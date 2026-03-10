@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:ui';
+
+import '../../providers/expense_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../theme/colors.dart';
+import '../../utils/formatters.dart';
+import '../../widgets/forms/add_expense_form.dart';
+import '../../services/sound_service.dart';
+
+class HistoryScreen extends StatelessWidget {
+  const HistoryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final expProv = context.watch<ExpenseProvider>();
+    final sProv = context.watch<SettingsProvider>();
+    final cur = sProv.settings.currency;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 20, 24, 10),
+              child: Text("History", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white)),
+            ),
+            Expanded(
+              child: expProv.expenses.isEmpty 
+              ? const Center(child: Text("No records yet", style: TextStyle(color: AppColors.textDim)))
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  itemCount: expProv.expenses.length,
+                  itemBuilder: (context, index) {
+                    final e = expProv.expenses[index];
+                    return GestureDetector(
+                      // FIXED: Correct delete logic with both arguments
+                      onLongPress: () => _showBlurMenu(context, e, expProv, sProv),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(22)),
+                        child: Row(children: [
+                          Expanded(child: Text(e.category, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600))),
+                          Text(Formatters.currency(e.amount, cur), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ]),
+                      ),
+                    ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.1);
+                  },
+                ),
+            ),
+            const SizedBox(height: 120),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBlurMenu(BuildContext context, dynamic e, ExpenseProvider prov, SettingsProvider sProv) {
+    showDialog(
+      context: context,
+      builder: (ctx) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          title: Text(e.category, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+            TextButton(onPressed: () {
+              Navigator.pop(ctx);
+              showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddExpenseForm(existingExpense: e));
+            }, child: const Text("Edit", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold))),
+            TextButton(onPressed: () {
+              // FIXED: Corrected arguments to clear red lines
+              prov.deleteExpense(e.id, sProv);
+              SoundService.delete();
+              Navigator.pop(ctx);
+            }, child: const Text("Delete", style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold))),
+          ],
+        ),
+      ),
+    );
+  }
+}
