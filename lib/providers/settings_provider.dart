@@ -4,15 +4,24 @@ import '../models/app_settings.dart';
 import '../services/storage_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
+  bool _isInitializing = true;
+  bool get isInitializing => _isInitializing;
+
   AppSettings _settings = AppSettings(
     name: 'User', currency: 'USD', monthlyBudget: 1000, 
     hourlyWage: 20, availableResources: 0
   );
 
   AppSettings get settings => _settings;
-  SettingsProvider() { _loadSettings(); }
+  SettingsProvider();
+
+  Future<void> init() async {
+    await _loadSettings();
+  }
 
   Future<void> _loadSettings() async {
+    _isInitializing = true;
+    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     _settings = AppSettings(
       name: prefs.getString('user_name') ?? 'User',
@@ -22,6 +31,7 @@ class SettingsProvider extends ChangeNotifier {
       availableResources: prefs.getDouble('available_resources') ?? 0,
       onboardingComplete: prefs.getBool('onboarding_complete') ?? false,
     );
+    _isInitializing = false;
     notifyListeners();
   }
 
@@ -33,27 +43,73 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> completeOnboarding(String name, double budget, double wage, String currency) async {
+  Future<void> addRolloverFunds(double amount) async {
+    await updateResources(amount);
+  }
+
+  Future<void> updateProfile(String name, double budget, double wage, String currency) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Calculate the budget delta and adjust available resources
+    double oldBudget = _settings.monthlyBudget;
+    double delta = budget - oldBudget;
+    
+    await prefs.setString('user_name', name);
+    await prefs.setDouble('monthly_budget', budget);
+    await prefs.setDouble('hourly_wage', wage);
+    await prefs.setString('currency', currency);
+    
+    // Adjust available resources by the budget change
+    if (delta != 0) {
+      double currentResources = prefs.getDouble('available_resources') ?? 0;
+      await prefs.setDouble('available_resources', currentResources + delta);
+    }
+    
+    await _loadSettings();
+  }
+
+  Future<void> completeOnboarding(String name, double budget, double wage, String currency, {double? availableResources}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_name', name);
     await prefs.setDouble('monthly_budget', budget);
     await prefs.setDouble('hourly_wage', wage);
     await prefs.setString('currency', currency);
-    await prefs.setDouble('available_resources', budget); // First month setup
-    await prefs.setBool('onboarding_complete', true);
+    
+    // Only set available resources on initial setup
+    if (!(_settings.onboardingComplete)) {
+      await prefs.setDouble('available_resources', availableResources ?? budget);
+      await prefs.setBool('onboarding_complete', true);
+    }
     await _loadSettings();
   }
 
   Future<void> clearAllData() async {
-    final storage = StorageService();
-    final db = await storage.database;
-    // Wipe Data
-    await db.delete('expenses');
-    await db.delete('savings');
-    // Wipe Prefs
+    // 1. Storage wipe
+    await StorageService().clearAll();
+    
+    // 2. Prefs wipe
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    // Reset App
+    await prefs.setBool('onboarding_complete', false);
+    
+    // 3. Reset local state
+    _settings = AppSettings(
+      name: 'User', currency: 'USD', monthlyBudget: 1000, 
+      hourlyWage: 20, availableResources: 0, onboardingComplete: false
+    );
+    notifyListeners();
+  }
+
+  Future<void> updateAvailableResources(double amount) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('available_resources', amount);
+    await _loadSettings();
+  }
+
+  Future<void> deductFromResources(double amount) async {
+    final prefs = await SharedPreferences.getInstance();
+    double current = prefs.getDouble('available_resources') ?? 0;
+    await prefs.setDouble('available_resources', (current - amount).clamp(0, double.infinity));
     await _loadSettings();
   }
 }

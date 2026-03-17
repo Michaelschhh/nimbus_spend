@@ -22,70 +22,51 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        top: 24,
-        left: 24,
-        right: 24,
+        top: 24, left: 24, right: 24,
       ),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            "Add Recurring Payment",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
+          const Text("Add Recurring Payment",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 20),
-          _buildField(
-            _nameController,
-            "Service Name (e.g. Netflix)",
-            LucideIcons.tv,
-          ),
+          _field(_nameController, "Service Name (e.g. Netflix)", LucideIcons.tv),
           const SizedBox(height: 15),
-          _buildField(
-            _amountController,
-            "Amount",
-            LucideIcons.banknote,
-            isNum: true,
-          ),
+          _field(_amountController, "Amount", LucideIcons.banknote, isNum: true),
           const SizedBox(height: 15),
           DropdownButtonFormField<String>(
-            initialValue: _selectedFrequency,
-            items: [
-              'Weekly',
-              'Monthly',
-              'Yearly',
-            ].map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
+            value: _selectedFrequency,
+            dropdownColor: AppColors.cardBg,
+            style: const TextStyle(color: Colors.white),
+            items: ['Weekly', 'Monthly', 'Yearly']
+                .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                .toList(),
             onChanged: (v) => setState(() => _selectedFrequency = v!),
             decoration: InputDecoration(
               labelText: "Frequency",
-              prefixIcon: const Icon(LucideIcons.calendar),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
+              labelStyle: const TextStyle(color: AppColors.textDim),
+              prefixIcon: const Icon(LucideIcons.calendar, color: AppColors.primary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: const BorderSide(color: Colors.white24)),
             ),
           ),
           const SizedBox(height: 25),
           SizedBox(
-            width: double.infinity,
-            height: 55,
+            width: double.infinity, height: 55,
             child: ElevatedButton(
               onPressed: _save,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
-              child: const Text(
-                "Track Subscription",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: const Text("Track Subscription",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -93,19 +74,22 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
     );
   }
 
-  Widget _buildField(
-    TextEditingController controller,
-    String hint,
-    IconData icon, {
-    bool isNum = false,
-  }) {
+  Widget _field(TextEditingController controller, String hint, IconData icon, {bool isNum = false}) {
     return TextField(
       controller: controller,
       keyboardType: isNum ? TextInputType.number : TextInputType.text,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: hint,
-        prefixIcon: Icon(icon),
+        labelStyle: const TextStyle(color: AppColors.textDim),
+        prefixIcon: Icon(icon, color: AppColors.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: Colors.white24)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: AppColors.primary)),
       ),
     );
   }

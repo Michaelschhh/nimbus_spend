@@ -1,6 +1,6 @@
 class LifeCostUtils {
   static double calculate(double amount, double hourlyWage) {
-    if (hourlyWage <= 0) return 0;
+    if (hourlyWage <= 0) return 0.0;
     return amount / hourlyWage;
   }
 

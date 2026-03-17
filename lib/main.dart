@@ -32,7 +32,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => ExpenseProvider()..fetchExpenses()),
+        ChangeNotifierProvider(create: (_) => ExpenseProvider()),
         ChangeNotifierProvider(create: (_) => SavingsProvider()..fetchSavings()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()..fetchSubscriptions()),
         ChangeNotifierProvider(create: (_) => GamificationProvider()),
@@ -60,6 +60,10 @@ class _LogicInitializerState extends State<LogicInitializer> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sProv = Provider.of<SettingsProvider>(context, listen: false);
       final eProv = Provider.of<ExpenseProvider>(context, listen: false);
+      
+      // Await data load before checking cycles
+      await sProv.init();
+      await eProv.fetchExpenses();
       
       // Perform automated checks for month rollover and recurring payments
       await RecurringService.checkAllCycles(sProv, eProv);

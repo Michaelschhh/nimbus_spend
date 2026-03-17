@@ -28,35 +28,43 @@ class ExpenseProvider extends ChangeNotifier {
     double budget = settings.settings.monthlyBudget;
     double alreadySpent = totalSpentThisMonth;
     
-    await _storage.insert('expenses', expense.toMap());
-    _expenses.insert(0, expense);
-    
-    // NOTIFICATION LOGIC: Fire only when crossing the threshold
-    if (alreadySpent < budget && (alreadySpent + expense.amount) >= budget) {
-      NotificationService.showNotification(
-        id: 555,
-        title: "Allowance Depleted ⚠️",
-        body: "You are now spending from your core Available Resources.",
-      );
-    } else if ((alreadySpent + expense.amount) > budget) {
-       // Optional: Repeat warning for every spend when over budget
-    }
+    try {
+      await _storage.insert('expenses', expense.toMap());
+      _expenses.insert(0, expense);
+      
+      // NOTIFICATION LOGIC: Fire only when crossing the threshold
+      if (alreadySpent < budget && (alreadySpent + expense.amount) >= budget) {
+        NotificationService.showNotification(
+          id: 555,
+          title: "Allowance Depleted ⚠️",
+          body: "You are now spending from your core Available Resources.",
+        );
+      } else if ((alreadySpent + expense.amount) > budget) {
+         // Optional: Repeat warning for every spend when over budget
+      }
 
-    // DUAL DRAIN
-    await settings.updateResources(-expense.amount);
-    notifyListeners();
+      // DUAL DRAIN - Only executed if DB insert succeeds
+      await settings.updateResources(-expense.amount);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error adding expense: $e");
+    }
   }
 
   Future<void> deleteExpense(String id, SettingsProvider settings) async {
     final idx = _expenses.indexWhere((e) => e.id == id);
     if (idx != -1) {
       double refund = _expenses[idx].amount;
-      await _storage.delete('expenses', id);
-      _expenses.removeAt(idx);
-      
-      // REVERT (Refund resources)
-      await settings.updateResources(refund);
-      notifyListeners();
+      try {
+        await _storage.delete('expenses', id);
+        _expenses.removeAt(idx);
+        
+        // REVERT (Refund resources)
+        await settings.updateResources(refund);
+        notifyListeners();
+      } catch (e) {
+        debugPrint("Error deleting expense: $e");
+      }
     }
   }
 
@@ -65,5 +73,10 @@ class ExpenseProvider extends ChangeNotifier {
     double diff = oldAmount - expense.amount;
     await settings.updateResources(diff);
     await fetchExpenses();
+  }
+
+  void clear() {
+    _expenses = [];
+    notifyListeners();
   }
 }

@@ -10,6 +10,7 @@ class AppColors {
   static const warning = Color(0xFFFF9F0A); // Apple Orange
   static const lifeColor = Color(0xFFBF5AF2); // Apple Purple
   static const gold = Color(0xFFF5D1B0);    // Champagne Gold
+  static const info = Color(0xFF5AC8FA);    // Apple Light Blue
 
   // --- TYPOGRAPHY ---
   static const textMain = Color(0xFFFFFFFF);

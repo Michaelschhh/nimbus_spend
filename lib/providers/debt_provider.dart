@@ -7,15 +7,50 @@ class DebtProvider extends ChangeNotifier {
   List<Debt> _debts = [];
   List<Debt> get debts => _debts;
 
+  double get totalIOwe => _debts
+      .where((d) => !d.isOwedToMe && !d.isSettled)
+      .fold(0.0, (sum, d) => sum + d.remainingAmount);
+
+  double get totalOwedToMe => _debts
+      .where((d) => d.isOwedToMe && !d.isSettled)
+      .fold(0.0, (sum, d) => sum + d.remainingAmount);
+
   Future<void> fetchDebts() async {
     final data = await _storage.queryAll('debts');
     _debts = data.map((d) => Debt.fromMap(d)).toList();
+    _debts.sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
   }
 
   Future<void> addDebt(Debt debt) async {
     await _storage.insert('debts', debt.toMap());
-    fetchDebts();
+    await fetchDebts();
+  }
+
+  Future<void> deleteDebt(String id) async {
+    await _storage.delete('debts', id);
+    await fetchDebts();
+  }
+
+  Future<void> makePayment(String id, double amount) async {
+    final index = _debts.indexWhere((d) => d.id == id);
+    if (index != -1) {
+      final debt = _debts[index];
+      final newRemaining = (debt.remainingAmount - amount).clamp(0.0, debt.amount);
+      final updated = Debt(
+        id: debt.id,
+        personName: debt.personName,
+        amount: debt.amount,
+        description: debt.description,
+        date: debt.date,
+        dueDate: debt.dueDate,
+        isOwedToMe: debt.isOwedToMe,
+        isSettled: newRemaining <= 0,
+        remainingAmount: newRemaining,
+      );
+      await _storage.update('debts', updated.toMap(), id);
+      await fetchDebts();
+    }
   }
 
   Future<void> settleDebt(String id) async {
@@ -33,7 +68,12 @@ class DebtProvider extends ChangeNotifier {
         remainingAmount: 0,
       );
       await _storage.update('debts', updated.toMap(), id);
-      fetchDebts();
+      await fetchDebts();
     }
+  }
+
+  void clear() {
+    _debts = [];
+    notifyListeners();
   }
 }

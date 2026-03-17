@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'dart:ui';
+import '../../theme/colors.dart';
+import '../../utils/formatters.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/savings_provider.dart';
+import '../../providers/bills_provider.dart';
+import '../../providers/debt_provider.dart';
+import '../../providers/goals_provider.dart';
+import '../../providers/subscription_provider.dart';
+import '../savings/savings_screen.dart';
+import '../bills/bills_screen.dart';
+import '../debts/debts_screen.dart';
+import '../goals/goals_screen.dart';
+import '../subscriptions/subscriptions_screen.dart';
+
+class FinancialHubScreen extends StatelessWidget {
+  const FinancialHubScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<SettingsProvider>().settings;
+    final savProv = context.watch<SavingsProvider>();
+    final billProv = context.watch<BillsProvider>();
+    final debtProv = context.watch<DebtProvider>();
+    final goalProv = context.watch<GoalsProvider>();
+    final subProv = context.watch<SubscriptionProvider>();
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              const Text("Finances",
+                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
+              const SizedBox(height: 8),
+              Text("${Formatters.currency(s.availableResources, s.currency)} in reserves",
+                  style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
+              const SizedBox(height: 35),
+
+              _glassCard(
+                context,
+                icon: LucideIcons.piggyBank,
+                title: "Savings Vault",
+                subtitle: Formatters.currency(savProv.totalSavings, s.currency),
+                color: AppColors.success,
+                screen: const SavingsScreen(),
+              ),
+              _glassCard(
+                context,
+                icon: LucideIcons.fileText,
+                title: "Bills",
+                subtitle: "${billProv.bills.where((b) => !b.isPaid).length} unpaid • ${Formatters.currency(billProv.totalUnpaid, s.currency)}",
+                color: AppColors.warning,
+                screen: const BillsScreen(),
+              ),
+              _glassCard(
+                context,
+                icon: LucideIcons.arrowLeftRight,
+                title: "Debts",
+                subtitle: "Owe ${Formatters.currency(debtProv.totalIOwe, s.currency)} • Owed ${Formatters.currency(debtProv.totalOwedToMe, s.currency)}",
+                color: AppColors.danger,
+                screen: const DebtsScreen(),
+              ),
+              _glassCard(
+                context,
+                icon: LucideIcons.target,
+                title: "Goals",
+                subtitle: "${goalProv.activeGoals.length} active • ${goalProv.completedGoals.length} achieved",
+                color: AppColors.lifeColor,
+                screen: const GoalsScreen(),
+              ),
+              _glassCard(
+                context,
+                icon: LucideIcons.refreshCw,
+                title: "Subscriptions",
+                subtitle: "${Formatters.currency(subProv.monthlySubCost, s.currency)}/mo • ${subProv.subscriptions.where((s) => s.isActive).length} active",
+                color: AppColors.primary,
+                screen: const SubscriptionsScreen(),
+              ),
+
+              const SizedBox(height: 140),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _glassCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required Widget screen,
+  }) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.04),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: color.withOpacity(0.12)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: color, size: 22),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title,
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Text(subtitle,
+                            style: TextStyle(color: color.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                  Icon(LucideIcons.chevronRight, color: Colors.white.withOpacity(0.2), size: 20),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

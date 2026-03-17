@@ -7,6 +7,10 @@ class BillsProvider extends ChangeNotifier {
   List<Bill> _bills = [];
   List<Bill> get bills => _bills;
 
+  double get totalUnpaid => _bills
+      .where((b) => !b.isPaid)
+      .fold(0.0, (sum, b) => sum + b.amount);
+
   Future<void> fetchBills() async {
     final data = await _storage.queryAll('bills');
     _bills = data.map((b) => Bill.fromMap(b)).toList();
@@ -17,7 +21,12 @@ class BillsProvider extends ChangeNotifier {
   Future<void> addBill(Bill bill) async {
     await _storage.insert('bills', bill.toMap());
     _bills.add(bill);
-    fetchBills();
+    await fetchBills();
+  }
+
+  Future<void> deleteBill(String id) async {
+    await _storage.delete('bills', id);
+    await fetchBills();
   }
 
   Future<void> markAsPaid(String id) async {
@@ -35,7 +44,12 @@ class BillsProvider extends ChangeNotifier {
         paidDate: DateTime.now(),
       );
       await _storage.update('bills', updated.toMap(), id);
-      fetchBills();
+      await fetchBills();
     }
+  }
+
+  void clear() {
+    _bills = [];
+    notifyListeners();
   }
 }

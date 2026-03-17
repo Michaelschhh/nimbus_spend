@@ -36,7 +36,8 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   }
 
   void _submit() {
-    final double? val = double.tryParse(_amount.text);
+    String sanitized = _amount.text.replaceAll(',', '').replaceAll(' ', '');
+    final double? val = double.tryParse(sanitized);
     if (val == null || val <= 0) return;
 
     final sProv = context.read<SettingsProvider>();

@@ -1,211 +1,208 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:ui';
 import '../../providers/subscription_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../models/subscription.dart';
 import '../../utils/formatters.dart';
-import '../../utils/life_cost_utils.dart';
-import '../../widgets/forms/add_subscription_form.dart';
 import '../../theme/colors.dart';
-import '../../services/ad_service.dart';
+import '../../widgets/forms/add_subscription_form.dart';
+import '../../widgets/common/apple_button.dart';
+import '../../services/sound_service.dart';
 
-class SubscriptionsScreen extends StatelessWidget {
+class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
+  @override
+  State<SubscriptionsScreen> createState() => _SubscriptionsScreenState();
+}
+
+class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => context.read<SubscriptionProvider>().fetchSubscriptions());
+  }
 
   @override
   Widget build(BuildContext context) {
     final subProv = context.watch<SubscriptionProvider>();
-    final settings = context.watch<SettingsProvider>().settings;
-
-    // Calculate totals
-    final monthlyTotal = subProv.monthlySubCost;
-    final annualTotal = monthlyTotal * 12;
-    final annualLifeHours = LifeCostUtils.calculate(
-      annualTotal,
-      settings.hourlyWage,
-    );
+    final s = context.read<SettingsProvider>().settings;
+    final active = subProv.subscriptions.where((s) => s.isActive).toList();
+    final paused = subProv.subscriptions.where((s) => !s.isActive).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Subscriptions",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Summary Card
-            _buildSummaryCard(annualTotal, annualLifeHours, settings.currency),
-            const SizedBox(height: 25),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Active Subscriptions",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Row(children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 22),
                 ),
-                Text(
-                  "${subProv.subscriptions.length} Tracked",
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-
-            if (subProv.subscriptions.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 40),
-                  child: Text(
-                    "No subscriptions yet. Track your recurring costs!",
+                const SizedBox(width: 16),
+                const Text("Subscriptions", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => showModalBottomSheet(
+                    context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+                    builder: (_) => const AddSubscriptionForm(),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(color: AppColors.cardBg, shape: BoxShape.circle),
+                    child: const Icon(LucideIcons.plus, color: AppColors.primary, size: 20),
                   ),
                 ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: subProv.subscriptions.length,
-                itemBuilder: (context, index) {
-                  final sub = subProv.subscriptions[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.primary.withOpacity(0.1),
-                        child: const Icon(
-                          LucideIcons.refreshCw,
-                          size: 20,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      title: Text(
-                        sub.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        "Next: ${Formatters.date(sub.nextDueDate)}",
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            Formatters.currency(sub.amount, settings.currency),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            sub.frequency,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ).animate().fadeIn(delay: (index * 100).ms);
-                },
+              ]),
+              const SizedBox(height: 8),
+              Text("${Formatters.currency(subProv.monthlySubCost, s.currency)}/mo • ${active.length} active",
+                  style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
+
+              // Monthly cost card
+              const SizedBox(height: 25),
+              Container(
+                width: double.infinity, padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBg, borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text("MONTHLY BURN", style: TextStyle(color: AppColors.textDim, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                  const SizedBox(height: 8),
+                  Text(Formatters.currency(subProv.monthlySubCost, s.currency),
+                      style: const TextStyle(fontSize: 38, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -2)),
+                  const SizedBox(height: 8),
+                  if (s.monthlyBudget > 0)
+                    Text("${(subProv.monthlySubCost / s.monthlyBudget * 100).toStringAsFixed(1)}% of your monthly allowance",
+                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 11)),
+                ]),
               ),
-          ],
+              const SizedBox(height: 30),
+
+              if (subProv.subscriptions.isEmpty)
+                _emptyState()
+              else ...[
+                if (active.isNotEmpty) ...[
+                  const Text("ACTIVE", style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                  const SizedBox(height: 12),
+                  ...active.map((sub) => _subCard(context, sub, s.currency, subProv)),
+                  const SizedBox(height: 25),
+                ],
+                if (paused.isNotEmpty) ...[
+                  const Text("PAUSED", style: TextStyle(color: AppColors.textDim, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                  const SizedBox(height: 12),
+                  ...paused.map((sub) => _subCard(context, sub, s.currency, subProv)),
+                ],
+              ],
+              const SizedBox(height: 140),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () =>
-            _handleAddButton(context, subProv.subscriptions.length),
-        label: const Text(
-          "Add Subscription",
-          style: TextStyle(color: Colors.white),
-        ),
-        icon: const Icon(LucideIcons.plus, color: Colors.white),
-        backgroundColor: AppColors.primary,
       ),
     );
   }
 
-  Widget _buildSummaryCard(double annual, double life, String currency) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.circular(24),
+  Widget _emptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(60),
+        child: Column(children: [
+          Icon(LucideIcons.refreshCw, color: Colors.white.withOpacity(0.1), size: 48),
+          const SizedBox(height: 16),
+          const Text("No subscriptions yet", style: TextStyle(color: AppColors.textDim)),
+        ]),
       ),
-      child: Column(
-        children: [
-          const Text(
-            "ANNUAL COST",
-            style: TextStyle(
-              color: Colors.white60,
-              fontSize: 12,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            Formatters.currency(annual, currency),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "That's ${LifeCostUtils.format(life)} of your work every year",
-            style: const TextStyle(
-              color: AppColors.lifeColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    ).animate().slideY(begin: 0.2);
+    );
   }
 
-  void _handleAddButton(BuildContext context, int count) {
-    if (count >= 1) {
-      // THE AD GATE: Show dialog before showing Ad
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text("Unlock New Slot"),
-          content: const Text(
-            "Watch a short ad to add another recurring payment to your list.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                AdService.showRewardedAd(() {
-                  _showAddForm(context);
-                });
-              },
-              child: const Text("Watch Ad"),
-            ),
-          ],
+  Widget _subCard(BuildContext context, Subscription sub, String cur, SubscriptionProvider prov) {
+    return GestureDetector(
+      onLongPress: () => _showBlurMenu(context, sub, prov),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.cardBg,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: sub.isActive ? AppColors.primary.withOpacity(0.08) : Colors.white.withOpacity(0.04)),
         ),
-      );
-    } else {
-      // First one is free!
-      _showAddForm(context);
-    }
+        child: Row(children: [
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(
+              color: (sub.isActive ? AppColors.primary : AppColors.textDim).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(LucideIcons.refreshCw,
+                color: sub.isActive ? AppColors.primary : AppColors.textDim, size: 18),
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(sub.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+            const SizedBox(height: 4),
+            Text(sub.frequency, style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
+          ])),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text(Formatters.currency(sub.amount, cur),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            if (!sub.isActive)
+              const Text("Paused", style: TextStyle(color: AppColors.textDim, fontSize: 10)),
+          ]),
+        ]),
+      ),
+    );
   }
 
-  void _showAddForm(BuildContext context) {
-    showModalBottomSheet(
+  void _showBlurMenu(BuildContext context, Subscription sub, SubscriptionProvider prov) {
+    showGeneralDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const AddSubscriptionForm(),
+      barrierDismissible: true,
+      barrierLabel: "SubOptions",
+      pageBuilder: (ctx, a1, a2) => Material(
+        type: MaterialType.transparency,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.8,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.cardBg, borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(sub.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                const SizedBox(height: 6),
+                Text(sub.frequency, style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
+                const SizedBox(height: 30),
+                AppleButton(
+                  label: sub.isActive ? "Pause Subscription" : "Resume Subscription",
+                  bgColor: sub.isActive ? AppColors.warning : AppColors.success,
+                  textColor: Colors.white,
+                  onTap: () {
+                    prov.toggleSubscription(sub);
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const SizedBox(height: 12),
+                AppleButton(label: "Delete", isDestructive: true, onTap: () {
+                  prov.deleteSubscription(sub.id);
+                  SoundService.delete();
+                  Navigator.pop(ctx);
+                }),
+                const SizedBox(height: 12),
+                AppleButton(label: "Cancel", bgColor: Colors.white10, textColor: Colors.white, onTap: () => Navigator.pop(ctx)),
+              ]),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

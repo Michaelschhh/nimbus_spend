@@ -2,8 +2,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 class SoundService {
-  static final AudioPlayer _player = AudioPlayer();
-
   /// Initialize audio settings
   static Future<void> init() async {
     try {
@@ -17,8 +15,16 @@ class SoundService {
 
   static Future<void> play(String fileName) async {
     try {
+      final player = AudioPlayer();
       // We use volume 0.5 to keep it subtle like a real system sound
-      await _player.play(AssetSource('sounds/$fileName'), volume: 0.5);
+      await player.play(AssetSource('sounds/$fileName'), volume: 0.5);
+      
+      // Dispose of the player after it completes to free resources
+      player.onPlayerStateChanged.listen((state) {
+        if (state == PlayerState.completed) {
+          player.dispose();
+        }
+      });
     } catch (e) {
       debugPrint("Sound Play Error: $e");
     }

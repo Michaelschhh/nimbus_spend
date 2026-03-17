@@ -7,6 +7,8 @@ class GoalsProvider extends ChangeNotifier {
   List<Goal> _goals = [];
 
   List<Goal> get goals => _goals;
+  List<Goal> get activeGoals => _goals.where((g) => !g.isCompleted).toList();
+  List<Goal> get completedGoals => _goals.where((g) => g.isCompleted).toList();
 
   Future<void> fetchGoals() async {
     final data = await _storage.queryAll('goals');
@@ -20,22 +22,33 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteGoal(String id) async {
+    await _storage.delete('goals', id);
+    await fetchGoals();
+  }
+
   Future<void> updateGoalProgress(String id, double amount) async {
     final index = _goals.indexWhere((g) => g.id == id);
     if (index != -1) {
+      final g = _goals[index];
+      final newAmount = g.currentAmount + amount;
       final updated = Goal(
-        id: _goals[index].id,
-        name: _goals[index].name,
-        targetAmount: _goals[index].targetAmount,
-        currentAmount: _goals[index].currentAmount + amount,
-        deadline: _goals[index].deadline,
-        isCompleted:
-            (_goals[index].currentAmount + amount) >=
-            _goals[index].targetAmount,
+        id: g.id,
+        name: g.name,
+        targetAmount: g.targetAmount,
+        currentAmount: newAmount,
+        deadline: g.deadline,
+        isCompleted: newAmount >= g.targetAmount,
+        completedDate: newAmount >= g.targetAmount ? DateTime.now() : null,
       );
       await _storage.update('goals', updated.toMap(), id);
       _goals[index] = updated;
       notifyListeners();
     }
+  }
+
+  void clear() {
+    _goals = [];
+    notifyListeners();
   }
 }

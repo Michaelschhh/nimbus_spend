@@ -28,20 +28,21 @@ class SubscriptionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteSubscription(String id) async {
+    await _storage.delete('subscriptions', id);
+    await fetchSubscriptions();
+  }
+
   Future<void> toggleSubscription(Subscription sub) async {
-    final updated = Subscription(
-      id: sub.id,
-      name: sub.name,
-      amount: sub.amount,
-      category: sub.category,
-      startDate: sub.startDate,
-      frequency: sub.frequency,
-      nextDueDate: sub.nextDueDate,
-      isActive: !sub.isActive,
-    );
+    final updated = sub.copyWith(isActive: !sub.isActive);
     await _storage.update('subscriptions', updated.toMap(), sub.id);
     final index = _subscriptions.indexWhere((s) => s.id == sub.id);
     _subscriptions[index] = updated;
+    notifyListeners();
+  }
+
+  void clear() {
+    _subscriptions = [];
     notifyListeners();
   }
 }

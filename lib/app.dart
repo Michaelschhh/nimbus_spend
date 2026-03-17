@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 
 // Screen Imports
@@ -10,6 +12,7 @@ import 'screens/history/history_screen.dart';
 import 'screens/reports/reports_screen.dart';
 import 'screens/savings/savings_screen.dart';
 import 'screens/settings/settings_screen.dart';
+import 'screens/hub/financial_hub_screen.dart';
 
 // Logic & Theme
 import 'providers/settings_provider.dart';
@@ -26,19 +29,26 @@ class NimbusSpendApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Nimbus Spend',
-          // Stable Minimal Theme to prevent compilation errors
-          theme: ThemeData.dark().copyWith(
-            scaffoldBackgroundColor: AppColors.background,
-            primaryColor: AppColors.primary,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.primary,
-              brightness: Brightness.dark,
+          theme: FlexThemeData.dark(
+            scheme: FlexScheme.deepPurple,
+            surfaceMode: FlexSurfaceMode.highScaffoldLowSurface,
+            blendLevel: 15,
+            appBarStyle: FlexAppBarStyle.background,
+            appBarOpacity: 0.90,
+            subThemesData: const FlexSubThemesData(
+              blendOnLevel: 30,
             ),
+            useMaterial3ErrorColors: true,
+            visualDensity: FlexColorScheme.comfortablePlatformDensity,
+            useMaterial3: true,
+            fontFamily: GoogleFonts.inter().fontFamily,
           ),
           // Control Flow: Setup vs Dashboard
-          home: setProv.settings.onboardingComplete 
-              ? const MainNavigation() 
-              : const OnboardingScreen(),
+          home: setProv.isInitializing
+              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+              : setProv.settings.onboardingComplete 
+                  ? const MainNavigation() 
+                  : const OnboardingScreen(),
         );
       },
     );
@@ -68,7 +78,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const DashboardScreen(),
     const HistoryScreen(),
     const ReportsScreen(),
-    const SavingsScreen(),
+    const FinancialHubScreen(),
     const SettingsScreen(),
   ];
 
@@ -97,38 +107,59 @@ class _MainNavigationState extends State<MainNavigation> {
         margin: const EdgeInsets.fromLTRB(24, 0, 24, 30),
         height: 75,
         decoration: BoxDecoration(
-          color: AppColors.cardBg.withOpacity(0.92),
+          // LIQUID GLASS: More transparent, more blur, subtle gradient
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withOpacity(0.08),
+              Colors.white.withOpacity(0.03),
+            ],
+          ),
           borderRadius: BorderRadius.circular(35),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withOpacity(0.12)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 30,
+              spreadRadius: -5,
+              offset: const Offset(0, 15),
             )
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(35),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            // DEEPER BLUR for that liquid feel
+            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // THE SLIDING PILL - Mathematically locked to the icon center
+                // THE SLIDING PILL - Liquid highlight
                 AnimatedPositioned(
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutQuart,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
                   left: _index * itemWidth,
                   top: 0,
                   bottom: 0,
                   child: Container(
                     width: itemWidth,
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(12),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.2),
+                            AppColors.primary.withOpacity(0.05),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(22),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.1),
+                            blurRadius: 10,
+                          )
+                        ],
                       ),
                     ),
                   ),
@@ -165,7 +196,7 @@ class _MainNavigationState extends State<MainNavigation> {
       case 0: return LucideIcons.wallet;
       case 1: return LucideIcons.history;
       case 2: return LucideIcons.pieChart;
-      case 3: return LucideIcons.target;
+      case 3: return LucideIcons.briefcase;
       default: return LucideIcons.settings;
     }
   }

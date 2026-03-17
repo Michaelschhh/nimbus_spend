@@ -31,11 +31,28 @@ class RecurringService {
     }
 
     // 2. BUDGET ALLOCATION LOGIC
-    int lastAlloc = prefs.getInt('last_alloc_month') ?? 0;
-    if (lastAlloc != 0 && lastAlloc != now.month) {
-      // Logic for rollover budget to resources happened in settings_provider.dart
+    int lastAllocMonth = prefs.getInt('last_alloc_month') ?? now.month;
+    int lastAllocYear = prefs.getInt('last_alloc_year') ?? now.year;
+    
+    int missedMonths = _calculateMissedMonths(lastAllocYear, lastAllocMonth, now.year, now.month);
+    
+    if (missedMonths > 0) {
+      // Inject missed funds
+      await sProv.addRolloverFunds(missedMonths * sProv.settings.monthlyBudget);
       await prefs.setInt('last_alloc_month', now.month);
+      await prefs.setInt('last_alloc_year', now.year);
+    } else if (prefs.getInt('last_alloc_month') == null) {
+        // Initial setup edgecase
+        await prefs.setInt('last_alloc_month', now.month);
+        await prefs.setInt('last_alloc_year', now.year);
     }
+  }
+
+  static int _calculateMissedMonths(int startYear, int startMonth, int endYear, int endMonth) {
+    if (startYear == 0 || startMonth == 0) return 0;
+    int yearDiff = endYear - startYear;
+    int monthDiff = endMonth - startMonth;
+    return (yearDiff * 12) + monthDiff;
   }
 
   static bool _due(DateTime last, String freq) {
