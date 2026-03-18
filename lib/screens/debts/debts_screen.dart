@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:ui';
 import '../../providers/debt_provider.dart';
@@ -13,6 +14,7 @@ import '../../theme/colors.dart';
 import '../../widgets/forms/add_debt_form.dart';
 import '../../widgets/common/apple_button.dart';
 import '../../services/sound_service.dart';
+import '../../widgets/common/ad_placements.dart';
 
 class DebtsScreen extends StatefulWidget {
   const DebtsScreen({super.key});
@@ -66,11 +68,11 @@ class _DebtsScreenState extends State<DebtsScreen> {
                   ),
                 ),
               ]),
-              const SizedBox(height: 20),
+              const BannerAdSpace(),
 
               // Summary cards
               Row(children: [
-                _summaryPill("I Owe", Formatters.currency(debtProv.totalIOwe, s.currency), AppColors.danger, !_showOwedToMe, () => setState(() => _showOwedToMe = false)),
+                _summaryPill("Money I Owe", Formatters.currency(debtProv.totalIOwe, s.currency), AppColors.danger, !_showOwedToMe, () => setState(() => _showOwedToMe = false)),
                 const SizedBox(width: 10),
                 _summaryPill("Owed to Me", Formatters.currency(debtProv.totalOwedToMe, s.currency), AppColors.success, _showOwedToMe, () => setState(() => _showOwedToMe = true)),
               ]),
@@ -126,7 +128,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
   Widget _debtCard(BuildContext context, Debt d, String cur, DebtProvider prov) {
     final settled = d.isSettled;
     return GestureDetector(
-      onLongPress: () => _showBlurMenu(context, d, prov),
+      onTap: () => _showBlurMenu(context, d, prov),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(20),
@@ -162,7 +164,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
           ]),
         ]),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
   }
 
   void _showBlurMenu(BuildContext context, Debt d, DebtProvider prov) {
@@ -189,15 +191,10 @@ class _DebtsScreenState extends State<DebtsScreen> {
                 Text(Formatters.currency(d.remainingAmount, sProv.settings.currency),
                     style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
                 const SizedBox(height: 30),
-                if (!d.isSettled && !d.isOwedToMe) ...[
-                  AppleButton(label: "Pay from Allowance", onTap: () {
+                if (!d.isSettled) ...[
+                  AppleButton(label: d.isOwedToMe ? "Receive Payment" : "Make Payment", onTap: () {
                     Navigator.pop(ctx);
-                    _showPaymentDialog(d, 'allowance', prov, sProv);
-                  }),
-                  const SizedBox(height: 12),
-                  AppleButton(label: "Pay from Resources", bgColor: AppColors.primary, textColor: Colors.white, onTap: () {
-                    Navigator.pop(ctx);
-                    _showPaymentDialog(d, 'resources', prov, sProv);
+                    _showPaymentDialog(d, prov, sProv);
                   }),
                   const SizedBox(height: 12),
                 ],
@@ -208,6 +205,11 @@ class _DebtsScreenState extends State<DebtsScreen> {
                   }),
                 if (!d.isSettled)
                   const SizedBox(height: 12),
+                AppleButton(label: "Edit Debt", onTap: () {
+                  Navigator.pop(ctx);
+                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddDebtForm(existingDebt: d));
+                }),
+                const SizedBox(height: 12),
                 AppleButton(label: "Delete", isDestructive: true, onTap: () {
                   prov.deleteDebt(d.id);
                   SoundService.delete();
@@ -223,41 +225,81 @@ class _DebtsScreenState extends State<DebtsScreen> {
     );
   }
 
-  void _showPaymentDialog(Debt d, String source, DebtProvider prov, SettingsProvider sProv) {
+  void _showPaymentDialog(Debt d, DebtProvider prov, SettingsProvider sProv) {
     final ctrl = TextEditingController();
-    showDialog(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: AppColors.cardBg,
-      title: const Text("Payment Amount", style: TextStyle(color: Colors.white)),
-      content: TextField(
-        controller: ctrl, keyboardType: TextInputType.number, autofocus: true,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: Formatters.currency(d.remainingAmount, sProv.settings.currency),
-          hintStyle: const TextStyle(color: Colors.white24),
-          enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-          focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+    String source = 'allowance';
+    if (d.defaultRouting == 'Available Resources') source = 'resources';
+    if (d.defaultRouting == 'None (Do not log)') source = 'none';
+    
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: Text(d.isOwedToMe ? "Receive Payment" : "Payment Amount", style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: ctrl, keyboardType: TextInputType.number, autofocus: true,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: Formatters.currency(d.remainingAmount, sProv.settings.currency),
+                hintStyle: const TextStyle(color: Colors.white24),
+                enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text("Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 12)),
+            const SizedBox(height: 8),
+            DropdownButton<String>(
+              value: source,
+              isExpanded: true,
+              dropdownColor: AppColors.cardBg,
+              style: const TextStyle(color: Colors.white),
+              underline: Container(height: 1, color: Colors.white24),
+              items: [
+                DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget" + (d.isOwedToMe ? " (Deposit)" : " (Expense)"))),
+                const DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
+                const DropdownMenuItem(value: 'none', child: Text("None (Update only)")),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => source = val);
+              },
+            ),
+          ],
         ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel", style: TextStyle(color: AppColors.textDim))),
-        TextButton(onPressed: () {
-          final val = double.tryParse(ctrl.text) ?? d.remainingAmount;
-          prov.makePayment(d.id, val);
-          if (source == 'allowance') {
-            final expense = Expense(
-              amount: val,
-              category: 'Debts 💳',
-              date: DateTime.now(),
-              note: 'Debt: ${d.personName}',
-              lifeCostHours: LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
-            );
-            context.read<ExpenseProvider>().addExpense(expense, sProv);
-          } else {
-            sProv.deductFromResources(val);
-          }
-          Navigator.pop(ctx);
-        }, child: const Text("Pay", style: TextStyle(color: AppColors.primary))),
-      ],
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel", style: TextStyle(color: AppColors.textDim))),
+          TextButton(onPressed: () {
+            final val = double.tryParse(ctrl.text) ?? d.remainingAmount;
+            prov.makePayment(d.id, val);
+            SoundService.chaching();
+            if (source == 'allowance') {
+              final expense = Expense(
+                amount: d.isOwedToMe ? -val : val,
+                category: 'Debts 💳',
+                date: DateTime.now(),
+                note: d.isOwedToMe ? 'Debt Received: ${d.personName}' : 'Debt Paid: ${d.personName}',
+                lifeCostHours: d.isOwedToMe ? 0 : LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
+                fundingSource: 'allowance',
+              );
+              context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
+              if (d.isOwedToMe) {
+                // Incoming cash always adds to resources
+                sProv.addToResources(val);
+              }
+            } else if (source == 'resources') {
+              if (d.isOwedToMe) {
+                sProv.addToResources(val);
+              } else {
+                sProv.deductFromResources(val);
+              }
+            }
+            Navigator.pop(ctx);
+          }, child: Text(d.isOwedToMe ? "Receive" : "Pay", style: const TextStyle(color: AppColors.primary))),
+        ],
+      )
     ));
   }
 }

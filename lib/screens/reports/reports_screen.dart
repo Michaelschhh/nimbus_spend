@@ -6,6 +6,7 @@ import '../../providers/expense_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/common/ad_placements.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -52,7 +53,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 35),
+              const BannerAdSpace(),
+              const SizedBox(height: 15),
               
               if (expenses.isEmpty)
                 const Center(child: Text("No data for current cycle.", style: TextStyle(color: AppColors.textDim)))

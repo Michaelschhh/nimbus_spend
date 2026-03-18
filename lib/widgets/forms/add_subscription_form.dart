@@ -3,10 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../models/subscription.dart';
 import '../../providers/subscription_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/expense_provider.dart';
+import '../../models/expense.dart';
 import '../../theme/colors.dart';
+import '../common/custom_switch.dart';
+import '../../utils/life_cost_utils.dart';
+import '../../services/ad_service.dart';
 
 class AddSubscriptionForm extends StatefulWidget {
-  const AddSubscriptionForm({super.key});
+  final Subscription? existingSubscription;
+  const AddSubscriptionForm({super.key, this.existingSubscription});
 
   @override
   State<AddSubscriptionForm> createState() => _AddSubscriptionFormState();
@@ -15,7 +22,25 @@ class AddSubscriptionForm extends StatefulWidget {
 class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
+  final _billingDayController = TextEditingController();
   String _selectedFrequency = 'Monthly';
+  bool _chargeFirstInterval = false;
+  String _routing = 'allowance';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingSubscription != null) {
+      _nameController.text = widget.existingSubscription!.name;
+      _amountController.text = widget.existingSubscription!.amount.toString();
+      _billingDayController.text = widget.existingSubscription!.billingDay?.toString() ?? '';
+      if (['Weekly', 'Monthly', 'Yearly'].contains(widget.existingSubscription!.frequency)) {
+        _selectedFrequency = widget.existingSubscription!.frequency;
+      }
+      _chargeFirstInterval = widget.existingSubscription!.chargeFirstInterval;
+      _routing = widget.existingSubscription!.defaultRouting;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +56,8 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("Add Recurring Payment",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(widget.existingSubscription == null ? "Add Recurring Payment" : "Edit Subscription",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 20),
           _field(_nameController, "Service Name (e.g. Netflix)", LucideIcons.tv),
           const SizedBox(height: 15),
@@ -56,6 +81,40 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
                   borderSide: const BorderSide(color: Colors.white24)),
             ),
           ),
+          if (_selectedFrequency == 'Monthly') ...[
+            const SizedBox(height: 15),
+            _field(_billingDayController, "Billing Day (1-31) (Optional)", LucideIcons.calendarClock, isNum: true),
+          ],
+          const SizedBox(height: 15),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Charge first interval immediately?", style: TextStyle(color: Colors.white, fontSize: 14)),
+              CustomSwitch(
+                value: _chargeFirstInterval, 
+                onChanged: (v) => setState(() => _chargeFirstInterval = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          const Text("Default Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _routing,
+            dropdownColor: AppColors.cardBg,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              prefixIcon: const Icon(LucideIcons.wallet, color: AppColors.primary, size: 18),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.white24)),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
+              DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
+              DropdownMenuItem(value: 'none', child: Text("None (Track Only)")),
+            ],
+            onChanged: (v) => setState(() => _routing = v!),
+          ),
           const SizedBox(height: 25),
           SizedBox(
             width: double.infinity, height: 55,
@@ -65,8 +124,8 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
-              child: const Text("Track Subscription",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text(widget.existingSubscription == null ? "Track Subscription" : "Save Changes",
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -98,16 +157,84 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     if (_nameController.text.isEmpty || amount <= 0) return;
 
-    final sub = Subscription(
-      name: _nameController.text,
-      amount: amount,
-      category: 'Bills 📄',
-      startDate: DateTime.now(),
-      frequency: _selectedFrequency,
-      nextDueDate: DateTime.now().add(const Duration(days: 30)),
-    );
+    int? billingDay;
+    if (_selectedFrequency == 'Monthly') {
+      billingDay = int.tryParse(_billingDayController.text);
+      if (billingDay != null && (billingDay < 1 || billingDay > 31)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Billing day must be between 1 and 31', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.danger)
+        );
+        return;
+      }
+    }
 
-    context.read<SubscriptionProvider>().addSubscription(sub);
+    if (widget.existingSubscription != null) {
+      final sub = Subscription(
+        id: widget.existingSubscription!.id,
+        name: _nameController.text,
+        amount: amount,
+        category: widget.existingSubscription!.category,
+        startDate: widget.existingSubscription!.startDate,
+        frequency: _selectedFrequency,
+        nextDueDate: widget.existingSubscription!.nextDueDate,
+        isActive: widget.existingSubscription!.isActive,
+        billingDay: billingDay,
+        chargeFirstInterval: _chargeFirstInterval,
+        defaultRouting: _routing,
+      );
+      context.read<SubscriptionProvider>().updateSubscription(sub);
+    } else {
+      DateTime nextDue = DateTime.now().add(const Duration(days: 30));
+      if (_selectedFrequency == 'Weekly') nextDue = DateTime.now().add(const Duration(days: 7));
+      if (_selectedFrequency == 'Yearly') nextDue = DateTime.now().add(const Duration(days: 365));
+
+      final sub = Subscription(
+        name: _nameController.text,
+        amount: amount,
+        category: 'Bills 📄',
+        startDate: DateTime.now(),
+        frequency: _selectedFrequency,
+        nextDueDate: nextDue,
+        billingDay: billingDay,
+        chargeFirstInterval: _chargeFirstInterval,
+        defaultRouting: _routing,
+      );
+      context.read<SubscriptionProvider>().addSubscription(sub);
+      
+      if (_chargeFirstInterval && _routing != 'none') {
+         final settProv = context.read<SettingsProvider>();
+         final exp = Expense(
+          amount: amount,
+          date: DateTime.now(),
+          category: 'Bills 📄',
+          note: 'Subscription: ${_nameController.text}',
+          isRecurring: false,
+          lifeCostHours: LifeCostUtils.calculate(amount, settProv.settings.hourlyWage),
+          fundingSource: _routing,
+        );
+        // Correctly handle immediate charge based on routing
+        if (_routing == 'allowance') {
+          context.read<ExpenseProvider>().addExpense(exp, settProv, skipResourceUpdate: true);
+          settProv.deductFromResources(amount);
+        } else if (_routing == 'resources') {
+          context.read<ExpenseProvider>().addExpense(exp, settProv, skipResourceUpdate: true);
+          settProv.deductFromResources(amount);
+        }
+      }
+    }
+
+    final settProv = context.read<SettingsProvider>();
+    if (!settProv.settings.isPro) {
+      settProv.incrementAdCounter();
+      if (settProv.adClickCounter >= 2) {
+        AdService.showInterstitialAd(() {
+          settProv.resetAdCounter();
+          if (mounted) Navigator.pop(context);
+        });
+        return;
+      }
+    }
+
     Navigator.pop(context);
   }
 }

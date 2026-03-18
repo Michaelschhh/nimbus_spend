@@ -2,62 +2,59 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:developer';
 
 class AdService {
-  static RewardedAd? _rewardedAd;
+  static InterstitialAd? _interstitialAd;
   static bool _isAdLoaded = false;
 
-  // TODO: Replace with real ID from AdMob before Play Store
-  static const String rewardedAdUnitId =
-      'ca-app-pub-3940256099942544/5224354917';
+  // Production IDs
+  static const String interstitialAdUnitId = 'ca-app-pub-1530144408092330/9449178515';
+  static const String bannerAdUnitId = 'ca-app-pub-1530144408092330/8537432429';
 
   static Future<void> init() async {
     await MobileAds.instance.initialize();
-    _loadRewardedAd();
+    _loadInterstitialAd();
   }
 
-  static void _loadRewardedAd() {
-    RewardedAd.load(
-      adUnitId: rewardedAdUnitId,
+  static void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: interstitialAdUnitId,
       request: const AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
+      adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
-          _rewardedAd = ad;
+          _interstitialAd = ad;
           _isAdLoaded = true;
-          log("Ad Loaded Successfully");
+          log("Interstitial Ad Loaded Successfully");
         },
         onAdFailedToLoad: (error) {
           _isAdLoaded = false;
-          log("Ad Failed to Load: $error");
+          log("Interstitial Ad Failed to Load: $error");
         },
       ),
     );
   }
 
-  static void showRewardedAd(Function onRewardEarned) {
-    if (_rewardedAd != null && _isAdLoaded) {
-      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+  static void showInterstitialAd(Function onComplete) {
+    if (_interstitialAd != null && _isAdLoaded) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
           ad.dispose();
           _isAdLoaded = false;
-          _loadRewardedAd(); // Preload next one
+          _loadInterstitialAd(); // Preload next one
+          onComplete(); // Continue logic after ad plays
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           ad.dispose();
           _isAdLoaded = false;
-          _loadRewardedAd();
+          _loadInterstitialAd();
+          onComplete(); // Fail gracefully
         },
       );
 
-      _rewardedAd!.show(
-        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-          onRewardEarned();
-        },
-      );
+      _interstitialAd!.show();
     } else {
       // If ad isn't ready, let them through anyway so they don't get stuck
-      // but try to load for next time.
-      log("Ad not ready yet, skipping gate...");
-      onRewardEarned();
-      _loadRewardedAd();
+      log("Interstitial Ad not ready yet, skipping...");
+      onComplete();
+      _loadInterstitialAd();
     }
   }
 }

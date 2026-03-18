@@ -9,6 +9,8 @@ class Expense {
   final bool isRecurring;
   final String? recurringFrequency; // Daily, Weekly, Monthly, Yearly
   final double lifeCostHours;
+  final String fundingSource;
+  final String? linkedId;
 
   Expense({
     String? id,
@@ -19,6 +21,8 @@ class Expense {
     this.isRecurring = false,
     this.recurringFrequency,
     required this.lifeCostHours,
+    this.fundingSource = 'allowance',
+    this.linkedId,
   }) : id = id ?? const Uuid().v4();
 
   Map<String, dynamic> toMap() {
@@ -31,6 +35,8 @@ class Expense {
       'isRecurring': isRecurring ? 1 : 0,
       'recurringFrequency': recurringFrequency,
       'lifeCostHours': lifeCostHours,
+      'fundingSource': fundingSource,
+      'linkedId': linkedId,
     };
   }
 
@@ -44,6 +50,8 @@ class Expense {
       isRecurring: map['isRecurring'] == 1,
       recurringFrequency: map['recurringFrequency'],
       lifeCostHours: map['lifeCostHours'],
+      fundingSource: map['fundingSource'] ?? 'allowance',
+      linkedId: map['linkedId'],
     );
   }
 }

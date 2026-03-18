@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'dart:ui';
@@ -14,6 +15,7 @@ import '../../theme/colors.dart';
 import '../../widgets/forms/add_goal_form.dart';
 import '../../widgets/common/apple_button.dart';
 import '../../services/sound_service.dart';
+import '../../widgets/common/ad_placements.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -65,7 +67,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
               const SizedBox(height: 8),
               Text("${goalProv.activeGoals.length} active • ${goalProv.completedGoals.length} achieved",
                   style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
-              const SizedBox(height: 30),
+              const BannerAdSpace(),
 
               if (goalProv.goals.isEmpty)
                 _emptyState()
@@ -99,7 +101,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final hoursLeft = s.hourlyWage > 0 ? remaining / s.hourlyWage : 0.0;
 
     return GestureDetector(
-      onLongPress: () => _showBlurMenu(context, g, prov),
+      onTap: () => _showBlurMenu(context, g, prov),
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.all(22),
@@ -137,7 +139,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           ],
         ]),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
   }
 
   void _showBlurMenu(BuildContext context, Goal g, GoalsProvider prov) {
@@ -165,17 +167,17 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
                 const SizedBox(height: 30),
                 if (!g.isCompleted) ...[
-                  AppleButton(label: "Fund from Allowance", onTap: () {
+                  AppleButton(label: "Add Funds", onTap: () {
                     Navigator.pop(ctx);
-                    _showFundDialog(g, 'allowance', prov, sProv);
-                  }),
-                  const SizedBox(height: 12),
-                  AppleButton(label: "Fund from Resources", bgColor: AppColors.primary, textColor: Colors.white, onTap: () {
-                    Navigator.pop(ctx);
-                    _showFundDialog(g, 'resources', prov, sProv);
+                    _showFundDialog(g, prov, sProv);
                   }),
                   const SizedBox(height: 12),
                 ],
+                AppleButton(label: "Edit Goal", onTap: () {
+                  Navigator.pop(ctx);
+                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddGoalForm(existingGoal: g));
+                }),
+                const SizedBox(height: 12),
                 AppleButton(label: "Delete Goal", isDestructive: true, onTap: () {
                   prov.deleteGoal(g.id);
                   SoundService.delete();
@@ -191,43 +193,73 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
-  void _showFundDialog(Goal g, String source, GoalsProvider prov, SettingsProvider sProv) {
+  void _showFundDialog(Goal g, GoalsProvider prov, SettingsProvider sProv) {
     final ctrl = TextEditingController();
+    String source = 'allowance';
     final remaining = g.targetAmount - g.currentAmount;
-    showDialog(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: AppColors.cardBg,
-      title: const Text("Add Funds", style: TextStyle(color: Colors.white)),
-      content: TextField(
-        controller: ctrl, keyboardType: TextInputType.number, autofocus: true,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: Formatters.currency(remaining, sProv.settings.currency),
-          hintStyle: const TextStyle(color: Colors.white24),
-          enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-          focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+    
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: const Text("Add Funds", style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: ctrl, keyboardType: TextInputType.number, autofocus: true,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: Formatters.currency(remaining, sProv.settings.currency),
+                hintStyle: const TextStyle(color: Colors.white24),
+                enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text("Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 12)),
+            const SizedBox(height: 8),
+            DropdownButton<String>(
+              value: source,
+              isExpanded: true,
+              dropdownColor: AppColors.cardBg,
+              style: const TextStyle(color: Colors.white),
+              underline: Container(height: 1, color: Colors.white24),
+              items: const [
+                DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget (Expense)")),
+                DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
+                DropdownMenuItem(value: 'none', child: Text("None (Update only)")),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => source = val);
+              },
+            ),
+          ],
         ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel", style: TextStyle(color: AppColors.textDim))),
-        TextButton(onPressed: () {
-          final val = double.tryParse(ctrl.text) ?? 0;
-          if (val <= 0) return;
-          prov.updateGoalProgress(g.id, val);
-          if (source == 'allowance') {
-            final expense = Expense(
-              amount: val,
-              category: 'Goals 🎯',
-              date: DateTime.now(),
-              note: 'Goal: ${g.name}',
-              lifeCostHours: LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
-            );
-            context.read<ExpenseProvider>().addExpense(expense, sProv);
-          } else {
-            sProv.deductFromResources(val);
-          }
-          Navigator.pop(ctx);
-        }, child: const Text("Fund", style: TextStyle(color: AppColors.primary))),
-      ],
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel", style: TextStyle(color: AppColors.textDim))),
+          TextButton(onPressed: () {
+            final val = double.tryParse(ctrl.text) ?? 0;
+            if (val <= 0) return;
+            prov.updateGoalProgress(g.id, val);
+            SoundService.chaching();
+            if (source == 'allowance') {
+              final expense = Expense(
+                amount: val,
+                category: 'Goals 🎯',
+                date: DateTime.now(),
+                note: 'Goal: ${g.name}',
+                lifeCostHours: LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
+              );
+              context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
+              sProv.deductFromResources(val);
+            } else if (source == 'resources') {
+              sProv.deductFromResources(val);
+            }
+            Navigator.pop(ctx);
+          }, child: const Text("Fund", style: TextStyle(color: AppColors.primary))),
+        ],
+      )
     ));
   }
 }

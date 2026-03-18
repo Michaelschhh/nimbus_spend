@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/saving.dart';
 import '../services/storage_service.dart';
 import '../services/sound_service.dart';
+import './expense_provider.dart';
+import './settings_provider.dart';
 
 class SavingsProvider extends ChangeNotifier {
   final StorageService _storage = StorageService();
@@ -55,9 +57,49 @@ class SavingsProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteSaving(String id) async {
-    await _storage.delete('savings', id);
-    await fetchSavings();
-    SoundService.delete();
+  Future<void> updateSaving(Saving s) async {
+    final idx = _savings.indexWhere((item) => item.id == s.id);
+    if (idx != -1) {
+      await _storage.update('savings', s.toMap(), s.id);
+      await fetchSavings();
+    }
+  }
+
+  Future<void> deleteSaving(String id, SettingsProvider sProv, ExpenseProvider eProv) async {
+    final idx = _savings.indexWhere((s) => s.id == id);
+    if (idx != -1) {
+      final s = _savings[idx];
+      
+      // Cleanup linked expense (this handles the actual refund to resources if needed)
+      await eProv.deleteExpenseByLinkedId(id, sProv);
+      
+      await _storage.delete('savings', id);
+      await fetchSavings();
+      SoundService.delete();
+    }
+  }
+
+  Future<void> markAsMatured(String id) async {
+    final idx = _savings.indexWhere((s) => s.id == id);
+    if (idx != -1) {
+      final s = _savings[idx];
+      final updated = s.copyWith(isMatured: true);
+      await _storage.update('savings', updated.toMap(), id);
+      await fetchSavings();
+    }
+  }
+
+  Future<void> releaseMaturedFunds(String id, double amount, SettingsProvider sProv) async {
+    final idx = _savings.indexWhere((s) => s.id == id);
+    if (idx != -1) {
+      final s = _savings[idx];
+      if (s.amount >= amount) {
+        final updated = s.copyWith(amount: s.amount - amount);
+        await _storage.update('savings', updated.toMap(), id);
+        await sProv.addToResources(amount);
+        await fetchSavings();
+        SoundService.chaching();
+      }
+    }
   }
 }

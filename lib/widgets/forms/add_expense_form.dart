@@ -7,7 +7,9 @@ import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
 import '../../utils/life_cost_utils.dart';
 import '../../services/sound_service.dart';
+import '../../services/ad_service.dart';
 import '../common/apple_button.dart';
+import '../common/custom_switch.dart';
 
 class AddExpenseForm extends StatefulWidget {
   final Expense? existingExpense;
@@ -23,7 +25,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   late String _cat;
   late bool _isRec;
   late String _freq;
-  final double _hours = 0.0;
+  String _fundingSource = 'allowance';
 
   @override
   void initState() {
@@ -35,13 +37,106 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     _freq = widget.existingExpense?.recurringFrequency ?? "Monthly";
   }
 
-  void _submit() {
+  // Category-aware thresholds for AI insight
+  double _getWarningThreshold(String category) {
+    switch (category) {
+      case 'Health':
+      case 'Food':
+        return 0.40; // 40% — essential spending, higher tolerance
+      case 'Transport':
+        return 0.30; // 30%
+      default:
+        return 0.15; // 15% — Shopping, Bills, etc.
+    }
+  }
+
+  String _getCategoryLabel(String category) {
+    switch (category) {
+      case 'Health': return 'health expenses';
+      case 'Food': return 'food';
+      case 'Transport': return 'transportation';
+      case 'Shopping': return 'shopping';
+      case 'Bills': return 'bills';
+      default: return 'this expense';
+    }
+  }
+
+  Future<void> _submit() async {
     String sanitized = _amount.text.replaceAll(',', '').replaceAll(' ', '');
     final double? val = double.tryParse(sanitized);
     if (val == null || val <= 0) return;
 
     final sProv = context.read<SettingsProvider>();
     final eProv = context.read<ExpenseProvider>();
+
+    // 1. Forced Reflection Timer
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 20),
+            Text("Analyzing budget impact...", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    // 2. Percentage-based AI Insight (varies by category)
+    if (widget.existingExpense == null) {
+      final resources = sProv.settings.availableResources;
+      final allowanceRemaining = sProv.settings.monthlyBudget - eProv.totalSpentThisMonth;
+      
+      double baseline = (_fundingSource == 'allowance') ? allowanceRemaining : resources;
+      String sourceLabel = (_fundingSource == 'allowance') ? "monthly budget" : "available resources";
+
+      if (baseline > 0) {
+        final percentage = (val / baseline * 100);
+        final threshold = _getWarningThreshold(_cat);
+
+        if (val / baseline >= threshold) {
+          final shouldProceed = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: AppColors.cardBg,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: AppColors.warning)),
+              title: Row(
+                children: [
+                   const Icon(LucideIcons.brainCircuit, color: AppColors.warning),
+                   const SizedBox(width: 8),
+                   const Text("AI Insight", style: TextStyle(color: Colors.white)),
+                ],
+              ),
+              content: Text(
+                "This ${_getCategoryLabel(_cat)} costs ${percentage.toStringAsFixed(1)}% of your $sourceLabel. Do you really need this right now?",
+                style: const TextStyle(color: Colors.white70, height: 1.4),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text("Cancel", style: TextStyle(color: AppColors.textDim)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text("Yes, proceed", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldProceed != true) return;
+        }
+      }
+    }
 
     final expense = Expense(
       id: widget.existingExpense?.id,
@@ -52,16 +147,41 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
       recurringFrequency: _isRec ? _freq : null,
       lifeCostHours: LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
       note: _note.text,
+      fundingSource: _fundingSource,
     );
 
     if (widget.existingExpense != null) {
       eProv.updateExpense(expense, widget.existingExpense!.amount, sProv);
     } else {
-      eProv.addExpense(expense, sProv);
+      // Handle funding source
+      if (_fundingSource == 'allowance') {
+        // Monthly Budget: just log expense, resources NOT touched (budget is pre-allocated)
+        eProv.addExpense(expense, sProv, skipResourceUpdate: true);
+      } else if (_fundingSource == 'resources') {
+        // Available Resources: log expense + deduct from resources
+        eProv.addExpense(expense, sProv, skipResourceUpdate: true);
+        sProv.deductFromResources(val);
+      } else {
+        // None: just log it, no resource change
+        eProv.addExpense(expense, sProv, skipResourceUpdate: true);
+      }
+
+      // --- Seamless Interstitial Injection ---
+      if (!sProv.settings.isPro) {
+        sProv.incrementAdCounter();
+        if (sProv.adClickCounter >= 2) {
+           AdService.showInterstitialAd(() {
+             sProv.resetAdCounter();
+             if (mounted) Navigator.pop(context);
+           });
+           SoundService.success();
+           return;
+        }
+      }
     }
 
     SoundService.success();
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -97,7 +217,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text("Recurring Payment", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                      Switch.adaptive(value: _isRec, activeColor: AppColors.primary, onChanged: (v) => setState(() => _isRec = v)),
+                      CustomSwitch(value: _isRec, onChanged: (v) => setState(() => _isRec = v)),
                     ],
                   ),
                   if (_isRec) ...[
@@ -117,6 +237,36 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                 ],
               ),
             ),
+
+            // FUNDING SOURCE SELECTOR
+            if (widget.existingExpense == null) ...[
+              const SizedBox(height: 15),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.white10)),
+                child: Row(children: [
+                  const Icon(LucideIcons.wallet, size: 18, color: AppColors.textDim),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButton<String>(
+                      value: _fundingSource,
+                      isExpanded: true,
+                      dropdownColor: AppColors.cardBg,
+                      style: const TextStyle(color: Colors.white),
+                      underline: const SizedBox(),
+                      items: const [
+                        DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
+                        DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
+                        DropdownMenuItem(value: 'none', child: Text("None (Track Only)")),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setState(() => _fundingSource = val);
+                      },
+                    ),
+                  ),
+                ]),
+              ),
+            ],
             
             const SizedBox(height: 25),
             _categoryGrid(),

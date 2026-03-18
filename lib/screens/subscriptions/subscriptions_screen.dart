@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:intl/intl.dart';
 import 'dart:ui';
 import '../../providers/subscription_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -10,6 +12,7 @@ import '../../theme/colors.dart';
 import '../../widgets/forms/add_subscription_form.dart';
 import '../../widgets/common/apple_button.dart';
 import '../../services/sound_service.dart';
+import '../../widgets/common/ad_placements.dart';
 
 class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
@@ -63,7 +66,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               const SizedBox(height: 8),
               Text("${Formatters.currency(subProv.monthlySubCost, s.currency)}/mo • ${active.length} active",
                   style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
-
+              const BannerAdSpace(),
               // Monthly cost card
               const SizedBox(height: 25),
               Container(
@@ -123,7 +126,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
   Widget _subCard(BuildContext context, Subscription sub, String cur, SubscriptionProvider prov) {
     return GestureDetector(
-      onLongPress: () => _showBlurMenu(context, sub, prov),
+      onTap: () => _showBlurMenu(context, sub, prov),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(20),
@@ -146,7 +149,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(sub.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
             const SizedBox(height: 4),
-            Text(sub.frequency, style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
+            Text("${sub.frequency} • Next: ${DateFormat('MMM dd').format(sub.nextDueDate)}${sub.billingDay != null ? ' (Day ${sub.billingDay})' : ''}",
+                style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
           ])),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text(Formatters.currency(sub.amount, cur),
@@ -156,7 +160,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           ]),
         ]),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
   }
 
   void _showBlurMenu(BuildContext context, Subscription sub, SubscriptionProvider prov) {
@@ -187,9 +191,15 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   textColor: Colors.white,
                   onTap: () {
                     prov.toggleSubscription(sub);
+                    SoundService.success();
                     Navigator.pop(ctx);
                   },
                 ),
+                const SizedBox(height: 12),
+                AppleButton(label: "Edit", onTap: () {
+                  Navigator.pop(ctx);
+                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddSubscriptionForm(existingSubscription: sub));
+                }),
                 const SizedBox(height: 12),
                 AppleButton(label: "Delete", isDestructive: true, onTap: () {
                   prov.deleteSubscription(sub.id);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:ui';
 import '../../providers/bills_provider.dart';
@@ -13,6 +14,7 @@ import '../../theme/colors.dart';
 import '../../widgets/forms/add_bill_form.dart';
 import '../../widgets/common/apple_button.dart';
 import '../../services/sound_service.dart';
+import '../../widgets/common/ad_placements.dart';
 
 class BillsScreen extends StatefulWidget {
   const BillsScreen({super.key});
@@ -66,7 +68,8 @@ class _BillsScreenState extends State<BillsScreen> {
               const SizedBox(height: 8),
               Text("${unpaid.length} unpaid • ${Formatters.currency(billProv.totalUnpaid, s.currency)} due",
                   style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
-              const SizedBox(height: 30),
+              const BannerAdSpace(),
+              const SizedBox(height: 10),
 
               if (unpaid.isEmpty && paid.isEmpty)
                 _emptyState()
@@ -78,7 +81,7 @@ class _BillsScreenState extends State<BillsScreen> {
                   const SizedBox(height: 30),
                 ],
                 if (paid.isNotEmpty) ...[
-                  const Text("PAID", style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                  const Text("HISTORY OF PAID BILLS", style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
                   const SizedBox(height: 12),
                   ...paid.map((b) => _billCard(context, b, s.currency, billProv)),
                 ],
@@ -105,40 +108,52 @@ class _BillsScreenState extends State<BillsScreen> {
   }
 
   Widget _billCard(BuildContext context, Bill b, String cur, BillsProvider prov) {
+    final now = DateTime.now();
+    final isOverdue = !b.isPaid && b.dueDate.isBefore(DateTime(now.year, now.month, now.day));
     return GestureDetector(
-      onLongPress: () => _showBlurMenu(context, b, prov),
+      onTap: () => _showBlurMenu(context, b, prov),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: b.isPaid ? AppColors.success.withOpacity(0.1) : Colors.white.withOpacity(0.04)),
+          border: Border.all(color: isOverdue ? AppColors.danger.withOpacity(0.3) : (b.isPaid ? AppColors.success.withOpacity(0.1) : Colors.white.withOpacity(0.04))),
         ),
         child: Row(children: [
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: (b.isPaid ? AppColors.success : AppColors.warning).withOpacity(0.1),
+              color: (b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : AppColors.warning)).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              b.isPaid ? LucideIcons.checkCircle : LucideIcons.clock,
-              color: b.isPaid ? AppColors.success : AppColors.warning, size: 18,
+              b.isPaid ? LucideIcons.checkCircle : (isOverdue ? LucideIcons.alertTriangle : LucideIcons.clock),
+              color: b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : AppColors.warning), size: 18,
             ),
           ),
           const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(b.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+            Row(children: [
+              Flexible(child: Text(b.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15))),
+              if (b.autoPay) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                  child: const Text("AUTO", style: TextStyle(color: AppColors.primary, fontSize: 8, fontWeight: FontWeight.w900)),
+                ),
+              ],
+            ]),
             const SizedBox(height: 4),
-            Text("${b.frequency} • Due ${Formatters.date(b.dueDate)}",
-                style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
+            Text("${b.frequency} • ${isOverdue ? 'OVERDUE' : 'Due ${Formatters.date(b.dueDate)}'}",
+                style: TextStyle(color: isOverdue ? AppColors.danger : AppColors.textDim, fontSize: 11, fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal)),
           ])),
           Text(Formatters.currency(b.amount, cur),
-              style: TextStyle(color: b.isPaid ? AppColors.success : Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+              style: TextStyle(color: b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : Colors.white), fontWeight: FontWeight.bold, fontSize: 15)),
         ]),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
   }
 
   void _showBlurMenu(BuildContext context, Bill b, BillsProvider prov) {
@@ -166,18 +181,18 @@ class _BillsScreenState extends State<BillsScreen> {
                     style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
                 const SizedBox(height: 30),
                 if (!b.isPaid) ...[
-                  AppleButton(label: "Pay from Allowance", onTap: () {
+                  AppleButton(label: "Pay Bill", onTap: () {
                     Navigator.pop(ctx);
-                    _payBill(b, 'allowance', prov, sProv);
-                  }),
-                  const SizedBox(height: 12),
-                  AppleButton(label: "Pay from Resources", bgColor: AppColors.primary, textColor: Colors.white, onTap: () {
-                    Navigator.pop(ctx);
-                    _payBill(b, 'resources', prov, sProv);
+                    _showPaymentDialog(b, prov, sProv);
                   }),
                   const SizedBox(height: 12),
                 ],
-                AppleButton(label: "Delete Bill", isDestructive: true, onTap: () {
+                AppleButton(label: "Edit Bill", onTap: () {
+                  Navigator.pop(ctx);
+                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddBillForm(existingBill: b));
+                }),
+                const SizedBox(height: 12),
+                AppleButton(label: "Delete", isDestructive: true, onTap: () {
                   prov.deleteBill(b.id);
                   SoundService.delete();
                   Navigator.pop(ctx);
@@ -192,19 +207,64 @@ class _BillsScreenState extends State<BillsScreen> {
     );
   }
 
-  void _payBill(Bill b, String source, BillsProvider billProv, SettingsProvider sProv) {
-    billProv.markAsPaid(b.id);
-    if (source == 'allowance') {
-      final expense = Expense(
-        amount: b.amount,
-        category: b.category,
-        date: DateTime.now(),
-        note: 'Bill: ${b.name}',
-        lifeCostHours: LifeCostUtils.calculate(b.amount, sProv.settings.hourlyWage),
-      );
-      context.read<ExpenseProvider>().addExpense(expense, sProv);
-    } else {
-      sProv.deductFromResources(b.amount);
-    }
+  void _showPaymentDialog(Bill b, BillsProvider prov, SettingsProvider sProv) {
+    String source = b.defaultRouting;
+    
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: const Text("Pay Bill", style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Amount: ${Formatters.currency(b.amount, sProv.settings.currency)}", style: const TextStyle(color: Colors.white, fontSize: 16)),
+            const SizedBox(height: 20),
+            const Text("Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 12)),
+            const SizedBox(height: 8),
+            DropdownButton<String>(
+              value: source,
+              isExpanded: true,
+              dropdownColor: AppColors.cardBg,
+              style: const TextStyle(color: Colors.white),
+              underline: Container(height: 1, color: Colors.white24),
+              items: const [
+                DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
+                DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
+                DropdownMenuItem(value: 'none', child: Text("None (Update only)")),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => source = val);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel", style: TextStyle(color: AppColors.textDim))),
+          TextButton(onPressed: () {
+            prov.markAsPaid(b.id);
+            SoundService.chaching();
+            if (source != 'none') {
+              final expense = Expense(
+                amount: b.amount,
+                category: b.category,
+                date: DateTime.now(),
+                note: 'Bill: ${b.name}',
+                lifeCostHours: LifeCostUtils.calculate(b.amount, sProv.settings.hourlyWage),
+                fundingSource: source,
+              );
+              // Deduct from resources if it's budget/resource (ALL real money moves should deduct)
+              if (source == 'allowance') {
+                context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
+              } else if (source == 'resources') {
+                context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
+                sProv.deductFromResources(b.amount);
+              }
+            }
+            Navigator.pop(ctx);
+          }, child: const Text("Pay", style: TextStyle(color: AppColors.primary))),
+        ],
+      )
+    ));
   }
 }

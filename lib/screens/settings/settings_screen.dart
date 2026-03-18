@@ -7,9 +7,13 @@ import '../../providers/bills_provider.dart';
 import '../../providers/debt_provider.dart';
 import '../../providers/goals_provider.dart';
 import '../../providers/subscription_provider.dart';
-import '../../providers/subscription_provider.dart';
 import '../../theme/colors.dart';
 import '../../widgets/common/currency_picker_modal.dart';
+import '../../widgets/common/custom_switch.dart';
+import '../../services/sound_service.dart';
+import '../../services/iap_service.dart';
+import '../../widgets/common/ad_placements.dart';
+import 'salary_settings_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -26,7 +30,8 @@ class SettingsScreen extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           children: [
             const Text("Settings", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 35),
+            const BannerAdSpace(),
+            const SizedBox(height: 15),
             
             _editCard(context, "Identity", s.name, LucideIcons.user, (v) => prov.updateProfile(v, s.monthlyBudget, s.hourlyWage, s.currency)),
             _editCard(context, "Monthly Allocation", s.monthlyBudget.toStringAsFixed(0), LucideIcons.wallet, (v) => prov.updateProfile(s.name, double.tryParse(v) ?? 1000, s.hourlyWage, s.currency)),
@@ -37,11 +42,61 @@ class SettingsScreen extends StatelessWidget {
             _editCard(context, "Hourly Wage", s.hourlyWage.toStringAsFixed(0), LucideIcons.clock, (v) => prov.updateProfile(s.name, s.monthlyBudget, double.tryParse(v) ?? 20, s.currency)),
             
             GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const SalarySettingsScreen())),
+              child: _staticCard("Salary", s.isSalaryEarner ? "Active" : "Disabled", LucideIcons.briefcase),
+            ),
+            
+            GestureDetector(
               onTap: () => _showCurrencyPicker(context, prov),
               child: _staticCard("Standard Currency", s.currency, LucideIcons.globe),
             ),
             
+            const SizedBox(height: 25),
+            const Text("Preferences", style: TextStyle(color: AppColors.textDim, fontSize: 13, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _soundCard(context, prov),
+            
             const SizedBox(height: 60),
+            
+            // Remove Ads
+            if (!s.isPro)
+              GestureDetector(
+                onTap: () => IAPService.buyRemoveAds(),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [AppColors.primary.withOpacity(0.2), Colors.purple.withOpacity(0.15)]),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                  ),
+                  child: Row(children: [
+                    const Icon(LucideIcons.shieldOff, color: AppColors.primary, size: 18),
+                    const SizedBox(width: 14),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text("Remove Ads", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                      Text(IAPService.priceString, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ])),
+                    const Icon(LucideIcons.chevronRight, color: AppColors.primary, size: 16),
+                  ]),
+                ),
+              ),
+            
+            GestureDetector(
+              onTap: () => IAPService.restorePurchases(),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+                child: const Row(children: [
+                  Icon(LucideIcons.refreshCw, color: AppColors.textDim, size: 18),
+                  SizedBox(width: 14),
+                  Expanded(child: Text("Restore Purchases", style: TextStyle(fontSize: 15, color: AppColors.textDim))),
+                ]),
+              ),
+            ),
+
+            const SizedBox(height: 20),
             GestureDetector(
               onTap: () => _confirmPurge(context, prov),
               child: Container(
@@ -111,6 +166,32 @@ class SettingsScreen extends StatelessWidget {
           const Icon(LucideIcons.edit3, color: Colors.white24, size: 16),
         ]),
       ),
+    );
+  }
+
+  Widget _soundCard(BuildContext context, SettingsProvider prov) {
+    // Only import CustomSwitch here if not already imported, but better to import at top
+    // Since I'm using multi_replace, I'll add the import at the top too.
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+      child: Row(children: [
+        const Icon(LucideIcons.volume2, color: AppColors.primary, size: 18),
+        const SizedBox(width: 14),
+        const Expanded(child: Text("App Sounds", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
+        TextButton(
+          onPressed: () => SoundService.tap(),
+          child: const Text("TEST", style: TextStyle(color: AppColors.textDim, fontSize: 12)),
+        ),
+        const SizedBox(width: 10),
+        CustomSwitch(
+          value: prov.settings.soundsEnabled,
+          onChanged: (val) {
+            prov.toggleSounds(val);
+            SoundService.setEnabled(val);
+          },
+        ),
+      ]),
     );
   }
 

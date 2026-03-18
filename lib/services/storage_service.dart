@@ -2,18 +2,25 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class StorageService {
-  static Database? _database;
+  static final StorageService _instance = StorageService._internal();
+  factory StorageService() => _instance;
+  static Database? _db;
+
+  StorageService._internal();
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('nimbus_vault_v2.db'); // New version name to force reset
-    return _database!;
+    if (_db != null) return _db!;
+    _db = await _initDB();
+    return _db!;
   }
 
-  Future<Database> _initDB(String filePath) async {
+  Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-    return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
+    final path = join(dbPath, 'nimbus_spend.db');
+
+    return await openDatabase(
+      path, version: 6, onCreate: _createDB, onUpgrade: _upgradeDB,
+    );
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -28,6 +35,28 @@ class StorageService {
       await _createGoals(db);
       await _createSubscriptions(db);
     }
+    if (oldVersion < 3) {
+      // Add new Phase 2 columns safely via ALTER TABLE
+      try { await db.execute('ALTER TABLE bills ADD COLUMN autoPay INTEGER DEFAULT 0'); } catch (_) {}
+      try { await db.execute('ALTER TABLE subscriptions ADD COLUMN billingDay INTEGER'); } catch (_) {}
+      try { await db.execute('ALTER TABLE subscriptions ADD COLUMN chargeFirstInterval INTEGER DEFAULT 0'); } catch (_) {}
+      try { await db.execute('ALTER TABLE debts ADD COLUMN defaultRouting TEXT'); } catch (_) {}
+    }
+    if (oldVersion < 4) {
+      // Add fundingSource to expenses
+      try { await db.execute('ALTER TABLE expenses ADD COLUMN fundingSource TEXT DEFAULT "allowance"'); } catch (_) {}
+    }
+    if (oldVersion < 5) {
+      // Add defaultRouting to bills and subscriptions
+      try { await db.execute('ALTER TABLE bills ADD COLUMN defaultRouting TEXT DEFAULT "allowance"'); } catch (_) {}
+      try { await db.execute('ALTER TABLE subscriptions ADD COLUMN defaultRouting TEXT DEFAULT "allowance"'); } catch (_) {}
+    }
+    if (oldVersion < 6) {
+      // Add new fields for version 6
+      try { await db.execute('ALTER TABLE savings ADD COLUMN fundingSource TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE savings ADD COLUMN isMatured INTEGER'); } catch (_) {}
+      try { await db.execute('ALTER TABLE expenses ADD COLUMN linkedId TEXT'); } catch (_) {}
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -40,7 +69,9 @@ class StorageService {
         note TEXT,
         isRecurring INTEGER,
         recurringFrequency TEXT,
-        lifeCostHours REAL
+        lifeCostHours REAL,
+        fundingSource TEXT,
+        linkedId TEXT
       )
     ''');
 
@@ -52,7 +83,9 @@ class StorageService {
         annualInterestRate REAL,
         date TEXT,
         endDate TEXT,
-        isCompleted INTEGER
+        isCompleted INTEGER,
+        fundingSource TEXT,
+        isMatured INTEGER
       )
     ''');
 
@@ -72,7 +105,8 @@ class StorageService {
         frequency TEXT,
         category TEXT,
         isPaid INTEGER,
-        paidDate TEXT
+        paidDate TEXT,
+        autoPay INTEGER DEFAULT 0
       )
     ''');
   }
@@ -88,7 +122,8 @@ class StorageService {
         dueDate TEXT,
         isOwedToMe INTEGER,
         isSettled INTEGER,
-        remainingAmount REAL
+        remainingAmount REAL,
+        defaultRouting TEXT
       )
     ''');
   }
@@ -118,7 +153,10 @@ class StorageService {
         frequency TEXT,
         nextDueDate TEXT,
         isActive INTEGER,
-        note TEXT
+        note TEXT,
+        billingDay INTEGER,
+        chargeFirstInterval INTEGER DEFAULT 0,
+        defaultRouting TEXT DEFAULT "allowance"
       )
     ''');
   }

@@ -3,9 +3,13 @@ import 'package:provider/provider.dart';
 import '../../models/debt.dart';
 import '../../providers/debt_provider.dart';
 import '../../theme/colors.dart';
+import '../common/custom_switch.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/ad_service.dart';
 
 class AddDebtForm extends StatefulWidget {
-  const AddDebtForm({super.key});
+  final Debt? existingDebt;
+  const AddDebtForm({super.key, this.existingDebt});
 
   @override
   State<AddDebtForm> createState() => _AddDebtFormState();
@@ -16,6 +20,19 @@ class _AddDebtFormState extends State<AddDebtForm> {
   final _amountController = TextEditingController();
   final _descController = TextEditingController();
   bool _isOwedToMe = false;
+  String _routing = 'Monthly Budget';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingDebt != null) {
+      _nameController.text = widget.existingDebt!.personName;
+      _amountController.text = widget.existingDebt!.amount.toString();
+      _descController.text = widget.existingDebt!.description;
+      _isOwedToMe = widget.existingDebt!.isOwedToMe;
+      _routing = widget.existingDebt!.defaultRouting ?? 'Monthly Budget';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,22 +48,43 @@ class _AddDebtFormState extends State<AddDebtForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_isOwedToMe ? "Money Owed to Me" : "Money I Owe",
+          Text(widget.existingDebt == null ? (_isOwedToMe ? "Money Owed to Me" : "Money I Owe") : "Edit Debt Entry",
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 15),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text("Is someone owing you?", style: TextStyle(color: Colors.white)),
-            value: _isOwedToMe,
-            onChanged: (v) => setState(() => _isOwedToMe = v),
-            activeColor: AppColors.primary,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Is someone owing you?", style: TextStyle(color: Colors.white)),
+              CustomSwitch(
+                value: _isOwedToMe,
+                onChanged: (v) => setState(() => _isOwedToMe = v),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 15),
           _field(_nameController, "Person Name"),
           const SizedBox(height: 12),
           _field(_amountController, "Amount", isNum: true),
           const SizedBox(height: 12),
           _field(_descController, "Description (Optional)"),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _routing,
+            dropdownColor: AppColors.cardBg,
+            style: const TextStyle(color: Colors.white),
+            items: ['Monthly Budget', 'Available Resources', 'None (Do not log)']
+                .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                .toList(),
+            onChanged: (v) => setState(() => _routing = v!),
+            decoration: InputDecoration(
+              labelText: _isOwedToMe ? "Where funds go" : "Where to pay from",
+              labelStyle: const TextStyle(color: AppColors.textDim),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: const BorderSide(color: Colors.white24)),
+            ),
+          ),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity, height: 55,
@@ -57,18 +95,49 @@ class _AddDebtFormState extends State<AddDebtForm> {
               ),
               onPressed: () {
                 if (_nameController.text.isEmpty) return;
-                final debt = Debt(
-                  personName: _nameController.text,
-                  amount: double.tryParse(_amountController.text) ?? 0,
-                  description: _descController.text,
-                  date: DateTime.now(),
-                  isOwedToMe: _isOwedToMe,
-                );
-                context.read<DebtProvider>().addDebt(debt);
+                
+                if (widget.existingDebt != null) {
+                  final debt = Debt(
+                    id: widget.existingDebt!.id,
+                    personName: _nameController.text,
+                    amount: double.tryParse(_amountController.text) ?? 0,
+                    description: _descController.text,
+                    date: widget.existingDebt!.date,
+                    dueDate: widget.existingDebt!.dueDate,
+                    isOwedToMe: _isOwedToMe,
+                    isSettled: widget.existingDebt!.isSettled,
+                    remainingAmount: widget.existingDebt!.remainingAmount,
+                    defaultRouting: _routing,
+                  );
+                  context.read<DebtProvider>().updateDebt(debt);
+                } else {
+                  final debt = Debt(
+                    personName: _nameController.text,
+                    amount: double.tryParse(_amountController.text) ?? 0,
+                    description: _descController.text,
+                    date: DateTime.now(),
+                    isOwedToMe: _isOwedToMe,
+                    defaultRouting: _routing,
+                  );
+                  context.read<DebtProvider>().addDebt(debt);
+                }
+
+                final sProv = context.read<SettingsProvider>();
+                if (!sProv.settings.isPro) {
+                  sProv.incrementAdCounter();
+                  if (sProv.adClickCounter >= 2) {
+                    AdService.showInterstitialAd(() {
+                      sProv.resetAdCounter();
+                      if (mounted) Navigator.pop(context);
+                    });
+                    return;
+                  }
+                }
+
                 Navigator.pop(context);
               },
-              child: const Text("Add Debt Entry",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text(widget.existingDebt == null ? "Add Debt Entry" : "Save Changes",
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],

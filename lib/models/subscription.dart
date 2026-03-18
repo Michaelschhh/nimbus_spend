@@ -10,6 +10,9 @@ class Subscription {
   final DateTime nextDueDate;
   final bool isActive;
   final String note;
+  final int? billingDay;
+  final bool chargeFirstInterval;
+  final String defaultRouting;
 
   Subscription({
     String? id,
@@ -21,10 +24,13 @@ class Subscription {
     required this.nextDueDate,
     this.isActive = true,
     this.note = '',
+    this.billingDay,
+    this.chargeFirstInterval = false,
+    this.defaultRouting = 'allowance',
   }) : id = id ?? const Uuid().v4();
 
   // This method allows the RecurringService to "bump" the date
-  Subscription copyWith({DateTime? nextDueDate, bool? isActive}) {
+  Subscription copyWith({DateTime? nextDueDate, bool? isActive, String? defaultRouting}) {
     return Subscription(
       id: id,
       name: name,
@@ -35,6 +41,9 @@ class Subscription {
       nextDueDate: nextDueDate ?? this.nextDueDate,
       isActive: isActive ?? this.isActive,
       note: note,
+      billingDay: billingDay,
+      chargeFirstInterval: chargeFirstInterval,
+      defaultRouting: defaultRouting ?? this.defaultRouting,
     );
   }
 
@@ -49,6 +58,9 @@ class Subscription {
       'nextDueDate': nextDueDate.toIso8601String(),
       'isActive': isActive ? 1 : 0,
       'note': note,
+      'billingDay': billingDay,
+      'chargeFirstInterval': chargeFirstInterval ? 1 : 0,
+      'defaultRouting': defaultRouting,
     };
   }
 
@@ -63,6 +75,9 @@ class Subscription {
       nextDueDate: DateTime.parse(map['nextDueDate']),
       isActive: map['isActive'] == 1,
       note: map['note'] ?? '',
+      billingDay: map['billingDay'],
+      chargeFirstInterval: map['chargeFirstInterval'] == 1,
+      defaultRouting: map['defaultRouting'] ?? 'allowance',
     );
   }
 }

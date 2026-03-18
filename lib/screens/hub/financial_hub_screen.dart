@@ -15,13 +15,16 @@ import '../bills/bills_screen.dart';
 import '../debts/debts_screen.dart';
 import '../goals/goals_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
+import '../../widgets/common/ad_placements.dart';
+import '../../services/ad_service.dart';
 
 class FinancialHubScreen extends StatelessWidget {
   const FinancialHubScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final s = context.watch<SettingsProvider>().settings;
+    final sProv = context.watch<SettingsProvider>();
+    final s = sProv.settings;
     final savProv = context.watch<SavingsProvider>();
     final billProv = context.watch<BillsProvider>();
     final debtProv = context.watch<DebtProvider>();
@@ -39,9 +42,54 @@ class FinancialHubScreen extends StatelessWidget {
               const SizedBox(height: 20),
               const Text("Finances",
                   style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
-              const SizedBox(height: 8),
-              Text("${Formatters.currency(s.availableResources, s.currency)} in reserves",
-                  style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
+              const BannerAdSpace(),
+              const SizedBox(height: 20),
+
+              // Smart Net Worth Summary
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBg,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("AVAILABLE RESOURCES", 
+                        style: TextStyle(color: AppColors.textDim, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                    const SizedBox(height: 8),
+                    Text(Formatters.currency(s.availableResources, s.currency),
+                        style: const TextStyle(fontSize: 38, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -2)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text("+${Formatters.currency(savProv.totalSavings, s.currency)} saved", 
+                              style: const TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 8),
+                        if (billProv.totalUnpaid > 0 || (debtProv.totalIOwe - debtProv.totalOwedToMe) > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text("-${Formatters.currency(billProv.totalUnpaid + (debtProv.totalIOwe - debtProv.totalOwedToMe > 0 ? debtProv.totalIOwe - debtProv.totalOwedToMe : 0), s.currency)} owed", 
+                                style: const TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.bold)),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 35),
 
               _glassCard(
@@ -148,4 +196,5 @@ class FinancialHubScreen extends StatelessWidget {
       ),
     );
   }
+
 }

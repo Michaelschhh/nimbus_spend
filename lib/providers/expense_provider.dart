@@ -12,7 +12,7 @@ class ExpenseProvider extends ChangeNotifier {
   double get totalSpentThisMonth {
     final now = DateTime.now();
     return _expenses
-        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .where((e) => e.date.year == now.year && e.date.month == now.month && e.fundingSource == 'allowance')
         .fold(0.0, (sum, item) => sum + item.amount);
   }
 
@@ -23,7 +23,7 @@ class ExpenseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addExpense(Expense expense, SettingsProvider settings) async {
+  Future<void> addExpense(Expense expense, SettingsProvider settings, {bool skipResourceUpdate = false}) async {
     // Check state before adding
     double budget = settings.settings.monthlyBudget;
     double alreadySpent = totalSpentThisMonth;
@@ -39,12 +39,12 @@ class ExpenseProvider extends ChangeNotifier {
           title: "Allowance Depleted ⚠️",
           body: "You are now spending from your core Available Resources.",
         );
-      } else if ((alreadySpent + expense.amount) > budget) {
-         // Optional: Repeat warning for every spend when over budget
       }
 
-      // DUAL DRAIN - Only executed if DB insert succeeds
-      await settings.updateResources(-expense.amount);
+      // Only deduct from resources if the caller hasn't already handled it
+      if (!skipResourceUpdate) {
+        await settings.updateResources(-expense.amount);
+      }
       notifyListeners();
     } catch (e) {
       debugPrint("Error adding expense: $e");
@@ -54,13 +54,17 @@ class ExpenseProvider extends ChangeNotifier {
   Future<void> deleteExpense(String id, SettingsProvider settings) async {
     final idx = _expenses.indexWhere((e) => e.id == id);
     if (idx != -1) {
-      double refund = _expenses[idx].amount;
+      final expense = _expenses[idx];
+      double refund = expense.amount;
       try {
         await _storage.delete('expenses', id);
         _expenses.removeAt(idx);
         
-        // REVERT (Refund resources)
-        await settings.updateResources(refund);
+        // REVERT (Refund resources ONLY if it was deducted from resources)
+        if (expense.fundingSource == 'resources') {
+          await settings.addToResources(refund);
+        }
+        // Note: For 'allowance', removing from list automatically restores 'totalSpentThisMonth'
         notifyListeners();
       } catch (e) {
         debugPrint("Error deleting expense: $e");
@@ -70,9 +74,26 @@ class ExpenseProvider extends ChangeNotifier {
 
   Future<void> updateExpense(Expense expense, double oldAmount, SettingsProvider settings) async {
     await _storage.update('expenses', expense.toMap(), expense.id);
-    double diff = oldAmount - expense.amount;
-    await settings.updateResources(diff);
+    
+    // Only handle resource diff if it's funded by resources
+    if (expense.fundingSource == 'resources') {
+      double diff = oldAmount - expense.amount;
+      await settings.updateResources(diff);
+    }
     await fetchExpenses();
+  }
+
+  Future<void> deleteExpenseByLinkedId(String linkedId, SettingsProvider sProv) async {
+    final toDelete = _expenses.where((e) => e.linkedId == linkedId).toList();
+    for (var e in toDelete) {
+      await deleteExpense(e.id, sProv);
+    }
+  }
+
+  double getSpentForMonth(int year, int month) {
+    return _expenses
+        .where((e) => e.date.year == year && e.date.month == month && e.fundingSource == 'allowance')
+        .fold(0, (sum, e) => sum + e.amount);
   }
 
   void clear() {

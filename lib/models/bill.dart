@@ -9,6 +9,8 @@ class Bill {
   final String category;
   final bool isPaid;
   final DateTime? paidDate;
+  final bool autoPay;
+  final String defaultRouting;
 
   Bill({
     String? id,
@@ -19,6 +21,8 @@ class Bill {
     required this.category,
     this.isPaid = false,
     this.paidDate,
+    this.autoPay = false,
+    this.defaultRouting = 'allowance',
   }) : id = id ?? const Uuid().v4();
 
   Map<String, dynamic> toMap() {
@@ -31,6 +35,8 @@ class Bill {
       'category': category,
       'isPaid': isPaid ? 1 : 0,
       'paidDate': paidDate?.toIso8601String(),
+      'autoPay': autoPay ? 1 : 0,
+      'defaultRouting': defaultRouting,
     };
   }
 
@@ -46,6 +52,8 @@ class Bill {
       paidDate: map['paidDate'] != null
           ? DateTime.parse(map['paidDate'])
           : null,
+      autoPay: map['autoPay'] == 1,
+      defaultRouting: map['defaultRouting'] ?? 'allowance',
     );
   }
 }

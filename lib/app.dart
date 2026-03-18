@@ -13,11 +13,14 @@ import 'screens/reports/reports_screen.dart';
 import 'screens/savings/savings_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/hub/financial_hub_screen.dart';
+import 'screens/onboarding/tos_screen.dart';
+import 'screens/onboarding/tutorial_screen.dart';
 
 // Logic & Theme
 import 'providers/settings_provider.dart';
 import 'theme/colors.dart';
 import 'services/sound_service.dart';
+import 'widgets/common/ad_placements.dart';
 
 class NimbusSpendApp extends StatelessWidget {
   const NimbusSpendApp({super.key});
@@ -68,9 +71,14 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   void initState() {
     super.initState();
-    // Play Welcome Sound every time the app opens
-    Future.delayed(const Duration(milliseconds: 500), () {
-      SoundService.welcome();
+    // Sync sound settings and play welcome sound
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sProv = context.read<SettingsProvider>();
+      SoundService.setEnabled(sProv.settings.soundsEnabled);
+      
+      Future.delayed(const Duration(milliseconds: 500), () {
+        SoundService.welcome();
+      });
     });
   }
 
@@ -84,14 +92,21 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final setProv = context.watch<SettingsProvider>();
     return Scaffold(
       extendBody: true, // Allows content to flow behind the glass nav bar
       backgroundColor: AppColors.background,
-      body: IndexedStack(
-        index: _index,
-        children: _pages,
-      ),
-      bottomNavigationBar: _buildAppleNavBar(),
+      body: setProv.settings.tosAccepted 
+        ? (setProv.settings.tutorialSeen 
+            ? IndexedStack(
+                index: _index,
+                children: _pages,
+              )
+            : TutorialOverlay(onComplete: () => setProv.completeTutorial()))
+        : TermsOfServiceScreen(onAccept: () => setProv.acceptTOS()),
+      bottomNavigationBar: (setProv.settings.tosAccepted && setProv.settings.tutorialSeen) 
+        ? _buildAppleNavBar() 
+        : null,
     );
   }
 

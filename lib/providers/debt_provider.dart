@@ -32,6 +32,14 @@ class DebtProvider extends ChangeNotifier {
     await fetchDebts();
   }
 
+  Future<void> updateDebt(Debt debt) async {
+    final index = _debts.indexWhere((d) => d.id == debt.id);
+    if (index != -1) {
+      await _storage.update('debts', debt.toMap(), debt.id);
+      await fetchDebts();
+    }
+  }
+
   Future<void> makePayment(String id, double amount) async {
     final index = _debts.indexWhere((d) => d.id == id);
     if (index != -1) {

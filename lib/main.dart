@@ -12,6 +12,7 @@ import 'providers/goals_provider.dart';
 import 'providers/subscription_provider.dart';
 
 import 'services/ad_service.dart';
+import 'services/iap_service.dart';
 import 'services/notification_service.dart';
 import 'services/haptic_service.dart';
 import 'services/sound_service.dart';
@@ -22,9 +23,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Core Infrastructure
-  // All these methods now exist in their respective service files
   await NotificationService.init(); 
   await AdService.init();
+  await IAPService.init();
   await HapticService.init();
   await SoundService.init();
 
@@ -60,13 +61,24 @@ class _LogicInitializerState extends State<LogicInitializer> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sProv = Provider.of<SettingsProvider>(context, listen: false);
       final eProv = Provider.of<ExpenseProvider>(context, listen: false);
+      final bProv = Provider.of<BillsProvider>(context, listen: false);
+      final dProv = Provider.of<DebtProvider>(context, listen: false);
+      final subProv = Provider.of<SubscriptionProvider>(context, listen: false);
+      
+      // Wire IAP callback
+      IAPService.onPurchaseSuccess = () => sProv.upgradeToPro();
       
       // Await data load before checking cycles
       await sProv.init();
       await eProv.fetchExpenses();
+      await bProv.fetchBills();
+      await dProv.fetchDebts();
+      await subProv.fetchSubscriptions();
+      final prov = Provider.of<SavingsProvider>(context, listen: false);
+      await prov.fetchSavings();
       
       // Perform automated checks for month rollover and recurring payments
-      await RecurringService.checkAllCycles(sProv, eProv);
+      await RecurringService.checkAllCycles(sProv, eProv, bProv, dProv, subProv, prov);
     });
   }
 

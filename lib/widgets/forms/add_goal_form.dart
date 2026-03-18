@@ -3,9 +3,12 @@ import 'package:provider/provider.dart';
 import '../../models/goal.dart';
 import '../../providers/goals_provider.dart';
 import '../../theme/colors.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/ad_service.dart';
 
 class AddGoalForm extends StatefulWidget {
-  const AddGoalForm({super.key});
+  final Goal? existingGoal;
+  const AddGoalForm({super.key, this.existingGoal});
 
   @override
   State<AddGoalForm> createState() => _AddGoalFormState();
@@ -14,6 +17,15 @@ class AddGoalForm extends StatefulWidget {
 class _AddGoalFormState extends State<AddGoalForm> {
   final _nameController = TextEditingController();
   final _targetController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingGoal != null) {
+      _nameController.text = widget.existingGoal!.name;
+      _targetController.text = widget.existingGoal!.targetAmount.toString();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +41,8 @@ class _AddGoalFormState extends State<AddGoalForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("Set Financial Goal",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(widget.existingGoal == null ? "Set Financial Goal" : "Edit Financial Goal",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 20),
           _field(_nameController, "Goal Name (e.g. New Car)"),
           const SizedBox(height: 12),
@@ -45,15 +57,42 @@ class _AddGoalFormState extends State<AddGoalForm> {
               ),
               onPressed: () {
                 if (_nameController.text.isEmpty) return;
-                final goal = Goal(
-                  name: _nameController.text,
-                  targetAmount: double.tryParse(_targetController.text) ?? 0,
-                );
-                context.read<GoalsProvider>().addGoal(goal);
+                
+                if (widget.existingGoal != null) {
+                  final goal = Goal(
+                    id: widget.existingGoal!.id,
+                    name: _nameController.text,
+                    targetAmount: double.tryParse(_targetController.text) ?? 0,
+                    currentAmount: widget.existingGoal!.currentAmount,
+                    deadline: widget.existingGoal!.deadline,
+                    isCompleted: widget.existingGoal!.isCompleted,
+                    completedDate: widget.existingGoal!.completedDate,
+                  );
+                  context.read<GoalsProvider>().updateGoal(goal);
+                } else {
+                  final goal = Goal(
+                    name: _nameController.text,
+                    targetAmount: double.tryParse(_targetController.text) ?? 0,
+                  );
+                  context.read<GoalsProvider>().addGoal(goal);
+                }
+
+                final sProv = context.read<SettingsProvider>();
+                if (!sProv.settings.isPro) {
+                  sProv.incrementAdCounter();
+                  if (sProv.adClickCounter >= 2) {
+                    AdService.showInterstitialAd(() {
+                      sProv.resetAdCounter();
+                      if (mounted) Navigator.pop(context);
+                    });
+                    return;
+                  }
+                }
+
                 Navigator.pop(context);
               },
-              child: const Text("Create Goal",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text(widget.existingGoal == null ? "Create Goal" : "Save Changes",
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],

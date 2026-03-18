@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:ui';
 
@@ -10,6 +11,7 @@ import '../../utils/formatters.dart';
 import '../../utils/life_cost_utils.dart';
 import '../../widgets/forms/add_expense_form.dart';
 import '../../widgets/common/apple_button.dart';
+import '../../widgets/common/ad_placements.dart';
 import '../../services/sound_service.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -34,7 +36,9 @@ class DashboardScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               _header(s.name, s.availableResources, s.currency),
-              const SizedBox(height: 40),
+              const SizedBox(height: 10),
+              const BannerAdSpace(),
+              const SizedBox(height: 10),
 
               // THE MAIN ALLOWANCE CARD
               _mainCard(context, left, s.currency, isOver),
@@ -97,8 +101,7 @@ class DashboardScreen extends StatelessWidget {
   Widget _item(BuildContext context, dynamic e, ExpenseProvider prov, SettingsProvider sProv, String cur) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onLongPress: () => _showAppleMenu(context, e, prov, sProv),
-      onTap: () => showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddExpenseForm(existingExpense: e)),
+      onTap: () => _showAppleMenu(context, e, prov, sProv),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(20),
@@ -108,7 +111,7 @@ class DashboardScreen extends StatelessWidget {
           Text(Formatters.currency(e.amount, cur), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ]),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
   }
 
   void _showAppleMenu(BuildContext context, dynamic e, ExpenseProvider prov, SettingsProvider sProv) {
@@ -130,16 +133,19 @@ class DashboardScreen extends StatelessWidget {
                 children: [
                   Text(e.category, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 30),
-                  AppleButton(label: "Edit Entry", onTap: () {
-                    Navigator.pop(ctx);
-                    showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddExpenseForm(existingExpense: e));
-                  }),
-                  const SizedBox(height: 12),
-                  AppleButton(label: "Delete Payment", isDestructive: true, onTap: () {
-                    prov.deleteExpense(e.id, sProv);
-                    SoundService.delete();
-                    Navigator.pop(ctx);
-                  }),
+                  if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰') ...[
+                    AppleButton(label: "Edit Entry", onTap: () {
+                      Navigator.pop(ctx);
+                      showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddExpenseForm(existingExpense: e));
+                    }),
+                    const SizedBox(height: 12),
+                  ],
+                  if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰' && e.category != 'Subscriptions 💎')
+                    AppleButton(label: "Delete Payment", isDestructive: true, onTap: () {
+                      prov.deleteExpense(e.id, sProv);
+                      SoundService.delete();
+                      Navigator.pop(ctx);
+                    }),
                   const SizedBox(height: 12),
                   AppleButton(label: "Cancel", bgColor: Colors.white10, textColor: Colors.white, onTap: () => Navigator.pop(ctx)),
                 ],

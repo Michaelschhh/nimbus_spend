@@ -8,7 +8,7 @@ class AppColors {
   static const success = Color(0xFF32D74B); // Apple Green
   static const danger = Color(0xFFFF453A);  // Apple Red
   static const warning = Color(0xFFFF9F0A); // Apple Orange
-  static const lifeColor = Color(0xFFBF5AF2); // Apple Purple
+  static const lifeColor = Color(0xFF5AC8FA); // Apple Light Blue
   static const gold = Color(0xFFF5D1B0);    // Champagne Gold
   static const info = Color(0xFF5AC8FA);    // Apple Light Blue
 

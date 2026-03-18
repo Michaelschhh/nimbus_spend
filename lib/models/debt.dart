@@ -10,6 +10,7 @@ class Debt {
   final bool isOwedToMe;
   final bool isSettled;
   final double remainingAmount;
+  final String? defaultRouting; // 'Monthly Budget', 'Available Resources', or null
 
   Debt({
     String? id,
@@ -21,6 +22,7 @@ class Debt {
     required this.isOwedToMe,
     this.isSettled = false,
     double? remainingAmount,
+    this.defaultRouting,
   }) : id = id ?? const Uuid().v4(),
        remainingAmount = remainingAmount ?? amount;
 
@@ -35,6 +37,7 @@ class Debt {
       'isOwedToMe': isOwedToMe ? 1 : 0,
       'isSettled': isSettled ? 1 : 0,
       'remainingAmount': remainingAmount,
+      'defaultRouting': defaultRouting,
     };
   }
 
@@ -49,6 +52,7 @@ class Debt {
       isOwedToMe: map['isOwedToMe'] == 1,
       isSettled: map['isSettled'] == 1,
       remainingAmount: map['remainingAmount'],
+      defaultRouting: map['defaultRouting'],
     );
   }
 }

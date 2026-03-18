@@ -4,9 +4,14 @@ import 'package:intl/intl.dart';
 import '../../models/bill.dart';
 import '../../providers/bills_provider.dart';
 import '../../theme/colors.dart';
+import '../common/custom_switch.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/ad_service.dart';
 
 class AddBillForm extends StatefulWidget {
-  const AddBillForm({super.key});
+  final Bill? existingBill;
+  const AddBillForm({super.key, this.existingBill});
 
   @override
   State<AddBillForm> createState() => _AddBillFormState();
@@ -17,6 +22,24 @@ class _AddBillFormState extends State<AddBillForm> {
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _frequency = 'Monthly';
+  bool _autoPay = false;
+  String _routing = 'allowance';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingBill != null) {
+      _nameController.text = widget.existingBill!.name;
+      _amountController.text = widget.existingBill!.amount.toString();
+      _selectedDate = widget.existingBill!.dueDate;
+      // Handle the case where an older bill might have a frequency not in our list
+      if (['Weekly', 'Monthly', 'Yearly', 'Once'].contains(widget.existingBill!.frequency)) {
+        _frequency = widget.existingBill!.frequency;
+      }
+      _autoPay = widget.existingBill!.autoPay;
+      _routing = widget.existingBill!.defaultRouting;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +55,8 @@ class _AddBillFormState extends State<AddBillForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("Add New Bill",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(widget.existingBill == null ? "Add New Bill" : "Edit Bill",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 20),
           _field(_nameController, "Bill Name (e.g. Rent)"),
           const SizedBox(height: 12),
@@ -71,6 +94,36 @@ class _AddBillFormState extends State<AddBillForm> {
               if (date != null) setState(() => _selectedDate = date);
             },
           ),
+          const SizedBox(height: 15),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Auto Pay on Due Date?", style: TextStyle(color: Colors.white, fontSize: 14)),
+              CustomSwitch(
+                value: _autoPay,
+                onChanged: (v) => setState(() => _autoPay = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          const Text("Default Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _routing,
+            dropdownColor: AppColors.cardBg,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              prefixIcon: Icon(LucideIcons.wallet, color: AppColors.primary, size: 18),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.white24)),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
+              DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
+              DropdownMenuItem(value: 'none', child: Text("None (Track Only)")),
+            ],
+            onChanged: (v) => setState(() => _routing = v!),
+          ),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity, height: 55,
@@ -80,8 +133,8 @@ class _AddBillFormState extends State<AddBillForm> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
               onPressed: _save,
-              child: const Text("Save Bill",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text(widget.existingBill == null ? "Save Bill" : "Save Changes",
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -112,15 +165,46 @@ class _AddBillFormState extends State<AddBillForm> {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     if (amount <= 0) return;
 
-    final bill = Bill(
-      name: _nameController.text,
-      amount: amount,
-      dueDate: _selectedDate,
-      frequency: _frequency,
-      category: 'Bills 📄',
-    );
+    if (widget.existingBill != null) {
+      final bill = Bill(
+        id: widget.existingBill!.id,
+        name: _nameController.text,
+        amount: amount,
+        dueDate: _selectedDate,
+        frequency: _frequency,
+        category: widget.existingBill!.category,
+        isPaid: widget.existingBill!.isPaid,
+        paidDate: widget.existingBill!.paidDate,
+        autoPay: _autoPay,
+        defaultRouting: _routing,
+      );
+      context.read<BillsProvider>().updateBill(bill);
+    } else {
+      final bill = Bill(
+        name: _nameController.text,
+        amount: amount,
+        dueDate: _selectedDate,
+        frequency: _frequency,
+        category: 'Bills 📄',
+        autoPay: _autoPay,
+        defaultRouting: _routing,
+      );
+      context.read<BillsProvider>().addBill(bill);
+    }
+    
+    final sProv = context.read<SettingsProvider>();
 
-    context.read<BillsProvider>().addBill(bill);
+    if (!sProv.settings.isPro) {
+      sProv.incrementAdCounter();
+      if (sProv.adClickCounter >= 2) {
+        AdService.showInterstitialAd(() {
+          sProv.resetAdCounter();
+          if (mounted) Navigator.pop(context);
+        });
+        return;
+      }
+    }
+
     Navigator.pop(context);
   }
 }

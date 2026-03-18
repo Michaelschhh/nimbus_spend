@@ -8,6 +8,8 @@ class Saving {
   final DateTime date;
   final DateTime endDate;
   final bool isCompleted;
+  final String fundingSource;
+  final bool isMatured;
 
   Saving({
     String? id,
@@ -17,6 +19,8 @@ class Saving {
     required this.date,
     required this.endDate,
     this.isCompleted = false,
+    this.fundingSource = 'allowance',
+    this.isMatured = false,
   }) : id = id ?? const Uuid().v4();
 
   Map<String, dynamic> toMap() {
@@ -28,6 +32,8 @@ class Saving {
       'date': date.toIso8601String(),
       'endDate': endDate.toIso8601String(),
       'isCompleted': isCompleted ? 1 : 0,
+      'fundingSource': fundingSource,
+      'isMatured': isMatured ? 1 : 0,
     };
   }
 
@@ -40,6 +46,31 @@ class Saving {
       date: DateTime.parse(map['date']),
       endDate: DateTime.parse(map['endDate']),
       isCompleted: map['isCompleted'] == 1,
+      fundingSource: map['fundingSource'] ?? 'allowance',
+      isMatured: map['isMatured'] == 1,
+    );
+  }
+  
+  Saving copyWith({
+    String? description,
+    double? amount,
+    double? annualInterestRate,
+    DateTime? date,
+    DateTime? endDate,
+    bool? isCompleted,
+    String? fundingSource,
+    bool? isMatured,
+  }) {
+    return Saving(
+      id: id,
+      description: description ?? this.description,
+      amount: amount ?? this.amount,
+      annualInterestRate: annualInterestRate ?? this.annualInterestRate,
+      date: date ?? this.date,
+      endDate: endDate ?? this.endDate,
+      isCompleted: isCompleted ?? this.isCompleted,
+      fundingSource: fundingSource ?? this.fundingSource,
+      isMatured: isMatured ?? this.isMatured,
     );
   }
 }

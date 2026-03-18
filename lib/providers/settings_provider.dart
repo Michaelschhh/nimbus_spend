@@ -19,6 +19,14 @@ class SettingsProvider extends ChangeNotifier {
     await _loadSettings();
   }
 
+  Future<void> updateSalarySettings(bool enabled, double amount, String frequency) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_salary_earner', enabled);
+    await prefs.setDouble('salary_amount', amount);
+    await prefs.setString('salary_frequency', frequency);
+    await _loadSettings();
+  }
+
   Future<void> _loadSettings() async {
     _isInitializing = true;
     notifyListeners();
@@ -30,9 +38,37 @@ class SettingsProvider extends ChangeNotifier {
       hourlyWage: prefs.getDouble('hourly_wage') ?? 20,
       availableResources: prefs.getDouble('available_resources') ?? 0,
       onboardingComplete: prefs.getBool('onboarding_complete') ?? false,
+      soundsEnabled: prefs.getBool('sounds_enabled') ?? true,
+      isPro: prefs.getBool('is_pro') ?? false,
+      tosAccepted: prefs.getBool('tos_accepted') ?? false,
+      tutorialSeen: prefs.getBool('tutorial_seen') ?? false,
+      isSalaryEarner: prefs.getBool('is_salary_earner') ?? false,
+      salaryAmount: prefs.getDouble('salary_amount') ?? 0.0,
+      salaryFrequency: prefs.getString('salary_frequency') ?? 'Monthly',
     );
     _isInitializing = false;
     notifyListeners();
+  }
+
+  // --- Ad Tracking System ---
+  int _adClickCounter = 0;
+  int get adClickCounter => _adClickCounter;
+
+  void incrementAdCounter() {
+    _adClickCounter++;
+    notifyListeners();
+  }
+
+  void resetAdCounter() {
+    _adClickCounter = 0;
+    notifyListeners();
+  }
+  // --------------------------
+
+  Future<void> upgradeToPro() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_pro', true);
+    await _loadSettings();
   }
 
   Future<void> updateResources(double delta) async {
@@ -68,7 +104,7 @@ class SettingsProvider extends ChangeNotifier {
     await _loadSettings();
   }
 
-  Future<void> completeOnboarding(String name, double budget, double wage, String currency, {double? availableResources}) async {
+  Future<void> completeOnboarding(String name, double budget, double wage, String currency, {double? availableResources, bool? isSalaryEarner, double? salaryAmount}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_name', name);
     await prefs.setDouble('monthly_budget', budget);
@@ -78,8 +114,28 @@ class SettingsProvider extends ChangeNotifier {
     // Only set available resources on initial setup
     if (!(_settings.onboardingComplete)) {
       await prefs.setDouble('available_resources', availableResources ?? budget);
+      
+      // Handle salary onboarding
+      if (isSalaryEarner != null) {
+        await prefs.setBool('is_salary_earner', isSalaryEarner);
+        await prefs.setDouble('salary_amount', salaryAmount ?? 0);
+        await prefs.setString('salary_frequency', 'Monthly');
+      }
+      
       await prefs.setBool('onboarding_complete', true);
     }
+    await _loadSettings();
+  }
+
+  Future<void> acceptTOS() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('tos_accepted', true);
+    await _loadSettings();
+  }
+
+  Future<void> completeTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('tutorial_seen', true);
     await _loadSettings();
   }
 
@@ -110,6 +166,19 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     double current = prefs.getDouble('available_resources') ?? 0;
     await prefs.setDouble('available_resources', (current - amount).clamp(0, double.infinity));
+    await _loadSettings();
+  }
+
+  Future<void> addToResources(double amount) async {
+    final prefs = await SharedPreferences.getInstance();
+    double current = prefs.getDouble('available_resources') ?? 0;
+    await prefs.setDouble('available_resources', current + amount);
+    await _loadSettings();
+  }
+
+  Future<void> toggleSounds(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sounds_enabled', value);
     await _loadSettings();
   }
 }

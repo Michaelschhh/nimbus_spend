@@ -47,4 +47,20 @@ class NotificationService {
       ),
     );
   }
+
+  static Future<void> showOverdueNotification(String itemName, double amount) async {
+    await showNotification(
+      id: itemName.hashCode,
+      title: 'Payment Overdue!',
+      body: '$itemName of \$${amount.toStringAsFixed(2)} is overdue.',
+    );
+  }
+
+  static Future<void> showAutoPayNotification(String billName, double amount) async {
+    await showNotification(
+      id: billName.hashCode + 1,
+      title: 'Bill Auto-Paid',
+      body: 'Successfully auto-paid $billName for \$${amount.toStringAsFixed(2)}.',
+    );
+  }
 }

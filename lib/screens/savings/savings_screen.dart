@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:ui';
 import '../../providers/savings_provider.dart';
@@ -9,6 +10,11 @@ import '../../utils/formatters.dart';
 import '../../widgets/forms/goal_creation_sheet.dart';
 import '../../widgets/common/apple_button.dart';
 import '../../services/sound_service.dart';
+import '../../providers/expense_provider.dart';
+import '../../models/expense.dart';
+import '../../utils/life_cost_utils.dart';
+import '../../widgets/common/ad_placements.dart';
+import 'matured_savings_screen.dart';
 
 class SavingsScreen extends StatefulWidget {
   const SavingsScreen({super.key});
@@ -24,9 +30,8 @@ class _SavingsScreenState extends State<SavingsScreen> {
     final prov = context.watch<SavingsProvider>();
     final s = context.read<SettingsProvider>().settings;
 
-    // Filter Active vs Matured Goals
-    final active = prov.savings.where((sg) => !sg.isCompleted).toList();
-    final matured = prov.savings.where((sg) => sg.isCompleted).toList();
+    // Filter Active Goals (Not matured)
+    final active = prov.savings.where((sg) => !sg.isMatured).toList();
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -42,41 +47,39 @@ class _SavingsScreenState extends State<SavingsScreen> {
                 children: [
                   const Text("Wealth", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white)),
                   GestureDetector(
-                    onTap: () => setState(() => _showHistory = !_showHistory),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MaturedSavingsScreen())),
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: const BoxDecoration(color: AppColors.cardBg, shape: BoxShape.circle),
-                      child: Icon(_showHistory ? LucideIcons.checkCircle : LucideIcons.history, color: AppColors.primary, size: 20),
+                      child: const Icon(LucideIcons.archive, color: AppColors.primary, size: 20),
                     ),
                   )
                 ],
               ),
-              const SizedBox(height: 30),
+              const BannerAdSpace(),
 
               // 1. THE NIMBUS PLATINUM ATM CARD
               _buildATMCard(prov.totalSavings, s.currency, s.name),
               const SizedBox(height: 30),
 
-              if (!_showHistory) ...[
-                const Text("Good job! Your vault is growing.", 
-                  style: TextStyle(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 35),
-                
-                // NEW GOAL BUTTON
-                AppleButton(
-                  label: "Start New Goal", 
-                  onTap: () => _openAdd(context),
-                  bgColor: Colors.white,
-                  textColor: Colors.black,
+              if (active.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Text("Start your wealth journey below.", style: TextStyle(color: AppColors.textDim)),
+                  ),
                 ),
-                
-                const SizedBox(height: 35),
-                ...active.map((sg) => _savingCard(context, sg, s.currency, prov)),
-              ] else ...[
-                const Text("Matured History", style: TextStyle(color: AppColors.textDim, fontWeight: FontWeight.bold, fontSize: 12)),
-                const SizedBox(height: 20),
-                ...matured.map((sg) => _savingCard(context, sg, s.currency, prov)),
-              ],
+
+              // NEW GOAL BUTTON
+              AppleButton(
+                label: "Start New Goal", 
+                onTap: () => _openAdd(context),
+                bgColor: Colors.white,
+                textColor: Colors.black,
+              ),
+              
+              const SizedBox(height: 35),
+              ...active.map((sg) => _savingCard(context, sg, s.currency, prov)),
               const SizedBox(height: 140),
             ],
           ),
@@ -117,7 +120,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
     double projected = s.amount + (s.amount * (s.annualInterestRate / 100));
 
     return GestureDetector(
-      onLongPress: () => _showBlurMenu(context, s, prov),
+      onTap: () => _showBlurMenu(context, s, prov),
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(24),
@@ -142,7 +145,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
           )
         ]),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
   }
 
   Widget _stat(String l, String v, {Color valColor = Colors.white}) => Padding(
@@ -162,25 +165,83 @@ class _SavingsScreenState extends State<SavingsScreen> {
 
   void _showTopUpDialog(BuildContext context, dynamic s, SavingsProvider prov) {
     final ctrl = TextEditingController();
-    showDialog(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: AppColors.cardBg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-      title: const Text("Capital Injection"),
-      content: TextField(controller: ctrl, keyboardType: TextInputType.number, autofocus: true, style: const TextStyle(color: Colors.white)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
-        TextButton(onPressed: () {
-          double val = double.tryParse(ctrl.text) ?? 0;
-          if (val > 0) prov.topUp(s.id, val);
-          Navigator.pop(ctx);
-        }, child: const Text("Authorize")),
-      ],
+    String source = 'allowance';
+    final sProv = context.read<SettingsProvider>();
+    
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        title: const Text("Capital Injection", style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: ctrl, keyboardType: TextInputType.number, autofocus: true, 
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text("Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 12)),
+            const SizedBox(height: 8),
+            DropdownButton<String>(
+              value: source,
+              isExpanded: true,
+              dropdownColor: AppColors.cardBg,
+              style: const TextStyle(color: Colors.white),
+              underline: Container(height: 1, color: Colors.white24),
+              items: const [
+                DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget (Expense)")),
+                DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
+                DropdownMenuItem(value: 'none', child: Text("None (Update only)")),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => source = val);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel", style: TextStyle(color: AppColors.textDim))),
+          TextButton(onPressed: () {
+            double val = double.tryParse(ctrl.text) ?? 0;
+            if (val > 0) {
+              prov.topUp(s.id, val);
+              SoundService.chaching();
+              if (source != 'none') {
+                final expense = Expense(
+                  amount: val,
+                  category: 'Savings 💰',
+                  date: DateTime.now(),
+                  note: 'Savings Top-up: ${s.description}',
+                  lifeCostHours: LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
+                  fundingSource: source,
+                  linkedId: s.id,
+                );
+                
+                if (source == 'allowance') {
+                  context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
+                } else if (source == 'resources') {
+                  context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
+                  sProv.deductFromResources(val);
+                }
+              }
+            }
+            Navigator.pop(ctx);
+          }, child: const Text("Authorize", style: TextStyle(color: AppColors.primary))),
+        ],
+      )
     ));
   }
 
   // ... existing imports ...
 
   void _showBlurMenu(BuildContext context, dynamic s, SavingsProvider prov) {
+    final sProv = context.read<SettingsProvider>();
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -212,10 +273,18 @@ class _SavingsScreenState extends State<SavingsScreen> {
                   ),
                   const SizedBox(height: 12),
                   AppleButton(
+                    label: "Edit Goal", 
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => GoalCreationSheet(existingSaving: s));
+                    }
+                  ),
+                  const SizedBox(height: 12),
+                  AppleButton(
                     label: "Delete Goal", 
                     isDestructive: true, 
                     onTap: () {
-                      prov.deleteSaving(s.id);
+                      prov.deleteSaving(s.id, sProv, context.read<ExpenseProvider>());
                       Navigator.pop(ctx);
                     }
                   ),

@@ -29,19 +29,43 @@ class BillsProvider extends ChangeNotifier {
     await fetchBills();
   }
 
+  Future<void> updateBill(Bill bill) async {
+    final index = _bills.indexWhere((b) => b.id == bill.id);
+    if (index != -1) {
+      await _storage.update('bills', bill.toMap(), bill.id);
+      await fetchBills();
+    }
+  }
+
   Future<void> markAsPaid(String id) async {
     final index = _bills.indexWhere((b) => b.id == id);
     if (index != -1) {
       final bill = _bills[index];
+      
+      bool isPaid = true;
+      DateTime nextDueDate = bill.dueDate;
+      
+      if (bill.frequency != 'Once') {
+        isPaid = false; // It's a recurring bill, so it's not permanently paid off
+        if (bill.frequency == 'Weekly') {
+          nextDueDate = bill.dueDate.add(const Duration(days: 7));
+        } else if (bill.frequency == 'Monthly') {
+          nextDueDate = DateTime(bill.dueDate.year, bill.dueDate.month + 1, bill.dueDate.day);
+        } else if (bill.frequency == 'Yearly') {
+          nextDueDate = DateTime(bill.dueDate.year + 1, bill.dueDate.month, bill.dueDate.day);
+        }
+      }
+
       final updated = Bill(
         id: bill.id,
         name: bill.name,
         amount: bill.amount,
-        dueDate: bill.dueDate,
+        dueDate: nextDueDate, // updated due date
         frequency: bill.frequency,
         category: bill.category,
-        isPaid: true,
+        isPaid: isPaid,
         paidDate: DateTime.now(),
+        autoPay: bill.autoPay,
       );
       await _storage.update('bills', updated.toMap(), id);
       await fetchBills();

@@ -47,6 +47,15 @@ class GoalsProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateGoal(Goal goal) async {
+    final index = _goals.indexWhere((g) => g.id == goal.id);
+    if (index != -1) {
+      await _storage.update('goals', goal.toMap(), goal.id);
+      _goals[index] = goal;
+      notifyListeners();
+    }
+  }
+
   void clear() {
     _goals = [];
     notifyListeners();
