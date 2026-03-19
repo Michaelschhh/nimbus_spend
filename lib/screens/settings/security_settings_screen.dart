@@ -89,13 +89,13 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2)),
       ),
       child: Column(
         children: [
-          const Icon(LucideIcons.lock, color: AppColors.primary, size: 32),
+          Icon(LucideIcons.lock, color: Theme.of(context).primaryColor, size: 32),
           const SizedBox(height: 12),
           const Text("Premium Security", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
@@ -124,18 +124,21 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(LucideIcons.shieldCheck, color: AppColors.primary),
-              SizedBox(width: 15),
-              Text("Enable App Lock", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Icon(LucideIcons.shieldCheck, color: Theme.of(context).primaryColor),
+              const SizedBox(width: 15),
+              const Text("Enable App Lock", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ],
           ),
           Switch.adaptive(
             value: _isEnabled,
-            activeColor: AppColors.primary,
+            activeColor: Theme.of(context).primaryColor,
             onChanged: isUnlocked ? (val) {
               setState(() => _isEnabled = val);
+              if (!val) {
+                context.read<SettingsProvider>().updateSecuritySettings(false, _type, _codeController.text);
+              }
             } : null,
           ),
         ],
@@ -161,9 +164,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
 
   Widget _typeTile(String label, IconData icon, bool selected) {
     return ListTile(
-      leading: Icon(icon, color: selected ? AppColors.primary : AppColors.textDim),
+      leading: Icon(icon, color: selected ? Theme.of(context).primaryColor : AppColors.textDim),
       title: Text(label, style: TextStyle(fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
-      trailing: selected ? const Icon(Icons.check_circle, color: AppColors.primary) : null,
+      trailing: selected ? Icon(Icons.check_circle, color: Theme.of(context).primaryColor) : null,
       onTap: () => setState(() => _type = label.toLowerCase()),
     );
   }

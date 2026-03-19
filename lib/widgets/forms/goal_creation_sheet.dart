@@ -43,7 +43,7 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 30, top: 25, left: 24, right: 24),
-      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(35))),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.vertical(top: Radius.circular(35))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -64,10 +64,10 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.05))),
                 child: Row(children: [
-                  const Icon(LucideIcons.calendar, size: 18, color: AppColors.primary),
+                  Icon(LucideIcons.calendar, size: 18, color: Theme.of(context).primaryColor),
                   const SizedBox(width: 15),
                   Expanded(child: Text("Target Date", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))),
-                  Text(DateFormat('MMM dd, yyyy').format(_targetDate), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  Text(DateFormat('MMM dd, yyyy').format(_targetDate), style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
                 ]),
               ),
             ),
@@ -158,7 +158,7 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
                 }
 
                 final sProv = context.read<SettingsProvider>();
-                if (!sProv.settings.isPro) {
+                if (!sProv.settings.isPro && !sProv.settings.adsRemoved) {
                   sProv.incrementAdCounter();
                   if (sProv.adClickCounter >= 2) {
                     AdService.showInterstitialAd(() {

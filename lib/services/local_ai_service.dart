@@ -40,10 +40,21 @@ class LocalAIService {
       final Map<String, double> categoryTotals = {};
       double totalRecentSpent = 0;
 
+      int weekendTx = 0;
+      double weekendSp = 0;
+      double weekdaySp = 0;
+
       for (var e in recentExpenses) {
         if (e.fundingSource == 'allowance') {
           categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount;
           totalRecentSpent += e.amount;
+          
+          if (e.date.weekday == DateTime.saturday || e.date.weekday == DateTime.sunday) {
+            weekendTx++;
+            weekendSp += e.amount;
+          } else {
+            weekdaySp += e.amount;
+          }
         }
       }
 
@@ -73,6 +84,38 @@ class LocalAIService {
       final dailyTx = recentExpenses.length / 30;
       if (dailyTx > 3) {
         insights.add("💳 You are making over 3 transactions a day. Try to consolidate purchases.");
+      }
+
+      // Weekend Warrior check
+      if (weekendSp > (weekdaySp * 1.5) && weekendSp > 0) {
+        insights.add("🏖️ Weekend Spender: You spend significantly more on weekends than during the week. Watch out for impulse buys!");
+      }
+
+      // Subscription Creep check
+      double recurringTotal = recentExpenses.where((e) => e.isRecurring).fold(0.0, (sum, e) => sum + e.amount);
+      if (recurringTotal > (monthlyBudget * 0.25) && monthlyBudget > 0) {
+        insights.add("🔄 Subscription Creep: Over 25% of your monthly budget is consumed by recurring payments. Time to audit your subscriptions!");
+      }
+
+      // Zero-Sum Streak check - only show if user has at least 7 days of history
+      final firstExpenseDate = expenses.map((e) => e.date).reduce((a, b) => a.isBefore(b) ? a : b);
+      final accountAgeDays = now.difference(firstExpenseDate).inDays;
+      
+      if (accountAgeDays >= 7) {
+        int zeroSumDays = 0;
+        for (int i = 1; i <= 7; i++) {
+          final d = now.subtract(Duration(days: i));
+          double spentOnDay = recentExpenses.where((e) => e.date.year == d.year && e.date.month == d.month && e.date.day == d.day).fold(0.0, (sum, e) => sum + e.amount);
+          if (spentOnDay == 0) {
+            zeroSumDays++;
+          } else {
+            break;
+          }
+        }
+        
+        if (zeroSumDays >= 3) {
+          insights.add("🧊 Frosty Finances: You've gone $zeroSumDays consecutive days without spending a dime! Incredible self-control.");
+        }
       }
     }
 

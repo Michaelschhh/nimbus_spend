@@ -64,7 +64,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
-                    child: const Icon(LucideIcons.plus, color: AppColors.primary, size: 20),
+                    child: Icon(LucideIcons.plus, color: Theme.of(context).primaryColor, size: 20),
                   ),
                 ),
               ]),
@@ -200,7 +200,30 @@ class _DebtsScreenState extends State<DebtsScreen> {
                 ],
                 if (!d.isSettled)
                   AppleButton(label: "Settle All", bgColor: AppColors.success, textColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), onTap: () {
+                    final val = d.remainingAmount;
                     prov.settleDebt(d.id);
+                    SoundService.chaching();
+
+                    if (val > 0 && d.defaultRouting != 'None (Do not log)' && d.defaultRouting != 'none') {
+                      final sourceStr = (d.defaultRouting == 'Available Resources' || d.defaultRouting == 'resources') ? 'resources' : 'allowance';
+                      final expense = Expense(
+                        amount: d.isOwedToMe ? -val : val,
+                        category: 'Debts 💳',
+                        date: DateTime.now(),
+                        note: d.isOwedToMe ? 'Debt Received (Settled): ${d.personName}' : 'Debt Paid (Settled): ${d.personName}',
+                        lifeCostHours: d.isOwedToMe ? 0 : LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
+                        fundingSource: sourceStr,
+                      );
+                      context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
+                      
+                      if (sourceStr == 'resources') {
+                        if (d.isOwedToMe) {
+                          sProv.addToResources(val);
+                        } else {
+                          sProv.deductFromResources(val);
+                        }
+                      }
+                    }
                     Navigator.pop(ctx);
                   }),
                 if (!d.isSettled)
@@ -246,7 +269,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                 hintText: Formatters.currency(d.remainingAmount, sProv.settings.currency),
                 hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26)),
                 enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
-                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor)),
               ),
             ),
             const SizedBox(height: 20),
@@ -285,10 +308,6 @@ class _DebtsScreenState extends State<DebtsScreen> {
                 fundingSource: 'allowance',
               );
               context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
-              if (d.isOwedToMe) {
-                // Incoming cash always adds to resources
-                sProv.addToResources(val);
-              }
             } else if (source == 'resources') {
               final expense = Expense(
                 amount: d.isOwedToMe ? -val : val,
@@ -306,7 +325,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
               }
             }
             Navigator.pop(ctx);
-          }, child: Text(d.isOwedToMe ? "Receive" : "Pay", style: const TextStyle(color: AppColors.primary))),
+          }, child: Text(d.isOwedToMe ? "Receive" : "Pay", style: TextStyle(color: Theme.of(context).primaryColor))),
         ],
       )
     ));

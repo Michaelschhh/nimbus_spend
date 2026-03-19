@@ -54,7 +54,7 @@ class _SalarySettingsScreenState extends State<SalarySettingsScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
                 child: Row(children: [
-                  const Icon(LucideIcons.briefcase, color: AppColors.primary, size: 18),
+                  Icon(LucideIcons.briefcase, color: Theme.of(context).primaryColor, size: 18),
                   const SizedBox(width: 14),
                   Expanded(child: Text("Salary Earning", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))),
                   CustomSwitch(
@@ -102,13 +102,13 @@ class _SalarySettingsScreenState extends State<SalarySettingsScreen> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
                   child: Row(children: [
-                    const Icon(LucideIcons.calendar, color: AppColors.primary, size: 18),
+                    Icon(LucideIcons.calendar, color: Theme.of(context).primaryColor, size: 18),
                     const SizedBox(width: 14),
                     Expanded(child: Text("Frequency", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))),
                     DropdownButton<String>(
                       value: _salaryFrequency,
                       dropdownColor: Theme.of(context).cardColor,
-                      style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
                       underline: const SizedBox(),
                       items: ['Monthly'].map((f) => DropdownMenuItem(value: f, child: Text("Per $f"))).toList(),
                       onChanged: (v) {

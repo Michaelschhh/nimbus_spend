@@ -41,7 +41,7 @@ class _AuthOverlayState extends State<AuthOverlay> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(LucideIcons.lock, size: 60, color: AppColors.primary),
+          Icon(LucideIcons.lock, size: 60, color: Theme.of(context).primaryColor),
           const SizedBox(height: 24),
           const Text("Nimbus Secure", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
@@ -61,8 +61,8 @@ class _AuthOverlayState extends State<AuthOverlay> {
             decoration: InputDecoration(
               hintText: s.appLockType == 'passcode' ? "••••" : "Password",
               hintStyle: const TextStyle(letterSpacing: 4),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary.withOpacity(0.3))),
-              focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary, width: 2)),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.3))),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2)),
             ),
             onSubmitted: (_) => _verify(),
           ),
@@ -79,12 +79,6 @@ class _AuthOverlayState extends State<AuthOverlay> {
           ),
           
           const SizedBox(height: 20),
-          TextButton(
-            onPressed: () {
-              // Implementation for forgot passcode (e.g. email reset) could go here
-            },
-            child: const Text("Forgot Lock Settings?", style: TextStyle(color: AppColors.textDim)),
-          ),
         ],
       ),
     );

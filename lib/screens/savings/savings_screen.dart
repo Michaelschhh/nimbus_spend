@@ -51,7 +51,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
-                      child: const Icon(LucideIcons.archive, color: AppColors.primary, size: 20),
+                      child: Icon(LucideIcons.archive, color: Theme.of(context).primaryColor, size: 20),
                     ),
                   )
                 ],
@@ -96,7 +96,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
         borderRadius: BorderRadius.circular(28),
         gradient: LinearGradient(
           colors: isDark 
-              ? [const Color(0xFF2C2C2E), const Color(0xFF000000)]
+              ? [Theme.of(context).primaryColor.withOpacity(0.3), Color(0xFF000000)]
               : [const Color(0xFFF2F2F7), const Color(0xFFE5E5EA)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
@@ -144,7 +144,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
           Divider(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), height: 30),
           GestureDetector(
             onTap: () => _showTopUpDialog(context, s, prov),
-            child: const Text("Inject Capital +", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text("Inject Capital +", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
           )
         ]),
       ),
@@ -185,7 +185,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
               style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
               decoration: InputDecoration(
                 enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
-                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor)),
               ),
             ),
             const SizedBox(height: 20),
@@ -235,7 +235,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
               }
             }
             Navigator.pop(ctx);
-          }, child: const Text("Authorize", style: TextStyle(color: AppColors.primary))),
+          }, child: Text("Authorize", style: TextStyle(color: Theme.of(context).primaryColor))),
         ],
       )
     ));

@@ -5,7 +5,9 @@ import 'package:share_plus/share_plus.dart';
 import '../../providers/expense_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
+import '../../utils/color_utils.dart';
 import '../../utils/formatters.dart';
+import '../../utils/responsive.dart';
 import '../../widgets/common/ad_placements.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -39,17 +41,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
       
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(Responsive.sp(24, context)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Analysis", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
+                  Text("Analysis", style: TextStyle(fontSize: Responsive.fs(34, context), fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
                   IconButton(
                     onPressed: () => _shareTranscript(context, expenses, total, settings.currency, settings.name),
-                    icon: const Icon(Icons.ios_share, color: AppColors.primary),
+                    icon: Icon(Icons.ios_share, color: Theme.of(context).primaryColor),
                   ),
                 ],
               ),
@@ -68,15 +70,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     _toggleBtn("Bars", _showBarChart, () => setState(() => _showBarChart = true)),
                   ],
                 ),
-                const SizedBox(height: 25),
+                SizedBox(height: Responsive.sp(25, context)),
 
                 Container(
-                  height: 300, width: double.infinity,
-                  padding: const EdgeInsets.all(20),
+                  height: Responsive.sp(300, context), width: double.infinity,
+                  padding: EdgeInsets.all(Responsive.sp(20, context)),
                   decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(32)),
                   child: _showBarChart ? _buildBarChart(dataMap, total) : _buildPieChart(dataMap, total),
                 ),
-                const SizedBox(height: 40),
+                SizedBox(height: Responsive.sp(40, context)),
                 ...dataMap.entries
                     .map((entry) => _row(entry.key, entry.value, settings.currency)),
               ],
@@ -95,7 +97,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.primary : Theme.of(context).cardColor,
+          color: active ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(label, style: TextStyle(color: active ? Theme.of(context).scaffoldBackgroundColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
@@ -111,7 +113,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         sections: dataMap.entries.map((entry) {
           double pct = (entry.value / total) * 100;
           return PieChartSectionData(
-            color: _colorFor(entry.key),
+            color: ColorUtils.categoryColor(entry.key, context),
             value: entry.value,
             title: "${pct.toStringAsFixed(0)}%",
             radius: 30,
@@ -176,7 +178,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
         borderData: FlBorderData(show: false),
         barGroups: entries.asMap().entries.map((group) {
-          final color = _colorFor(group.value.key);
+          final color = ColorUtils.categoryColor(group.value.key, context);
           return BarChartGroupData(
             x: group.key,
             barRods: [
@@ -225,21 +227,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
     Share.share(transcript, subject: "Nimbus Spend Transcript");
   }
 
-  Color _colorFor(String c) {
-    if (c.contains("Food")) return AppColors.success;
-    if (c.contains("Shopping")) return AppColors.primary;
-    if (c.contains("Bills")) return AppColors.warning;
-    if (c.contains("Transport")) return AppColors.info;
-    if (c.contains("Health")) return AppColors.danger;
-    return AppColors.lifeColor;
-  }
-
   Widget _row(String k, double v, String cur) => Container(
     margin: const EdgeInsets.only(bottom: 12),
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(22)),
     child: Row(children: [
-      CircleAvatar(radius: 5, backgroundColor: _colorFor(k)),
+      CircleAvatar(radius: 5, backgroundColor: ColorUtils.categoryColor(k, context)),
       const SizedBox(width: 15),
       Expanded(child: Text(k, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600))),
       Text(Formatters.currency(v, cur), style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),

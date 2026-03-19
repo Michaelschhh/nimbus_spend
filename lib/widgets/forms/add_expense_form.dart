@@ -10,6 +10,7 @@ import '../../services/sound_service.dart';
 import '../../services/ad_service.dart';
 import '../common/apple_button.dart';
 import '../common/custom_switch.dart';
+import '../../utils/responsive.dart';
 
 class AddExpenseForm extends StatefulWidget {
   final Expense? existingExpense;
@@ -78,7 +79,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: AppColors.primary),
+            CircularProgressIndicator(color: Theme.of(context).primaryColor),
             const SizedBox(height: 20),
             Text("Analyzing budget impact...", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
           ],
@@ -127,7 +128,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text("Yes, proceed", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  child: Text("Yes, proceed", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -151,7 +152,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     );
 
     if (widget.existingExpense != null) {
-      eProv.updateExpense(expense, widget.existingExpense!.amount, sProv);
+      eProv.updateExpense(expense, widget.existingExpense!, sProv);
     } else {
       // Handle funding source
       if (_fundingSource == 'allowance') {
@@ -167,7 +168,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
       }
 
       // --- Seamless Interstitial Injection ---
-      if (!sProv.settings.isPro) {
+      if (!sProv.settings.isPro && !sProv.settings.adsRemoved) {
         sProv.incrementAdCounter();
         if (sProv.adClickCounter >= 2) {
            AdService.showInterstitialAd(() {
@@ -187,36 +188,41 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 30, top: 20, left: 24, right: 24),
-      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(35))),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + Responsive.sp(30, context),
+        top: Responsive.sp(20, context),
+        left: Responsive.sp(24, context),
+        right: Responsive.sp(24, context),
+      ),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.vertical(top: Radius.circular(Responsive.sp(35, context)))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(height: 5, width: 40, decoration: BoxDecoration(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), borderRadius: BorderRadius.circular(10))),
-            const SizedBox(height: 25),
+            SizedBox(height: Responsive.sp(25, context)),
             Text(_isRec ? "Authorize Subscription" : "Authorize Payment", 
-              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 17, fontWeight: FontWeight.bold)),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: Responsive.fs(17, context), fontWeight: FontWeight.bold)),
             
             TextField(
               controller: _amount,
               autofocus: widget.existingExpense == null,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 54, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2),
+              style: TextStyle(fontSize: Responsive.fs(54, context), fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(border: InputBorder.none, hintText: "0.00"),
             ),
             
             // RECURRING TOGGLE (Apple Style)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(Responsive.sp(16, context)),
               decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Recurring Payment", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600)),
+                      Text("Recurring Payment", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600, fontSize: Responsive.fs(14, context))),
                       CustomSwitch(value: _isRec, onChanged: (v) => setState(() => _isRec = v)),
                     ],
                   ),
@@ -227,9 +233,9 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                       children: ["Daily", "Weekly", "Monthly", "Yearly"].map((f) => GestureDetector(
                         onTap: () => setState(() => _freq = f),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(color: _freq == f ? AppColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(10)),
-                          child: Text(f, style: TextStyle(color: _freq == f ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black) : AppColors.textDim, fontSize: 11, fontWeight: FontWeight.bold)),
+                          padding: EdgeInsets.symmetric(horizontal: Responsive.sp(12, context), vertical: Responsive.sp(8, context)),
+                          decoration: BoxDecoration(color: _freq == f ? Theme.of(context).primaryColor : Colors.transparent, borderRadius: BorderRadius.circular(10)),
+                          child: Text(f, style: TextStyle(color: _freq == f ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black) : AppColors.textDim, fontSize: Responsive.fs(11, context), fontWeight: FontWeight.bold)),
                         ),
                       )).toList(),
                     )

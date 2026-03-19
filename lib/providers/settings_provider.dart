@@ -50,12 +50,18 @@ class SettingsProvider extends ChangeNotifier {
       isDarkMode: prefs.getBool('is_dark_mode') ?? true,
       themeIndex: prefs.getInt('theme_index') ?? 0,
       themesUnlocked: prefs.getBool('themes_unlocked') ?? false,
+      themeExpiryTimestamp: prefs.getInt('theme_expiry_timestamp'),
       adsRemoved: prefs.getBool('ads_removed') ?? false,
+      performanceModeEnabled: prefs.getBool('performance_mode_enabled') ?? false,
+
+
       mascotEnabled: prefs.getBool('mascot_enabled') ?? true,
+      mascotTipsEnabled: prefs.getBool('mascot_tips_enabled') ?? true,
       appLockEnabled: prefs.getBool('app_lock_enabled') ?? false,
       appLockType: prefs.getString('app_lock_type') ?? 'passcode',
       appLockCode: prefs.getString('app_lock_code') ?? '',
       securityUnlocked: _settings.securityUnlocked,
+      securityUnlockedIAP: prefs.getBool('security_unlocked_iap') ?? false,
     );
     if (initial) _isInitializing = false;
     notifyListeners();
@@ -141,6 +147,12 @@ class SettingsProvider extends ChangeNotifier {
     await _loadSettings();
   }
 
+  Future<void> setPerformanceMode(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('performance_mode_enabled', enabled);
+    await _loadSettings();
+  }
+
   Future<void> unlockThemes() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('themes_unlocked', true);
@@ -152,10 +164,32 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setBool('security_unlocked_iap', true);
     await _loadSettings();
   }
+  
+  Future<void> unlockThemeFor24h() async {
+    final prefs = await SharedPreferences.getInstance();
+    final expiry = DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch;
+    await prefs.setInt('theme_expiry_timestamp', expiry);
+    await _loadSettings();
+  }
+
+  bool isThemeUnlocked() {
+    if (_settings.isPro || _settings.themesUnlocked) return true;
+    if (_settings.themeExpiryTimestamp != null) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now < _settings.themeExpiryTimestamp!) return true;
+    }
+    return false;
+  }
 
   Future<void> setMascotEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('mascot_enabled', enabled);
+    await _loadSettings();
+  }
+
+  Future<void> setMascotTipsEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('mascot_tips_enabled', enabled);
     await _loadSettings();
   }
 
@@ -213,7 +247,7 @@ class SettingsProvider extends ChangeNotifier {
 
   bool isSecurityUnlockedIAP() {
     // Check if security features are paid for
-    return _settings.isPro; 
+    return _settings.isPro || _settings.securityUnlockedIAP; 
   }
 
   Future<void> updateAvailableResources(double amount) async {

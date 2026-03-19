@@ -11,7 +11,7 @@ class NotificationService {
           channelKey: 'nimbus_alerts',
           channelName: 'Nimbus Spend Alerts',
           channelDescription: 'Institutional financial notifications',
-          defaultColor: AppColors.primary,
+          defaultColor: const Color(0xFF0A84FF),
           ledColor: Colors.white,
           importance: NotificationImportance.Max,
           channelShowBadge: true,

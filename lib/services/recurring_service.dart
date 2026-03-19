@@ -39,7 +39,7 @@ class RecurringService {
           await eProv.addExpense(next, sProv, skipResourceUpdate: true);
           await sProv.deductFromResources(item.amount);
         } else {
-          await eProv.addExpense(next, sProv);
+          await eProv.addExpense(next, sProv, skipResourceUpdate: true);
         }
         await prefs.setString(key, now.toIso8601String());
       }

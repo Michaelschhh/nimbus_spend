@@ -35,8 +35,8 @@ class Goal {
     return Goal(
       id: map['id'],
       name: map['name'],
-      targetAmount: map['targetAmount'],
-      currentAmount: map['currentAmount'],
+      targetAmount: (map['targetAmount'] as num).toDouble(),
+      currentAmount: (map['currentAmount'] as num).toDouble(),
       deadline: map['deadline'] != null
           ? DateTime.parse(map['deadline'])
           : null,

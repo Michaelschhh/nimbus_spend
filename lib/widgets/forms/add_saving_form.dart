@@ -66,7 +66,7 @@ class _AddSavingFormState extends State<AddSavingForm> {
     }
     
     final sProv = context.read<SettingsProvider>();
-    if (!sProv.settings.isPro) {
+    if (!sProv.settings.isPro && !sProv.settings.adsRemoved) {
       sProv.incrementAdCounter();
       if (sProv.adClickCounter >= 2) {
         AdService.showInterstitialAd(() {
@@ -84,7 +84,7 @@ class _AddSavingFormState extends State<AddSavingForm> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 30, top: 25, left: 24, right: 24),
-      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(35))),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.vertical(top: Radius.circular(35))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense.dart';
 import '../services/storage_service.dart';
 import '../services/notification_service.dart';
@@ -7,7 +8,12 @@ import '../providers/settings_provider.dart';
 class ExpenseProvider extends ChangeNotifier {
   final StorageService _storage = StorageService();
   List<Expense> _expenses = [];
+  Set<String> _hiddenIds = {};
+
   List<Expense> get expenses => _expenses;
+  List<Expense> get visibleExpenses => _expenses.where((e) => !_hiddenIds.contains(e.id)).toList();
+  List<Expense> get hiddenExpenses => _expenses.where((e) => _hiddenIds.contains(e.id)).toList();
+  bool isHidden(String id) => _hiddenIds.contains(id);
 
   double get totalSpentThisMonth {
     final now = DateTime.now();
@@ -20,6 +26,23 @@ class ExpenseProvider extends ChangeNotifier {
     final data = await _storage.queryAll('expenses');
     _expenses = data.map((e) => Expense.fromMap(e)).toList();
     _expenses.sort((a, b) => b.date.compareTo(a.date));
+    // Load hidden IDs
+    final prefs = await SharedPreferences.getInstance();
+    _hiddenIds = (prefs.getStringList('hidden_transaction_ids') ?? []).toSet();
+    notifyListeners();
+  }
+
+  Future<void> hideTransaction(String id) async {
+    _hiddenIds.add(id);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('hidden_transaction_ids', _hiddenIds.toList());
+    notifyListeners();
+  }
+
+  Future<void> unhideTransaction(String id) async {
+    _hiddenIds.remove(id);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('hidden_transaction_ids', _hiddenIds.toList());
     notifyListeners();
   }
 
@@ -72,14 +95,19 @@ class ExpenseProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateExpense(Expense expense, double oldAmount, SettingsProvider settings) async {
+  Future<void> updateExpense(Expense expense, Expense oldExpense, SettingsProvider settings) async {
     await _storage.update('expenses', expense.toMap(), expense.id);
     
-    // Only handle resource diff if it's funded by resources
-    if (expense.fundingSource == 'resources') {
-      double diff = oldAmount - expense.amount;
-      await settings.updateResources(diff);
+    // Reverse the old expense effect if it was funded by resources
+    if (oldExpense.fundingSource == 'resources') {
+      await settings.addToResources(oldExpense.amount);
     }
+    
+    // Apply the new expense effect if it is funded by resources
+    if (expense.fundingSource == 'resources') {
+      await settings.deductFromResources(expense.amount);
+    }
+    
     await fetchExpenses();
   }
 

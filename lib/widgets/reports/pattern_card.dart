@@ -24,10 +24,10 @@ class PatternCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: AppColors.primary),
+              child: Icon(icon, color: Theme.of(context).primaryColor),
             ),
             const SizedBox(width: 16),
             Expanded(

@@ -34,7 +34,7 @@ class ConfirmDialog extends StatelessWidget {
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: isDanger ? AppColors.danger : AppColors.primary,
+            backgroundColor: isDanger ? AppColors.danger : Theme.of(context).primaryColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),

@@ -44,7 +44,7 @@ class Bill {
     return Bill(
       id: map['id'],
       name: map['name'],
-      amount: map['amount'],
+      amount: (map['amount'] as num).toDouble(),
       dueDate: DateTime.parse(map['dueDate']),
       frequency: map['frequency'],
       category: map['category'],

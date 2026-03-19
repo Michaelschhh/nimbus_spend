@@ -59,7 +59,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
-                    child: const Icon(LucideIcons.plus, color: AppColors.primary, size: 20),
+                    child: Icon(LucideIcons.plus, color: Theme.of(context).primaryColor, size: 20),
                   ),
                 ),
               ]),
@@ -73,7 +73,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                 width: double.infinity, padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                  border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   const Text("MONTHLY BURN", style: TextStyle(color: AppColors.textDim, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
@@ -83,7 +83,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   const SizedBox(height: 8),
                   if (s.monthlyBudget > 0)
                     Text("${(subProv.monthlySubCost / s.monthlyBudget * 100).toStringAsFixed(1)}% of your monthly allowance",
-                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 11)),
+                        style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 11)),
                 ]),
               ),
               const SizedBox(height: 30),
@@ -133,17 +133,17 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: sub.isActive ? AppColors.primary.withOpacity(0.08) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04)),
+          border: Border.all(color: sub.isActive ? Theme.of(context).primaryColor.withOpacity(0.08) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04)),
         ),
         child: Row(children: [
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: (sub.isActive ? AppColors.primary : AppColors.textDim).withOpacity(0.1),
+              color: (sub.isActive ? Theme.of(context).primaryColor : AppColors.textDim).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(LucideIcons.refreshCw,
-                color: sub.isActive ? AppColors.primary : AppColors.textDim, size: 18),
+                color: sub.isActive ? Theme.of(context).primaryColor : AppColors.textDim, size: 18),
           ),
           const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

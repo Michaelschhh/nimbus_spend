@@ -4,6 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
 import '../../services/iap_service.dart';
+import '../../services/ad_service.dart';
+
 
 class PaywallScreen extends StatelessWidget {
   const PaywallScreen({super.key});
@@ -66,14 +68,27 @@ class PaywallScreen extends StatelessWidget {
             if (sProv.isSecurityUnlockedIAP())
               _purchasedBadge("Security Unlocked"),
 
-            if (!s.isPro && (!s.adsRemoved || !s.themesUnlocked || !sProv.isSecurityUnlockedIAP())) ...[
+            if (!s.isPro && (!s.adsRemoved || !sProv.isThemeUnlocked() || !sProv.isSecurityUnlockedIAP())) ...[
               const SizedBox(height: 30),
-              const Text("BEST VALUE", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text("BEST VALUE", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 8),
               _buyCard(context, "Pro Bundle", "All features + Secure Lock + Mascot.", "\$2.50", LucideIcons.sparkles, () {
                  IAPService.onPurchaseSuccess?.call('bundle_pro');
               }, isFeatured: true),
             ],
+            
+            if (!sProv.isThemeUnlocked()) ...[
+              const SizedBox(height: 16),
+              _buyCard(context, "Watch Ad for 24h Themes", "Unlock all premium themes for 24 hours.", "FREE", LucideIcons.playCircle, () {
+                AdService.showRewardedAd((reward) {
+                  sProv.unlockThemeFor24h();
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("All themes unlocked for 24 hours! 🎨")));
+                }, onAdSkipped: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Ad not completed. Theme unlock failed.")));
+                });
+              }),
+            ],
+
             
             if (s.isPro) ...[
               const SizedBox(height: 30),
@@ -87,9 +102,8 @@ class PaywallScreen extends StatelessWidget {
             const Text("THEMES GALLERY", style: TextStyle(color: AppColors.textDim, fontSize: 13, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             
-            // Vertical List of Themes (Glass Card Style)
             ...List.generate(10, (i) {
-              final isLocked = ! (s.themesUnlocked || s.isPro) && i > 0;
+              final isLocked = !sProv.isThemeUnlocked() && i > 0;
               final selected = s.themeIndex == i;
               final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -102,12 +116,13 @@ class PaywallScreen extends StatelessWidget {
                   }
                 },
                 child: Container(
+
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: selected ? AppColors.primary : (isDark ? Colors.white10 : Colors.black12), width: 1.5),
+                    border: Border.all(color: selected ? Theme.of(context).primaryColor : (isDark ? Colors.white10 : Colors.black12), width: 1.5),
                   ),
                   child: Row(
                     children: [
@@ -132,6 +147,12 @@ class PaywallScreen extends StatelessWidget {
                 ),
               );
             }),
+            
+            if (s.themeExpiryTimestamp != null && !s.themesUnlocked && !s.isPro) ...[
+              const SizedBox(height: 12),
+              Text("Temporary Access Active: Ends in ${((s.themeExpiryTimestamp! - DateTime.now().millisecondsSinceEpoch) / 3600000).ceil()}h", style: const TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.bold)),
+            ],
+
             
             const SizedBox(height: 40),
             TextButton(
@@ -176,13 +197,13 @@ class PaywallScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isFeatured ? AppColors.primary.withOpacity(0.1) : Theme.of(context).cardColor,
+          color: isFeatured ? Theme.of(context).primaryColor.withOpacity(0.1) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: isFeatured ? AppColors.primary.withOpacity(0.5) : Colors.transparent),
+          border: Border.all(color: isFeatured ? Theme.of(context).primaryColor.withOpacity(0.5) : Colors.transparent),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 28),
+            Icon(icon, color: Theme.of(context).primaryColor, size: 28),
             const SizedBox(width: 20),
             Expanded(
               child: Column(
@@ -195,7 +216,7 @@ class PaywallScreen extends StatelessWidget {
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: Theme.of(context).primaryColor, borderRadius: BorderRadius.circular(12)),
               child: Text(price, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
             ),
           ],

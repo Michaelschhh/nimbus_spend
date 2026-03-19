@@ -25,6 +25,8 @@ class SoundService {
   static Future<void> _loadSound(String s) async {
     try {
       final player = AudioPlayer();
+      await player.setPlayerMode(PlayerMode.lowLatency);
+      await player.setReleaseMode(ReleaseMode.stop);
       await player.setSource(AssetSource('sounds/$s'));
       await player.setVolume(0.5);
       _players[s] = player;
@@ -39,9 +41,9 @@ class SoundService {
     try {
       final player = _players[fileName];
       if (player != null) {
-        // Stop, rewind to beginning, and resume for reliable rapid playback
+        // Stop and resume cached buffer
         await player.stop();
-        await player.play(AssetSource('sounds/$fileName'), volume: 0.5);
+        await player.resume();
       } else {
         // Lazy load and play for any missed sounds
         final tempPlayer = AudioPlayer();

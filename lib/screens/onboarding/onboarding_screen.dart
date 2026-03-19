@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
 import '../../widgets/common/currency_picker_modal.dart';
+import '../../utils/responsive.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -29,7 +30,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
+          padding: EdgeInsets.symmetric(horizontal: Responsive.sp(32, context)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -84,18 +85,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildContent() {
     if (_step == 0) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const SizedBox(height: 80),
+        SizedBox(height: Responsive.sp(80, context)),
         Text("Hello.",
-                style: TextStyle(fontSize: 72, fontWeight: FontWeight.bold, letterSpacing: -4, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
+                style: TextStyle(fontSize: Responsive.fs(72, context), fontWeight: FontWeight.bold, letterSpacing: -4, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
             .animate().fadeIn(duration: 800.ms).slideY(begin: 0.2),
-        const Text("I'm Nimbus. What should I call you?",
-                style: TextStyle(color: AppColors.textDim, fontSize: 18))
+        Text("I'm Nimbus. What should I call you?",
+                style: TextStyle(color: AppColors.textDim, fontSize: Responsive.fs(18, context)))
             .animate().fadeIn(delay: 400.ms),
-        const SizedBox(height: 50),
+        SizedBox(height: Responsive.sp(50, context)),
         TextField(
           controller: _name,
           autofocus: true,
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+          style: TextStyle(fontSize: Responsive.fs(32, context), fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
           decoration: InputDecoration(
               border: InputBorder.none, hintText: "Your Name", hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
         ),
@@ -104,16 +105,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_step == 1) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text("Goals.",
-                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
+                style: TextStyle(fontSize: Responsive.fs(64, context), fontWeight: FontWeight.bold, letterSpacing: -3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
             .animate().fadeIn().slideY(begin: 0.2),
-        const Text("Set your monthly allowance target.",
-            style: TextStyle(color: AppColors.textDim, fontSize: 18)),
-        const SizedBox(height: 50),
+        Text("Set your monthly allowance target.",
+            style: TextStyle(color: AppColors.textDim, fontSize: Responsive.fs(18, context))),
+        SizedBox(height: Responsive.sp(50, context)),
         TextField(
           controller: _budget,
           autofocus: true,
           keyboardType: TextInputType.number,
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+          style: TextStyle(fontSize: Responsive.fs(32, context), fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
           decoration: InputDecoration(
               border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
         ),
@@ -122,22 +123,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_step == 2) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text("Value.",
-                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
+                style: TextStyle(fontSize: Responsive.fs(64, context), fontWeight: FontWeight.bold, letterSpacing: -3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
             .animate().fadeIn().slideY(begin: 0.2),
-        const Text("How much do you earn per hour?",
-            style: TextStyle(color: AppColors.textDim, fontSize: 18)),
-        const SizedBox(height: 50),
+        Text("How much do you earn per hour?",
+            style: TextStyle(color: AppColors.textDim, fontSize: Responsive.fs(18, context))),
+        SizedBox(height: Responsive.sp(50, context)),
         TextField(
           controller: _wage,
           autofocus: true,
           keyboardType: TextInputType.number,
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+          style: TextStyle(fontSize: Responsive.fs(32, context), fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
           decoration: InputDecoration(
               border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
         ),
-        const SizedBox(height: 30),
-        const Text("Currency", style: TextStyle(color: AppColors.textDim, fontSize: 18)),
-        const SizedBox(height: 10),
+        SizedBox(height: Responsive.sp(30, context)),
+        Text("Currency", style: TextStyle(color: AppColors.textDim, fontSize: Responsive.fs(18, context))),
+        SizedBox(height: Responsive.sp(10, context)),
         GestureDetector(
           onTap: () {
             showModalBottomSheet(
@@ -156,7 +157,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 Text(_selectedCurrency,
                     style: TextStyle(fontSize: 20, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
-                const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
+                Icon(Icons.keyboard_arrow_down, color: Theme.of(context).primaryColor),
               ],
             ),
           ),
@@ -185,15 +186,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.08),
+            color: Theme.of(context).primaryColor.withOpacity(0.08),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+            border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.15)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("What are Available Resources?",
-                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
+              Text("What are Available Resources?",
+                  style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
               const SizedBox(height: 8),
               Text(
                 "This is the total value you have outside your monthly budget — savings, emergency funds, or liquid assets.\n\nWhen you pay bills, settle debts, or fund goals, you can choose to pull from this pool instead of your monthly allowance.\n\nYou can always update this in Settings.",
@@ -220,7 +221,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: _isSalaryEarner ? AppColors.primary : Theme.of(context).cardColor,
+                  color: _isSalaryEarner ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: Text("Yes, I am", style: TextStyle(color: _isSalaryEarner ? Theme.of(context).scaffoldBackgroundColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),

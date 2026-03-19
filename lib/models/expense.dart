@@ -43,13 +43,13 @@ class Expense {
   factory Expense.fromMap(Map<String, dynamic> map) {
     return Expense(
       id: map['id'],
-      amount: map['amount'],
+      amount: (map['amount'] as num).toDouble(),
       category: map['category'],
       date: DateTime.parse(map['date']),
       note: map['note'] ?? '',
       isRecurring: map['isRecurring'] == 1,
       recurringFrequency: map['recurringFrequency'],
-      lifeCostHours: map['lifeCostHours'],
+      lifeCostHours: (map['lifeCostHours'] as num).toDouble(),
       fundingSource: map['fundingSource'] ?? 'allowance',
       linkedId: map['linkedId'],
     );

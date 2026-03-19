@@ -10,6 +10,7 @@ class AppTheme {
           secondary: AppColors.primary,
           appBarColor: AppColors.primary,
         ),
+
         surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
         blendLevel: 7,
         subThemesData: const FlexSubThemesData(
@@ -31,6 +32,7 @@ class AppTheme {
           secondary: AppColors.primary,
           appBarColor: AppColors.primary,
         ),
+
         surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
         blendLevel: 13,
         subThemesData: const FlexSubThemesData(

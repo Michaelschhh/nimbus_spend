@@ -52,7 +52,7 @@ class _AddGoalFormState extends State<AddGoalForm> {
             width: double.infinity, height: 55,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: Theme.of(context).primaryColor,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
               onPressed: () {
@@ -78,7 +78,7 @@ class _AddGoalFormState extends State<AddGoalForm> {
                 }
 
                 final sProv = context.read<SettingsProvider>();
-                if (!sProv.settings.isPro) {
+                if (!sProv.settings.isPro && !sProv.settings.adsRemoved) {
                   sProv.incrementAdCounter();
                   if (sProv.adClickCounter >= 2) {
                     AdService.showInterstitialAd(() {
@@ -113,7 +113,7 @@ class _AddGoalFormState extends State<AddGoalForm> {
             borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: AppColors.primary)),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor)),
       ),
     );
   }

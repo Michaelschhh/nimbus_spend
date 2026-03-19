@@ -68,7 +68,7 @@ class Subscription {
     return Subscription(
       id: map['id'],
       name: map['name'],
-      amount: map['amount'],
+      amount: (map['amount'] as num).toDouble(),
       category: map['category'],
       startDate: DateTime.parse(map['startDate']),
       frequency: map['frequency'],

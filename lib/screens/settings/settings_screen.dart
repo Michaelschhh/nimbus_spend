@@ -14,6 +14,7 @@ import '../../services/sound_service.dart';
 import '../../services/iap_service.dart';
 import '../../providers/savings_provider.dart';
 import '../../widgets/common/ad_placements.dart';
+import '../../utils/responsive.dart';
 import 'security_settings_screen.dart';
 import 'salary_settings_screen.dart';
 import 'paywall_screen.dart';
@@ -31,9 +32,9 @@ class SettingsScreen extends StatelessWidget {
       
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(Responsive.sp(24, context)),
           children: [
-            const Text("Settings", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold)),
+            Text("Settings", style: TextStyle(fontSize: Responsive.fs(34, context), fontWeight: FontWeight.bold)),
             const BannerAdSpace(),
             const SizedBox(height: 15),
             
@@ -55,9 +56,9 @@ class SettingsScreen extends StatelessWidget {
               child: _staticCard(context, "Standard Currency", s.currency, LucideIcons.globe),
             ),
             
-            const SizedBox(height: 25),
-            const Text("Preferences", style: TextStyle(color: AppColors.textDim, fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
+            SizedBox(height: Responsive.sp(25, context)),
+            Text("Preferences", style: TextStyle(color: AppColors.textDim, fontSize: Responsive.fs(13, context), fontWeight: FontWeight.bold)),
+            SizedBox(height: Responsive.sp(10, context)),
             
             _sectionHeader("PREFERENCES"),
             _settingsCard(context, [
@@ -68,10 +69,14 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 20),
             _soundCard(context, prov),
             _darkModeCard(context, prov),
+            _performanceModeCard(context, prov),
+
 
             // Nimbus Mascot toggle (Pro/adsRemoved only)
-            if (s.isPro || s.adsRemoved)
+            if (s.isPro || s.adsRemoved) ...[
               _mascotCard(context, prov),
+              if (s.mascotEnabled) _mascotTipsCard(context, prov),
+            ],
             
             const SizedBox(height: 60),
             
@@ -86,18 +91,18 @@ class SettingsScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.primary.withOpacity(0.2), Colors.purple.withOpacity(0.15)]),
+                    gradient: LinearGradient(colors: [Theme.of(context).primaryColor.withOpacity(0.2), Colors.purple.withOpacity(0.15)]),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                    border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
                   ),
                   child: Row(children: [
-                    const Icon(LucideIcons.shieldOff, color: AppColors.primary, size: 18),
+                    Icon(LucideIcons.shieldOff, color: Theme.of(context).primaryColor, size: 18),
                     const SizedBox(width: 14),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       const Text("Remove Ads", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-                      Text(IAPService.priceString, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(IAPService.priceString, style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, fontWeight: FontWeight.bold)),
                     ])),
-                    const Icon(LucideIcons.chevronRight, color: AppColors.primary, size: 16),
+                    Icon(LucideIcons.chevronRight, color: Theme.of(context).primaryColor, size: 16),
                   ]),
                 ),
               ),
@@ -125,6 +130,8 @@ class SettingsScreen extends StatelessWidget {
                 child: const Center(child: Text("PURGE ALL DATA", style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold))),
               ),
             ),
+            
+            const SizedBox(height: 120),
           ],
         ),
       ),
@@ -147,7 +154,7 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _settingsRow(BuildContext context, IconData icon, String label, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.primary, size: 20),
+      leading: Icon(icon, color: Theme.of(context).primaryColor, size: 20),
       title: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
       trailing: const Icon(LucideIcons.chevronRight, color: AppColors.textDim, size: 16),
       onTap: onTap,
@@ -182,7 +189,7 @@ class SettingsScreen extends StatelessWidget {
             style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             decoration: InputDecoration(
               enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
-              focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor)),
             ),
           ),
           actions: [
@@ -195,7 +202,7 @@ class SettingsScreen extends StatelessWidget {
                 onSave(ctrl.text);
                 Navigator.pop(ctx);
               },
-              child: const Text("Save", style: TextStyle(color: AppColors.primary))
+              child: Text("Save", style: TextStyle(color: Theme.of(context).primaryColor))
             )
           ]
         ));
@@ -205,7 +212,7 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
         child: Row(children: [
-          Icon(icon, color: AppColors.primary, size: 18),
+          Icon(icon, color: Theme.of(context).primaryColor, size: 18),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(l, style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
@@ -223,7 +230,7 @@ class SettingsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
       child: Row(children: [
-        const Icon(LucideIcons.volume2, color: AppColors.primary, size: 18),
+        Icon(LucideIcons.volume2, color: Theme.of(context).primaryColor, size: 18),
         const SizedBox(width: 14),
         const Expanded(child: Text("App Sounds", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
         TextButton(
@@ -248,7 +255,7 @@ class SettingsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
       child: Row(children: [
-        const Icon(LucideIcons.moon, color: AppColors.primary, size: 18),
+        Icon(LucideIcons.moon, color: Theme.of(context).primaryColor, size: 18),
         const SizedBox(width: 14),
         const Expanded(child: Text("Dark Mode", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
         CustomSwitch(
@@ -262,21 +269,46 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _mascotCard(BuildContext context, SettingsProvider prov) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
-      child: Row(children: [
-        const Icon(LucideIcons.cloud, color: AppColors.primary, size: 18),
-        const SizedBox(width: 14),
-        const Expanded(child: Text("Nimbus Mascot", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
-        CustomSwitch(
-          value: prov.settings.mascotEnabled,
-          onChanged: (val) {
-            prov.setMascotEnabled(val);
-          },
-        ),
-      ]),
+    return GestureDetector(
+      onTap: () => prov.setMascotEnabled(!prov.settings.mascotEnabled),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+        child: Row(children: [
+          Icon(LucideIcons.cloud, color: Theme.of(context).primaryColor, size: 18),
+          const SizedBox(width: 14),
+          const Expanded(child: Text("Nimbus Mascot", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
+          CustomSwitch(
+            value: prov.settings.mascotEnabled,
+            onChanged: (val) {
+              prov.setMascotEnabled(val);
+            },
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _mascotTipsCard(BuildContext context, SettingsProvider prov) {
+    return GestureDetector(
+      onTap: () => prov.setMascotTipsEnabled(!prov.settings.mascotTipsEnabled),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+        child: Row(children: [
+          Icon(LucideIcons.messageCircle, color: Theme.of(context).primaryColor, size: 18),
+          const SizedBox(width: 14),
+          const Expanded(child: Text("Nimbus Finance Tips", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
+          CustomSwitch(
+            value: prov.settings.mascotTipsEnabled,
+            onChanged: (val) {
+              prov.setMascotTipsEnabled(val);
+            },
+          ),
+        ]),
+      ),
     );
   }
 
@@ -286,7 +318,7 @@ class SettingsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
       child: Row(children: [
-        Icon(i, color: AppColors.primary, size: 18),
+        Icon(i, color: Theme.of(context).primaryColor, size: 18),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(l, style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
@@ -332,5 +364,30 @@ class SettingsScreen extends StatelessWidget {
       case 9: return "Rose Gold";
       default: return "Default";
     }
+  }
+
+  Widget _performanceModeCard(BuildContext context, SettingsProvider prov) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+      child: Row(children: [
+        Icon(LucideIcons.zap, color: Theme.of(context).primaryColor, size: 18),
+        const SizedBox(width: 14),
+        const Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Performance Mode", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            Text("Optimizes for lower-end devices", style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+          ],
+        )),
+        CustomSwitch(
+          value: prov.settings.performanceModeEnabled,
+          onChanged: (val) {
+            prov.setPerformanceMode(val);
+          },
+        ),
+      ]),
+    );
   }
 }

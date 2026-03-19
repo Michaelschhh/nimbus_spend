@@ -45,13 +45,13 @@ class Debt {
     return Debt(
       id: map['id'],
       personName: map['personName'],
-      amount: map['amount'],
+      amount: (map['amount'] as num).toDouble(),
       description: map['description'],
       date: DateTime.parse(map['date']),
       dueDate: map['dueDate'] != null ? DateTime.parse(map['dueDate']) : null,
       isOwedToMe: map['isOwedToMe'] == 1,
       isSettled: map['isSettled'] == 1,
-      remainingAmount: map['remainingAmount'],
+      remainingAmount: (map['remainingAmount'] as num).toDouble(),
       defaultRouting: map['defaultRouting'],
     );
   }

@@ -51,11 +51,12 @@ android {
             // Apply the release signature
             signingConfig = signingConfigs.getByName("release")
             
-            // Optimization for production
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // Shrinking disabled to fix build issues
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+
     }
 }
 

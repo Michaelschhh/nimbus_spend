@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
+
+import 'utils/responsive.dart'; // Added by user instruction
 
 // Screen Imports
 import 'screens/onboarding/onboarding_screen.dart';
@@ -19,7 +20,7 @@ import 'screens/onboarding/tutorial_screen.dart';
 import 'providers/settings_provider.dart';
 import 'theme/colors.dart';
 import 'services/sound_service.dart';
-import 'screens/settings/paywall_screen.dart';
+import 'services/haptic_service.dart';
 import 'widgets/common/auth_overlay.dart';
 import 'widgets/common/nimbus_mascot.dart';
 
@@ -64,6 +65,16 @@ class NimbusSpendApp extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: colors.primary,
+        selectionColor: colors.primary.withOpacity(0.3),
+        selectionHandleColor: colors.primary,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: MaterialStateProperty.resolveWith((states) => states.contains(MaterialState.selected) ? colors.primary : null),
+        trackColor: MaterialStateProperty.resolveWith((states) => states.contains(MaterialState.selected) ? colors.primary.withOpacity(0.5) : null),
+        trackOutlineColor: MaterialStateProperty.resolveWith((states) => states.contains(MaterialState.selected) ? Colors.transparent : null),
+      ),
       fontFamily: GoogleFonts.inter().fontFamily,
       useMaterial3: true,
     );
@@ -85,6 +96,16 @@ class NimbusSpendApp extends StatelessWidget {
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: colors.primary,
+        selectionColor: colors.primary.withOpacity(0.3),
+        selectionHandleColor: colors.primary,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: MaterialStateProperty.resolveWith((states) => states.contains(MaterialState.selected) ? colors.primary : null),
+        trackColor: MaterialStateProperty.resolveWith((states) => states.contains(MaterialState.selected) ? colors.primary.withOpacity(0.5) : null),
+        trackOutlineColor: MaterialStateProperty.resolveWith((states) => states.contains(MaterialState.selected) ? Colors.transparent : null),
       ),
       fontFamily: GoogleFonts.inter().fontFamily,
       useMaterial3: true,
@@ -227,7 +248,6 @@ class _MainNavigationState extends State<MainNavigation> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     final s = setProv.settings;
-    final themeIndex = s.themeIndex;
     
     return Scaffold(
       extendBody: true,
@@ -238,8 +258,16 @@ class _MainNavigationState extends State<MainNavigation> {
           }
           return false;
         },
-        child: Stack(
-          children: [
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (event) {
+            final s = setProv.settings;
+            if (s.mascotEnabled && (s.isPro || s.adsRemoved)) {
+              NimbusMascot.mascotKey.currentState?.tapAt(event.position);
+            }
+          },
+          child: Stack(
+            children: [
             setProv.settings.tosAccepted 
               ? (setProv.settings.tutorialSeen 
                   ? IndexedStack(
@@ -251,42 +279,48 @@ class _MainNavigationState extends State<MainNavigation> {
           
           // Nimbus Mascot Overlay
           if (s.mascotEnabled && (s.isPro || s.adsRemoved))
-            IgnorePointer(
-              ignoring: false,
-              child: Listener(
-                onPointerDown: (event) {
-                  NimbusMascot.mascotKey.currentState?.tapAt(event.position);
-                },
-                behavior: HitTestBehavior.translucent,
-                child: NimbusMascot(key: NimbusMascot.mascotKey),
-              ),
-            ),
+            NimbusMascot(key: NimbusMascot.mascotKey),
 
           // Security Lock Overlay
           if (s.appLockEnabled && !s.securityUnlocked)
             AuthOverlay(),
+
+          // The Floating Nav Bar
+          if (setProv.settings.tosAccepted && setProv.settings.tutorialSeen && (!s.appLockEnabled || s.securityUnlocked))
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildAppleNavBar(isDark),
+            ),
           ],
         ),
       ),
-      bottomNavigationBar: (setProv.settings.tosAccepted && setProv.settings.tutorialSeen) 
-        ? _buildAppleNavBar(isDark) 
-        : null,
+      ),
     );
   }
 
   Widget _buildAppleNavBar(bool isDark) {
     final primaryColor = Theme.of(context).primaryColor;
+    final s = context.watch<SettingsProvider>().settings;
+
     
     return LayoutBuilder(builder: (context, constraints) {
-      double totalNavWidth = constraints.maxWidth - 48;
-      double itemWidth = totalNavWidth / 5;
-
+      double maxWidth = constraints.maxWidth * 0.9;
+      double itemWidth = maxWidth / 5;
       final bottomPadding = MediaQuery.of(context).padding.bottom;
-      return Container(
-        margin: EdgeInsets.fromLTRB(24, 0, 24, 12 + bottomPadding),
-        height: 75,
+      final navHeight = 70.0; // Consistently sized visually grounded island
+      
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          width: maxWidth,
+          margin: EdgeInsets.only(
+            bottom: (Responsive.isTablet(context) ? 24.0 : 16.0) + bottomPadding,
+          ),
+        height: navHeight,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(35),
+          borderRadius: BorderRadius.circular(navHeight / 2),
           border: Border.all(
             color: isDark 
                 ? Colors.white.withOpacity(0.08) 
@@ -294,65 +328,80 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(35),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // THE SLIDING PILL - adapts to theme primary color
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                  left: _index * itemWidth,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: itemWidth,
-                    padding: const EdgeInsets.all(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            primaryColor.withOpacity(0.2),
-                            primaryColor.withOpacity(0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primaryColor.withOpacity(0.1),
-                            blurRadius: 10,
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
+          borderRadius: BorderRadius.circular(navHeight / 2),
+          child: s.performanceModeEnabled 
+            ? Stack(
+                alignment: Alignment.center,
+                children: _buildNavStack(primaryColor, itemWidth, navHeight, isDark),
+              )
+            : BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: _buildNavStack(primaryColor, itemWidth, navHeight, isDark),
                 ),
-                
-                // THE INTERACTIVE ICONS
-                Row(
-                  children: List.generate(5, (i) => Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        SoundService.tap();
-                        setState(() => _index = i);
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: Icon(
-                        _getIcon(i),
-                        color: _index == i ? primaryColor : AppColors.textDim,
-                        size: 24,
-                      ),
-                    ),
-                  )),
+              ),
+        ),
+        ),
+      );
+    });
+  }
+
+
+  List<Widget> _buildNavStack(Color primaryColor, double itemWidth, double navHeight, bool isDark) {
+    return [
+      // THE SLIDING PILL
+      AnimatedPositioned(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        left: _index * itemWidth,
+        top: 0,
+        bottom: 0,
+        child: SizedBox(
+          width: itemWidth,
+          child: Center(
+            child: Container(
+              width: Responsive.isTablet(context) ? 64 : Responsive.sp(56, context),
+              height: Responsive.isTablet(context) ? 42 : 36, // Guarantees a horizontal pill shape
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    primaryColor.withOpacity(0.2),
+                    primaryColor.withOpacity(0.05),
+                  ],
                 ),
+                borderRadius: BorderRadius.circular(100),
+                boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.1),
+                  blurRadius: 10,
+                )
               ],
             ),
           ),
         ),
-      );
-    });
+      ),
+      ),
+      
+      // THE INTERACTIVE ICONS
+      Row(
+        children: List.generate(5, (i) => Expanded(
+          child: GestureDetector(
+            onTap: () {
+              SoundService.tap();
+              HapticService.light();
+              setState(() => _index = i);
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Icon(
+              _getIcon(i),
+              color: _index == i ? primaryColor : AppColors.textDim,
+              size: Responsive.sp(23, context),
+            ),
+          ),
+        )),
+      ),
+    ];
   }
 
   IconData _getIcon(int i) {

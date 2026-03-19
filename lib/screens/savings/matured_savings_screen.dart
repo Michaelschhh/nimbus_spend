@@ -40,7 +40,7 @@ class MaturedSavingsScreen extends StatelessWidget {
               children: [
                 const Text("MATURED GOALS", style: TextStyle(color: AppColors.textDim, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                 const Spacer(),
-                Text("${matured.length} Items", style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                Text("${matured.length} Items", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -71,7 +71,7 @@ class MaturedSavingsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: AppColors.glassBorder),
         gradient: LinearGradient(
-          colors: [AppColors.primary.withOpacity(0.1), Colors.transparent],
+          colors: [Theme.of(context).primaryColor.withOpacity(0.1), Colors.transparent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -138,7 +138,7 @@ class MaturedSavingsScreen extends StatelessWidget {
               style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
               decoration: InputDecoration(
                 enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
-                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor)),
               ),
             ),
           ],
@@ -153,7 +153,7 @@ class MaturedSavingsScreen extends StatelessWidget {
                 Navigator.pop(ctx);
               }
             },
-            child: const Text("Release Now", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text("Release Now", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

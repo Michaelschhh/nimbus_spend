@@ -2,6 +2,12 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/expense_provider.dart';
+import '../../utils/nimbus_tips.dart';
+import '../../utils/responsive.dart';
+
 
 /// Nimbus the Cloud Mascot — a physics-based interactive pet for Pro users.
 /// Converted from HTML/SVG/JS to native Flutter.
@@ -13,7 +19,7 @@ class NimbusMascot extends StatefulWidget {
   State<NimbusMascot> createState() => NimbusMascotState();
 }
 
-enum NimbusEmo { idle, happy, excited, surprised, sad, sleep }
+enum NimbusEmo { idle, happy, excited, surprised, sad, sleep, curious }
 
 class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderStateMixin {
   // Position & velocity
@@ -32,6 +38,7 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
   int taps = 0;
   int idleTicks = 0;
   int lastInteractionTick = 0;
+  int _lastTipTick = 0; // Track when we last showed a tip
 
   // Wander & Curiosity
   double wAngle = 0;
@@ -54,7 +61,7 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
   int _emoEndTick = 0;
   int _decideAtTick = 0;
 
-  static const double mw = 70, mh = 56;
+  double mw = 70, mh = 56;
   static const double grav = 0.34, pdrag = 0.993, bounce = 0.5, fric = 0.86;
 
   @override
@@ -64,6 +71,16 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
     _ticker = createTicker(_onTick)..start();
     _decideAtTick = 60;
     lastInteractionTick = 0;
+    
+    // Initial size setup (will update on build for safety)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          mw = Responsive.mascotSize(context, base: 70);
+          mh = Responsive.mascotSize(context, base: 56);
+        });
+      }
+    });
   }
 
   @override
@@ -80,16 +97,26 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
     _tickCount++;
     setState(() {
       // Bubble timeout
-      if (bubbleText != null) {
-        bubbleTick--;
-        if (bubbleTick <= 0) bubbleText = null;
-      }
+      final sProv = context.read<SettingsProvider>();
+    final isPerf = sProv.settings.performanceModeEnabled;
 
-      // Opacity calculation
-      if (_scrollTicks > 0) _scrollTicks--;
+    if (bubbleTick > 0) {
+      bubbleTick--;
+      if (bubbleTick == 0) bubbleText = null;
+    }
+
+    if (held) {
+      if (!isPerf) trail.add(_TrailPoint(px + mw / 2, py + mh / 2, DateTime.now().millisecondsSinceEpoch));
+    }
+
+
+
+    if (!isPerf && trail.length > 20) trail.removeAt(0);
+    if (isPerf && trail.isNotEmpty) trail.clear();
       double targetOp = 1.0;
       if (_scrollTicks > 0) {
         targetOp = 0.2; // Very transparent while scrolling
+        _scrollTicks--; // Ensure the ticker unwinds correctly
       } else if (emo == NimbusEmo.sleep) {
         targetOp = 0.4; // Opaque enough to see through (transparent)
       }
@@ -130,8 +157,14 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
           py += sin(_tickCount * 0.05) * 0.2;
         } else {
           _wanderStep();
+          // Only run _decide at scheduled intervals for movement decisions
           if (_tickCount >= _decideAtTick) _decide();
         }
+      }
+
+      // Anti-freeze: if curiosity has been stuck for too long, clear it
+      if (curiosityPos != null && curiosityTick <= 0) {
+        curiosityPos = null;
       }
 
       // Speed multiplier decay
@@ -139,10 +172,12 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
       if (speedMult < 1.0) speedMult = 1.0;
 
       // Squash recovery
-      if ((sqX - 1).abs() > 0.001 || (sqY - 1).abs() > 0.001) {
+      if (!isPerf && ((sqX - 1).abs() > 0.001 || (sqY - 1).abs() > 0.001)) {
         sqX += (1 - sqX) * 0.17 + sqV;
         sqY += (1 - sqY) * 0.17 - sqV;
         sqV *= 0.7;
+      } else if (isPerf) { // If performance mode, snap back instantly
+        sqX = 1; sqY = 1; sqV = 0;
       } else {
         sqX = 1; sqY = 1; sqV = 0;
       }
@@ -226,6 +261,8 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
   }
 
   void _squash(bool vertical) {
+    final s = context.read<SettingsProvider>().settings;
+    if (s.performanceModeEnabled) return; // Skip squash/stretch in performance mode
     if (vertical) { sqX = 1.42; sqY = 0.68; sqV = 0.012; }
     else { sqX = 0.7; sqY = 1.4; sqV = -0.012; }
     _setEmo(NimbusEmo.surprised, 25);
@@ -242,23 +279,64 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
   }
 
   void _decide() {
-    if (held || flight || emo == NimbusEmo.sleep) return;
+    if (held || flight || emo == NimbusEmo.sleep || !mounted) return;
 
+    final sProv = context.read<SettingsProvider>();
+    final eProv = context.read<ExpenseProvider>();
+
+    // Movement decisions happen frequently (every 3-8 seconds)
     // Randomly get curious about numbers/labels on screen
     if (rng.nextDouble() < 0.15) {
       final tx = 40 + rng.nextDouble() * (screenW - 80);
       final ty = 100 + rng.nextDouble() * (floor - 120);
       curiosityPos = Offset(tx, ty);
       curiosityTick = 180 + rng.nextInt(300);
-      _setEmo(NimbusEmo.happy, 60);
+      _setEmo(NimbusEmo.curious, 60);
     }
 
-    _decideAtTick = _tickCount + 90 + rng.nextInt(180);
+    // Speech/tip decisions only every 7-15 minutes (25200-54000 ticks at 60fps)
+    final ticksSinceLastTip = _tickCount - _lastTipTick;
+    final minTipInterval = 25200; // 7 minutes
+    if (ticksSinceLastTip >= minTipInterval && sProv.settings.mascotTipsEnabled) {
+      final budgetLeft = sProv.settings.monthlyBudget - eProv.totalSpentThisMonth;
+      final hasExpenses = eProv.expenses.isNotEmpty;
+      final hasSavings = sProv.settings.availableResources > 0 && sProv.settings.monthlyBudget > 0;
+      
+      if (budgetLeft < 0 && hasExpenses) {
+        _setEmo(NimbusEmo.sad, 120);
+        _showBubble("We're over budget this month... Let's be careful! 😥", 300);
+        _lastTipTick = _tickCount;
+      } else if (hasSavings && sProv.settings.availableResources > sProv.settings.monthlyBudget * 3) {
+        _setEmo(NimbusEmo.happy, 120);
+        final saveMsg = [
+          "Your available resources are looking strong! 🌟",
+          "Great reserves! Keep it up! 💪",
+          "You have a solid financial cushion! ☁️",
+        ];
+        _showBubble(saveMsg[rng.nextInt(saveMsg.length)], 300);
+        _lastTipTick = _tickCount;
+      } else if (rng.nextDouble() < 0.6) {
+        final tip = NimbusTips.tips[rng.nextInt(NimbusTips.tips.length)];
+        _setEmo(NimbusEmo.happy, 120);
+        _showBubble(tip, 360); // ~6 seconds to read
+        _lastTipTick = _tickCount;
+      }
+    }
+
+    // Schedule next movement decision (3-8 seconds)
+    _decideAtTick = _tickCount + 180 + rng.nextInt(300);
   }
 
-  void _showBubble(String text) {
+  void _showBubble(String text, [int duration = 150]) {
     bubbleText = text;
-    bubbleTick = 150; // ~2.5 seconds
+    bubbleTick = duration;
+  }
+
+  double _getBubbleLeft() {
+    // Attempt to center bubble over Nimbus
+    double left = (px + mw / 2 - 110); // 220 is max width / 2
+    // Clamp to screen edges
+    return left.clamp(12.0, screenW - 232.0); // 220 + padding
   }
 
   // --- Public API for app reactions ---
@@ -307,7 +385,10 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
     ox = details.globalPosition.dx - px;
     oy = details.globalPosition.dy - py;
     trail.clear();
-    sqX = 0.9; sqY = 1.12; sqV = 0;
+    final s = context.read<SettingsProvider>().settings;
+    if (!s.performanceModeEnabled) { // Only squash/stretch if not in performance mode
+      sqX = 0.9; sqY = 1.12; sqV = 0;
+    }
     _setEmo(NimbusEmo.surprised, 17);
     if (emo == NimbusEmo.sleep) {
       _setEmo(NimbusEmo.surprised, 42);
@@ -320,8 +401,11 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
     px = (details.globalPosition.dx - ox).clamp(0, screenW - mw);
     py = (details.globalPosition.dy - oy).clamp(0, floor);
     final now = DateTime.now().millisecondsSinceEpoch;
-    trail.add(_TrailPoint(details.globalPosition.dx, details.globalPosition.dy, now));
-    while (trail.length > 1 && now - trail.first.t > 140) trail.removeAt(0);
+    final s = context.read<SettingsProvider>().settings;
+    if (!s.performanceModeEnabled) {
+      trail.add(_TrailPoint(details.globalPosition.dx, details.globalPosition.dy, now));
+      while (trail.length > 1 && now - trail.first.t > 140) trail.removeAt(0);
+    }
   }
 
   void _onPanEnd(DragEndDetails details) {
@@ -331,7 +415,10 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
     if (!dragged) {
       // Tap
       taps++;
-      sqX = 1.18; sqY = 0.84; sqV = 0;
+      final s = context.read<SettingsProvider>().settings;
+      if (!s.performanceModeEnabled) { // Only squash/stretch if not in performance mode
+        sqX = 1.18; sqY = 0.84; sqV = 0;
+      }
       _setEmo(NimbusEmo.happy, 90);
 
       if (taps % 5 == 0) {
@@ -368,16 +455,29 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
 
   @override
   Widget build(BuildContext context) {
+    // Dynamic size check to ensure responsiveness during orientation changes etc.
+    final targetMw = Responsive.mascotSize(context, base: 70);
+    final targetMh = Responsive.mascotSize(context, base: 56);
+    if (mw != targetMw || mh != targetMh) {
+      // Defer state update to next frame to avoid build-time errors
+      Future.microtask(() {
+        if (mounted) setState(() { mw = targetMw; mh = targetMh; });
+      });
+    }
+
     return Opacity(
       opacity: _opacity.clamp(0, 1),
       child: Stack(
         children: [
-        // Speech bubble
+        // Speech bubble — clamped to screen with theme awareness
         if (bubbleText != null)
           Positioned(
-            left: (px + mw / 2 - 60).clamp(4, screenW - 124),
-            top: max(4, py - 50),
-            child: _SpeechBubble(text: bubbleText!),
+            left: _getBubbleLeft(),
+            top: max(4, py - (Responsive.isTablet(context) ? 80 : 58)),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: Responsive.isTablet(context) ? 350 : (screenW - 24)),
+              child: _SpeechBubble(text: bubbleText!, isDark: Theme.of(context).brightness == Brightness.dark, primaryColor: Theme.of(context).primaryColor),
+            ),
           ),
         // Cloud body
         Positioned(
@@ -400,6 +500,20 @@ class NimbusMascotState extends State<NimbusMascot> with SingleTickerProviderSta
             ),
           ),
         ),
+        // Trail rendering
+        Builder(
+          builder: (context) {
+            final s = context.read<SettingsProvider>().settings;
+            if (s.performanceModeEnabled) return const SizedBox.shrink();
+            
+            return IgnorePointer(
+              child: CustomPaint(
+                size: Size(screenW, screenH),
+                painter: _TrailPainter(trail),
+              ),
+            );
+          },
+        ),
       ],
     ),
   );
@@ -412,21 +526,57 @@ class _TrailPoint {
   _TrailPoint(this.x, this.y, this.t);
 }
 
+class _TrailPainter extends CustomPainter {
+  final List<_TrailPoint> points;
+  _TrailPainter(this.points);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    for (int i = 0; i < points.length - 1; i++) {
+      final p1 = points[i];
+      final p2 = points[i + 1];
+      final age = now - p1.t;
+      if (age > 140) continue;
+      paint.color = Colors.white.withOpacity(0.3 * (1 - age / 140));
+      canvas.drawLine(Offset(p1.x, p1.y), Offset(p2.x, p2.y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrailPainter old) => true;
+}
+
+
 class _SpeechBubble extends StatelessWidget {
   final String text;
-  const _SpeechBubble({required this.text});
+  final bool isDark;
+  final Color primaryColor;
+  const _SpeechBubble({required this.text, required this.isDark, required this.primaryColor});
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor = isDark ? primaryColor.withOpacity(0.3) : const Color(0xFFC8E4F8);
+    final textColor = isDark ? Colors.white.withOpacity(0.9) : const Color(0xFF3A6EA8);
+    final shadowColor = isDark ? Colors.black.withOpacity(0.3) : const Color(0xFF508CD2).withOpacity(0.15);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      constraints: const BoxConstraints(maxWidth: 220),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bgColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFC8E4F8), width: 2.5),
-        boxShadow: [BoxShadow(color: const Color(0xFF508CD2).withOpacity(0.15), blurRadius: 14, offset: const Offset(0, 4))],
+        border: Border.all(color: borderColor, width: 2),
+        boxShadow: [BoxShadow(color: shadowColor, blurRadius: 14, offset: const Offset(0, 4))],
       ),
-      child: Text(text, style: const TextStyle(color: Color(0xFF3A6EA8), fontWeight: FontWeight.w800, fontSize: 14, decoration: TextDecoration.none)),
+      child: Text(text, style: TextStyle(color: textColor, fontWeight: FontWeight.w700, fontSize: 12, decoration: TextDecoration.none, height: 1.3), maxLines: 4, overflow: TextOverflow.ellipsis),
     );
   }
 }
@@ -535,6 +685,7 @@ class _NimbusCloudPainter extends CustomPainter {
     switch (emo) {
       case NimbusEmo.happy:
       case NimbusEmo.idle:
+      case NimbusEmo.curious:
         mouth = Path()..moveTo(50 * sx, 76 * sy)..quadraticBezierTo(60 * sx, 85 * sy, 70 * sx, 76 * sy);
         canvas.drawPath(mouth, mouthPaint);
         break;
@@ -569,6 +720,14 @@ class _NimbusCloudPainter extends CustomPainter {
       starPainter.text = TextSpan(text: '✦', style: TextStyle(color: const Color(0xFFFFD32A), fontSize: 9 * sx, decoration: TextDecoration.none));
       starPainter.layout();
       starPainter.paint(canvas, Offset(52 * sx, 14 * sy));
+    }
+
+    // Question mark for curious
+    if (emo == NimbusEmo.curious) {
+      final qPainter = TextPainter(textDirection: TextDirection.ltr);
+      qPainter.text = TextSpan(text: '?', style: TextStyle(color: const Color(0xFF1C3048), fontSize: 28 * sx, fontWeight: FontWeight.bold, decoration: TextDecoration.none));
+      qPainter.layout();
+      qPainter.paint(canvas, Offset(50 * sx, -15 * sy));
     }
 
     // Blush for sad

@@ -83,7 +83,7 @@ class NativeAdSpace extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -112,9 +112,9 @@ class NativeAdSpace extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
             alignment: Alignment.center,
-            child: const Text("Learn More", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text("Learn More", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
           )
         ],
       ),
@@ -135,9 +135,9 @@ class VideoRewardedAdButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [Colors.purple.shade700, AppColors.primary]),
+          gradient: LinearGradient(colors: [Colors.purple.shade700, Theme.of(context).primaryColor]),
           borderRadius: BorderRadius.circular(22),
-          boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))]
+          boxShadow: [BoxShadow(color: Theme.of(context).primaryColor.withOpacity(0.3), blurRadius: 10, offset: Offset(0, 5))]
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -163,11 +163,11 @@ class AppOpenAdSimulation extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(LucideIcons.monitorPlay, color: AppColors.primary, size: 64),
+            Icon(LucideIcons.monitorPlay, color: Theme.of(context).primaryColor, size: 64),
             const SizedBox(height: 20),
             Text("[ App Open Ad Space ]", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            const CircularProgressIndicator(color: AppColors.primary),
+            CircularProgressIndicator(color: Theme.of(context).primaryColor),
             const SizedBox(height: 20),
             Text("Loading your financial future...", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87))),
             const SizedBox(height: 40),

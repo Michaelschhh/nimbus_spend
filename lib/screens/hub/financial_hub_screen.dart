@@ -16,6 +16,7 @@ import '../debts/debts_screen.dart';
 import '../goals/goals_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
 import '../../widgets/common/ad_placements.dart';
+import '../../utils/responsive.dart';
 
 class FinancialHubScreen extends StatelessWidget {
   const FinancialHubScreen({super.key});
@@ -34,34 +35,34 @@ class FinancialHubScreen extends StatelessWidget {
       
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.symmetric(horizontal: Responsive.sp(24, context)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              SizedBox(height: Responsive.sp(20, context)),
               Text("Finances",
-                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1)),
+                  style: TextStyle(fontSize: Responsive.fs(34, context), fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1)),
               const BannerAdSpace(),
               const SizedBox(height: 20),
 
               // Smart Net Worth Summary
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(Responsive.sp(24, context)),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                  border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.1)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("AVAILABLE RESOURCES", 
-                        style: TextStyle(color: AppColors.textDim, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
-                    const SizedBox(height: 8),
+                    Text("AVAILABLE RESOURCES", 
+                        style: TextStyle(color: AppColors.textDim, fontSize: Responsive.fs(10, context), fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                    SizedBox(height: Responsive.sp(8, context)),
                     Text(Formatters.currency(s.availableResources, s.currency),
-                        style: TextStyle(fontSize: 38, fontWeight: FontWeight.w700, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2)),
-                    const SizedBox(height: 12),
+                        style: TextStyle(fontSize: Responsive.fs(38, context), fontWeight: FontWeight.w700, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2)),
+                    SizedBox(height: Responsive.sp(12, context)),
                     Row(
                       children: [
                         Container(
@@ -89,7 +90,7 @@ class FinancialHubScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 35),
+              SizedBox(height: Responsive.sp(35, context)),
 
               _glassCard(
                 context,
@@ -128,7 +129,7 @@ class FinancialHubScreen extends StatelessWidget {
                 icon: LucideIcons.refreshCw,
                 title: "Subscriptions",
                 subtitle: "${Formatters.currency(subProv.monthlySubCost, s.currency)}/mo • ${subProv.subscriptions.where((s) => s.isActive).length} active",
-                color: AppColors.primary,
+                color: Theme.of(context).primaryColor,
                 screen: const SubscriptionsScreen(),
               ),
 

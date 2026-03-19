@@ -41,8 +41,8 @@ class Saving {
     return Saving(
       id: map['id'],
       description: map['description'],
-      amount: map['amount'],
-      annualInterestRate: map['annualInterestRate'],
+      amount: (map['amount'] as num).toDouble(),
+      annualInterestRate: (map['annualInterestRate'] as num).toDouble(),
       date: DateTime.parse(map['date']),
       endDate: DateTime.parse(map['endDate']),
       isCompleted: map['isCompleted'] == 1,

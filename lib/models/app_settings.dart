@@ -19,10 +19,16 @@ class AppSettings {
   final int themeIndex;
   final bool themesUnlocked;
   final bool mascotEnabled;
+  final bool mascotTipsEnabled;
   final bool appLockEnabled;
   final String appLockType; // 'passcode' | 'password'
   final String appLockCode;
   final bool securityUnlocked; // Non-persistent session state
+  final bool securityUnlockedIAP; // Persisted IAP state
+  final int? themeExpiryTimestamp; // UTC milliseconds
+  final bool performanceModeEnabled; // Optimization for low-end devices
+
+
 
   AppSettings({
     required this.name,
@@ -45,10 +51,14 @@ class AppSettings {
     this.themeIndex = 0,
     this.themesUnlocked = false,
     this.mascotEnabled = true,
+    this.mascotTipsEnabled = true,
     this.appLockEnabled = false,
     this.appLockType = 'passcode',
     this.appLockCode = '',
     this.securityUnlocked = false,
+    this.securityUnlockedIAP = false,
+    this.themeExpiryTimestamp,
+    this.performanceModeEnabled = false,
   });
 
   AppSettings copyWith({
@@ -72,11 +82,17 @@ class AppSettings {
     int? themeIndex,
     bool? themesUnlocked,
     bool? mascotEnabled,
+    bool? mascotTipsEnabled,
     bool? appLockEnabled,
     String? appLockType,
     String? appLockCode,
     bool? securityUnlocked,
+    bool? securityUnlockedIAP,
+    int? themeExpiryTimestamp,
+    bool? performanceModeEnabled,
   }) {
+
+
     return AppSettings(
       name: name ?? this.name,
       currency: currency ?? this.currency,
@@ -98,10 +114,16 @@ class AppSettings {
       themeIndex: themeIndex ?? this.themeIndex,
       themesUnlocked: themesUnlocked ?? this.themesUnlocked,
       mascotEnabled: mascotEnabled ?? this.mascotEnabled,
+      mascotTipsEnabled: mascotTipsEnabled ?? this.mascotTipsEnabled,
       appLockEnabled: appLockEnabled ?? this.appLockEnabled,
       appLockType: appLockType ?? this.appLockType,
       appLockCode: appLockCode ?? this.appLockCode,
       securityUnlocked: securityUnlocked ?? this.securityUnlocked,
+      securityUnlockedIAP: securityUnlockedIAP ?? this.securityUnlockedIAP,
+      themeExpiryTimestamp: themeExpiryTimestamp ?? this.themeExpiryTimestamp,
+      performanceModeEnabled: performanceModeEnabled ?? this.performanceModeEnabled,
     );
+
+
   }
 }

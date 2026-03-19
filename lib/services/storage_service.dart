@@ -106,7 +106,8 @@ class StorageService {
         category TEXT,
         isPaid INTEGER,
         paidDate TEXT,
-        autoPay INTEGER DEFAULT 0
+        autoPay INTEGER DEFAULT 0,
+        defaultRouting TEXT DEFAULT "allowance"
       )
     ''');
   }

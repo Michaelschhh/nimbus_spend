@@ -61,7 +61,7 @@ class _BillsScreenState extends State<BillsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
-                    child: const Icon(LucideIcons.plus, color: AppColors.primary, size: 20),
+                    child: Icon(LucideIcons.plus, color: Theme.of(context).primaryColor, size: 20),
                   ),
                 ),
               ]),
@@ -140,8 +140,8 @@ class _BillsScreenState extends State<BillsScreen> {
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
-                  child: const Text("AUTO", style: TextStyle(color: AppColors.primary, fontSize: 8, fontWeight: FontWeight.w900)),
+                  decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                  child: Text("AUTO", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 8, fontWeight: FontWeight.w900)),
                 ),
               ],
             ]),
@@ -262,7 +262,7 @@ class _BillsScreenState extends State<BillsScreen> {
               }
             }
             Navigator.pop(ctx);
-          }, child: const Text("Pay", style: TextStyle(color: AppColors.primary))),
+          }, child: Text("Pay", style: TextStyle(color: Theme.of(context).primaryColor))),
         ],
       )
     ));

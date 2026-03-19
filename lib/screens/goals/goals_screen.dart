@@ -61,7 +61,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
-                    child: const Icon(LucideIcons.plus, color: AppColors.primary, size: 20),
+                    child: Icon(LucideIcons.plus, color: Theme.of(context).primaryColor, size: 20),
                   ),
                 ),
               ]),
@@ -99,11 +99,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
+          border: Border.all(color: isSelected ? Theme.of(context).primaryColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
         ),
-        child: Text("$title ($count)", style: TextStyle(color: isSelected ? AppColors.primary : AppColors.textDim, fontWeight: FontWeight.bold)),
+        child: Text("$title ($count)", style: TextStyle(color: isSelected ? Theme.of(context).primaryColor : AppColors.textDim, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -240,7 +240,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 hintText: Formatters.currency(remaining, sProv.settings.currency),
                 hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26)),
                 enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
-                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor)),
               ),
             ),
             const SizedBox(height: 20),
@@ -294,7 +294,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
               context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: false);
             }
             Navigator.pop(ctx);
-          }, child: const Text("Fund", style: TextStyle(color: AppColors.primary))),
+          }, child: Text("Fund", style: TextStyle(color: Theme.of(context).primaryColor))),
         ],
       )
     ));

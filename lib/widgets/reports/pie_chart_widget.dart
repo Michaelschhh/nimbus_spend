@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../models/expense.dart';
+import '../../utils/color_utils.dart';
 
 class CategoryPieChart extends StatelessWidget {
   final List<Expense> expenses;
@@ -32,7 +33,7 @@ class CategoryPieChart extends StatelessWidget {
 
       sections.add(
         PieChartSectionData(
-          color: Colors.primaries[i % Colors.primaries.length],
+          color: ColorUtils.categoryColor(cat, context),
           value: val,
           title: '${percentage.toStringAsFixed(0)}%',
           radius: 60,
@@ -70,7 +71,7 @@ class CategoryPieChart extends StatelessWidget {
                   width: 12,
                   height: 12,
                   decoration: BoxDecoration(
-                    color: Colors.primaries[index % Colors.primaries.length],
+                    color: ColorUtils.categoryColor(cat, context),
                     shape: BoxShape.circle,
                   ),
                 ),

@@ -85,7 +85,7 @@ class _AddBillFormState extends State<AddBillForm> {
             title: const Text("Due Date", style: TextStyle(color: AppColors.textDim)),
             subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate),
                 style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
-            trailing: const Icon(Icons.calendar_today, color: AppColors.primary),
+            trailing: Icon(Icons.calendar_today, color: Theme.of(context).primaryColor),
             onTap: () async {
               final date = await showDatePicker(
                 context: context, initialDate: DateTime.now(),
@@ -113,7 +113,7 @@ class _AddBillFormState extends State<AddBillForm> {
             dropdownColor: Theme.of(context).cardColor,
             style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             decoration: InputDecoration(
-              prefixIcon: const Icon(LucideIcons.wallet, color: AppColors.primary, size: 18),
+              prefixIcon: Icon(LucideIcons.wallet, color: Theme.of(context).primaryColor, size: 18),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
             ),
@@ -129,7 +129,7 @@ class _AddBillFormState extends State<AddBillForm> {
             width: double.infinity, height: 55,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: Theme.of(context).primaryColor,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
               onPressed: _save,
@@ -155,7 +155,7 @@ class _AddBillFormState extends State<AddBillForm> {
             borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: AppColors.primary)),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor)),
       ),
     );
   }
@@ -194,7 +194,7 @@ class _AddBillFormState extends State<AddBillForm> {
     
     final sProv = context.read<SettingsProvider>();
 
-    if (!sProv.settings.isPro) {
+    if (!sProv.settings.isPro && !sProv.settings.adsRemoved) {
       sProv.incrementAdCounter();
       if (sProv.adClickCounter >= 2) {
         AdService.showInterstitialAd(() {

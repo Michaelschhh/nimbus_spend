@@ -27,7 +27,11 @@ class ShareCardWidget extends StatelessWidget {
       width: 350,
       padding: const EdgeInsets.all(30),
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
+        gradient: LinearGradient(
+          colors: [Theme.of(context).primaryColor, Theme.of(context).colorScheme.secondary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(

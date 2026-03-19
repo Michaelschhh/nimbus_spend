@@ -6,17 +6,18 @@ import '../../services/sound_service.dart';
 class CustomSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
-  final Color activeColor;
+  final Color? activeColor;
 
   const CustomSwitch({
     super.key,
     required this.value,
     required this.onChanged,
-    this.activeColor = AppColors.primary,
+    this.activeColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final resolvedColor = activeColor ?? Theme.of(context).primaryColor;
     return GestureDetector(
       onTap: () {
         HapticService.light();
@@ -30,8 +31,8 @@ class CustomSwitch extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: value ? activeColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12),
-          border: Border.all(color: value ? activeColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), width: 1.5),
+          color: value ? resolvedColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12),
+          border: Border.all(color: value ? resolvedColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), width: 1.5),
         ),
         child: Stack(
           alignment: Alignment.center,

@@ -40,7 +40,7 @@ class _BadgeCelebrationState extends State<BadgeCelebration> {
           ConfettiWidget(
             confettiController: _confetti,
             blastDirectionality: BlastDirectionality.explosive,
-            colors: const [AppColors.gold, AppColors.primary, AppColors.success],
+            colors: [AppColors.gold, Theme.of(context).primaryColor, AppColors.success],
           ),
           Column(
             mainAxisSize: MainAxisSize.min,

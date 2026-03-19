@@ -21,9 +21,9 @@ class _CurrencyPickerModalState extends State<CurrencyPickerModal> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         children: [
@@ -34,7 +34,8 @@ class _CurrencyPickerModalState extends State<CurrencyPickerModal> {
             style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             decoration: InputDecoration(
               hintText: "Search currency code...",
-              prefixIcon: const Icon(LucideIcons.search, color: AppColors.primary),
+              hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54),
+              prefixIcon: Icon(LucideIcons.search, color: Theme.of(context).primaryColor),
               filled: true,
               fillColor: Theme.of(context).cardColor,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),

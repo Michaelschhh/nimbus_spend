@@ -74,7 +74,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
             decoration: InputDecoration(
               labelText: "Frequency",
               labelStyle: const TextStyle(color: AppColors.textDim),
-              prefixIcon: const Icon(LucideIcons.calendar, color: AppColors.primary),
+              prefixIcon: Icon(LucideIcons.calendar, color: Theme.of(context).primaryColor),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -104,7 +104,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
             dropdownColor: Theme.of(context).cardColor,
             style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             decoration: InputDecoration(
-              prefixIcon: const Icon(LucideIcons.wallet, color: AppColors.primary, size: 18),
+              prefixIcon: Icon(LucideIcons.wallet, color: Theme.of(context).primaryColor, size: 18),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
             ),
@@ -121,7 +121,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
             child: ElevatedButton(
               onPressed: _save,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: Theme.of(context).primaryColor,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
               child: Text(widget.existingSubscription == null ? "Track Subscription" : "Save Changes",
@@ -141,14 +141,14 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
       decoration: InputDecoration(
         labelText: hint,
         labelStyle: const TextStyle(color: AppColors.textDim),
-        prefixIcon: Icon(icon, color: AppColors.primary),
+        prefixIcon: Icon(icon, color: Theme.of(context).primaryColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: AppColors.primary)),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor)),
       ),
     );
   }
@@ -224,7 +224,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
     }
 
     final settProv = context.read<SettingsProvider>();
-    if (!settProv.settings.isPro) {
+    if (!settProv.settings.isPro && !settProv.settings.adsRemoved) {
       settProv.incrementAdCounter();
       if (settProv.adClickCounter >= 2) {
         AdService.showInterstitialAd(() {

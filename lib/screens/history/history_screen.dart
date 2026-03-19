@@ -100,7 +100,7 @@ class HistoryScreen extends StatelessWidget {
               TextButton(onPressed: () {
                 Navigator.pop(ctx);
                 showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddExpenseForm(existingExpense: e));
-              }, child: const Text("Edit", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold))),
+              }, child: Text("Edit", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold))),
             if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰' && e.category != 'Subscriptions 💎')
               TextButton(onPressed: () {
                 prov.deleteExpense(e.id, sProv);
