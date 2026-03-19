@@ -36,10 +36,10 @@ class CategoryPieChart extends StatelessWidget {
           value: val,
           title: '${percentage.toStringAsFixed(0)}%',
           radius: 60,
-          titleStyle: const TextStyle(
+          titleStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           ),
         ),
       );

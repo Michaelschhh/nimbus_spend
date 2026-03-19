@@ -12,8 +12,11 @@ import '../../widgets/common/currency_picker_modal.dart';
 import '../../widgets/common/custom_switch.dart';
 import '../../services/sound_service.dart';
 import '../../services/iap_service.dart';
+import '../../providers/savings_provider.dart';
 import '../../widgets/common/ad_placements.dart';
+import 'security_settings_screen.dart';
 import 'salary_settings_screen.dart';
+import 'paywall_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -22,9 +25,10 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final prov = context.watch<SettingsProvider>();
     final s = prov.settings;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(24),
@@ -43,25 +47,41 @@ class SettingsScreen extends StatelessWidget {
             
             GestureDetector(
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const SalarySettingsScreen())),
-              child: _staticCard("Salary", s.isSalaryEarner ? "Active" : "Disabled", LucideIcons.briefcase),
+              child: _staticCard(context, "Salary", s.isSalaryEarner ? "Active" : "Disabled", LucideIcons.briefcase),
             ),
             
             GestureDetector(
               onTap: () => _showCurrencyPicker(context, prov),
-              child: _staticCard("Standard Currency", s.currency, LucideIcons.globe),
+              child: _staticCard(context, "Standard Currency", s.currency, LucideIcons.globe),
             ),
             
             const SizedBox(height: 25),
             const Text("Preferences", style: TextStyle(color: AppColors.textDim, fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
+            
+            _sectionHeader("PREFERENCES"),
+            _settingsCard(context, [
+              _settingsRow(context, LucideIcons.palette, "Premium Features", () => Navigator.push(context, MaterialPageRoute(builder: (c) => const PaywallScreen()))),
+              _settingsRow(context, LucideIcons.shield, "Security Lock", () => Navigator.push(context, MaterialPageRoute(builder: (c) => SecuritySettingsScreen()))),
+            ]),
+
+            const SizedBox(height: 20),
             _soundCard(context, prov),
+            _darkModeCard(context, prov),
+
+            // Nimbus Mascot toggle (Pro/adsRemoved only)
+            if (s.isPro || s.adsRemoved)
+              _mascotCard(context, prov),
             
             const SizedBox(height: 60),
             
             // Remove Ads
-            if (!s.isPro)
+            if (!s.isPro && !s.adsRemoved)
               GestureDetector(
-                onTap: () => IAPService.buyRemoveAds(),
+                onTap: () async {
+                  await IAPService.buyRemoveAds();
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Processing purchase...')));
+                },
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(20),
@@ -87,7 +107,7 @@ class SettingsScreen extends StatelessWidget {
               child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
                 child: const Row(children: [
                   Icon(LucideIcons.refreshCw, color: AppColors.textDim, size: 18),
                   SizedBox(width: 14),
@@ -111,6 +131,34 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 12),
+      child: Text(title, style: const TextStyle(color: AppColors.textDim, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+    );
+  }
+
+  Widget _settingsCard(BuildContext context, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _settingsRow(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.primary, size: 20),
+      title: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      trailing: const Icon(LucideIcons.chevronRight, color: AppColors.textDim, size: 16),
+      onTap: onTap,
+    );
+  }
+
+  void _showProfileEdit(BuildContext context, SettingsProvider prov) {
+    final s = prov.settings;
+    _editCard(context, "Identity", s.name, LucideIcons.user, (v) => prov.updateProfile(v, s.monthlyBudget, s.hourlyWage, s.currency));
+  }
+
   void _showCurrencyPicker(BuildContext context, SettingsProvider prov) {
     showModalBottomSheet(
       context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
@@ -126,15 +174,15 @@ class SettingsScreen extends StatelessWidget {
       onTap: () {
         final ctrl = TextEditingController(text: v);
         showDialog(context: context, builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.cardBg,
-          title: Text("Edit $l", style: const TextStyle(color: Colors.white)),
+          backgroundColor: Theme.of(context).cardColor,
+          title: Text("Edit $l", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
           content: TextField(
             controller: ctrl,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+            decoration: InputDecoration(
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
+              focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
             ),
           ),
           actions: [
@@ -155,7 +203,7 @@ class SettingsScreen extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
         child: Row(children: [
           Icon(icon, color: AppColors.primary, size: 18),
           const SizedBox(width: 14),
@@ -163,18 +211,17 @@ class SettingsScreen extends StatelessWidget {
             Text(l, style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
             Text(v, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
           ])),
-          const Icon(LucideIcons.edit3, color: Colors.white24, size: 16),
+          Icon(LucideIcons.edit3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26), size: 16),
         ]),
       ),
     );
   }
 
   Widget _soundCard(BuildContext context, SettingsProvider prov) {
-    // Only import CustomSwitch here if not already imported, but better to import at top
-    // Since I'm using multi_replace, I'll add the import at the top too.
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
       child: Row(children: [
         const Icon(LucideIcons.volume2, color: AppColors.primary, size: 18),
         const SizedBox(width: 14),
@@ -195,10 +242,49 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _staticCard(String l, String v, IconData i) {
+  Widget _darkModeCard(BuildContext context, SettingsProvider prov) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+      child: Row(children: [
+        const Icon(LucideIcons.moon, color: AppColors.primary, size: 18),
+        const SizedBox(width: 14),
+        const Expanded(child: Text("Dark Mode", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
+        CustomSwitch(
+          value: prov.settings.isDarkMode,
+          onChanged: (val) {
+            prov.setDarkMode(val);
+          },
+        ),
+      ]),
+    );
+  }
+
+  Widget _mascotCard(BuildContext context, SettingsProvider prov) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+      child: Row(children: [
+        const Icon(LucideIcons.cloud, color: AppColors.primary, size: 18),
+        const SizedBox(width: 14),
+        const Expanded(child: Text("Nimbus Mascot", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
+        CustomSwitch(
+          value: prov.settings.mascotEnabled,
+          onChanged: (val) {
+            prov.setMascotEnabled(val);
+          },
+        ),
+      ]),
+    );
+  }
+
+  Widget _staticCard(BuildContext context, String l, String v, IconData i) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
       child: Row(children: [
         Icon(i, color: AppColors.primary, size: 18),
         const SizedBox(width: 14),
@@ -206,14 +292,14 @@ class SettingsScreen extends StatelessWidget {
           Text(l, style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
           Text(v, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.success)),
         ])),
-        const Icon(LucideIcons.chevronRight, color: Colors.white24, size: 16),
+        Icon(LucideIcons.chevronRight, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26), size: 16),
       ]),
     );
   }
 
   void _confirmPurge(BuildContext context, SettingsProvider prov) {
     showDialog(context: context, builder: (ctx) => AlertDialog(
-      backgroundColor: AppColors.cardBg,
+      backgroundColor: Theme.of(context).cardColor,
       title: const Text("Purge Data"),
       content: const Text("Wiping all financial data. App will reset."),
       actions: [
@@ -225,9 +311,26 @@ class SettingsScreen extends StatelessWidget {
           context.read<DebtProvider>().clear();
           context.read<GoalsProvider>().clear();
           context.read<SubscriptionProvider>().clear();
+          context.read<SavingsProvider>().clear();
           Navigator.pop(ctx); 
         }, child: const Text("PURGE", style: TextStyle(color: AppColors.danger))),
       ],
     ));
+  }
+
+  String _getThemeName(int index) {
+    switch(index) {
+      case 0: return "Default";
+      case 1: return "Emerald Night";
+      case 2: return "Ocean Blue";
+      case 3: return "Midnight Steel";
+      case 4: return "Cherry Blossom";
+      case 5: return "Obsidian";
+      case 6: return "Sunburst";
+      case 7: return "Forest";
+      case 8: return "Lavender";
+      case 9: return "Rose Gold";
+      default: return "Default";
+    }
   }
 }

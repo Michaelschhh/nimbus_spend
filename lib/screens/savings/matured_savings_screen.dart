@@ -19,20 +19,20 @@ class MaturedSavingsScreen extends StatelessWidget {
     final matured = prov.savings.where((s) => s.isMatured).toList();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text("Matured Vault", style: TextStyle(fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: Icon(Icons.arrow_back_ios_new, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Column(
         children: [
           const SizedBox(height: 20),
-          _buildTotalMatured(matured.fold(0.0, (sum, s) => sum + s.amount), cur),
+          _buildTotalMatured(context, matured.fold(0.0, (sum, s) => sum + s.amount), cur),
           const SizedBox(height: 30),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -62,12 +62,12 @@ class MaturedSavingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalMatured(double total, String cur) {
+  Widget _buildTotalMatured(BuildContext context, double total, String cur) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(30),
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: AppColors.glassBorder),
         gradient: LinearGradient(
@@ -80,7 +80,7 @@ class MaturedSavingsScreen extends StatelessWidget {
         children: [
           const Text("Available to Release", style: TextStyle(color: AppColors.textDim, fontSize: 14)),
           const SizedBox(height: 8),
-          Text(Formatters.currency(total, cur), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+          Text(Formatters.currency(total, cur), style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 32, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -91,7 +91,7 @@ class MaturedSavingsScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(25),
       ),
       child: Column(
@@ -101,16 +101,16 @@ class MaturedSavingsScreen extends StatelessWidget {
             children: [
               const Icon(LucideIcons.archive, color: AppColors.success, size: 20),
               const SizedBox(width: 12),
-              Expanded(child: Text(s.description, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16))),
-              Text(Formatters.currency(s.amount, cur), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              Expanded(child: Text(s.description, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold, fontSize: 16))),
+              Text(Formatters.currency(s.amount, cur), style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 20),
           AppleButton(
             label: "Release Funds to Resources",
             onTap: () => _showReleaseDialog(context, s, prov, sProv),
-            bgColor: Colors.white,
-            textColor: Colors.black,
+            bgColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
+            textColor: Theme.of(context).scaffoldBackgroundColor 
           ),
         ],
       ),
@@ -122,9 +122,9 @@ class MaturedSavingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.cardBg,
+        backgroundColor: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-        title: const Text("Release Matured Funds", style: TextStyle(color: Colors.white)),
+        title: Text("Release Matured Funds", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,10 +135,10 @@ class MaturedSavingsScreen extends StatelessWidget {
               controller: ctrl,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+              decoration: InputDecoration(
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
+                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
               ),
             ),
           ],

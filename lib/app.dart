@@ -10,7 +10,6 @@ import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/history/history_screen.dart';
 import 'screens/reports/reports_screen.dart';
-import 'screens/savings/savings_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/hub/financial_hub_screen.dart';
 import 'screens/onboarding/tos_screen.dart';
@@ -20,7 +19,9 @@ import 'screens/onboarding/tutorial_screen.dart';
 import 'providers/settings_provider.dart';
 import 'theme/colors.dart';
 import 'services/sound_service.dart';
-import 'widgets/common/ad_placements.dart';
+import 'screens/settings/paywall_screen.dart';
+import 'widgets/common/auth_overlay.dart';
+import 'widgets/common/nimbus_mascot.dart';
 
 class NimbusSpendApp extends StatelessWidget {
   const NimbusSpendApp({super.key});
@@ -29,24 +30,13 @@ class NimbusSpendApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, setProv, _) {
+        final themeIndex = setProv.settings.themeIndex;
+        final isDark = setProv.settings.isDarkMode;
+        
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Nimbus Spend',
-          theme: FlexThemeData.dark(
-            scheme: FlexScheme.deepPurple,
-            surfaceMode: FlexSurfaceMode.highScaffoldLowSurface,
-            blendLevel: 15,
-            appBarStyle: FlexAppBarStyle.background,
-            appBarOpacity: 0.90,
-            subThemesData: const FlexSubThemesData(
-              blendOnLevel: 30,
-            ),
-            useMaterial3ErrorColors: true,
-            visualDensity: FlexColorScheme.comfortablePlatformDensity,
-            useMaterial3: true,
-            fontFamily: GoogleFonts.inter().fontFamily,
-          ),
-          // Control Flow: Setup vs Dashboard
+          theme: isDark ? _buildDarkTheme(themeIndex) : _buildLightTheme(themeIndex),
           home: setProv.isInitializing
               ? const Scaffold(body: Center(child: CircularProgressIndicator()))
               : setProv.settings.onboardingComplete 
@@ -56,6 +46,148 @@ class NimbusSpendApp extends StatelessWidget {
       },
     );
   }
+
+  ThemeData _buildDarkTheme(int index) {
+    final colors = _getThemeColors(index);
+    final bgColor = _getDarkBgColor(index);
+    return ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: bgColor,
+      cardColor: Color.alphaBlend(Colors.white.withOpacity(0.05), bgColor),
+      primaryColor: colors.primary,
+      colorScheme: ColorScheme.dark(
+        primary: colors.primary,
+        secondary: colors.secondary,
+        surface: Color.alphaBlend(Colors.white.withOpacity(0.05), bgColor),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      fontFamily: GoogleFonts.inter().fontFamily,
+      useMaterial3: true,
+    );
+  }
+
+  ThemeData _buildLightTheme(int index) {
+    final colors = _getThemeColors(index);
+    final bgColor = _getLightBgColor(index);
+    return ThemeData(
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: bgColor,
+      cardColor: Color.alphaBlend(Colors.black.withOpacity(0.03), bgColor),
+      primaryColor: colors.primary,
+      colorScheme: ColorScheme.light(
+        primary: colors.primary,
+        secondary: colors.secondary,
+        surface: Color.alphaBlend(Colors.black.withOpacity(0.03), bgColor),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      fontFamily: GoogleFonts.inter().fontFamily,
+      useMaterial3: true,
+    );
+  }
+
+  _ThemeColors _getThemeColors(int index) {
+    switch (index) {
+      case 0: // Default — Apple Blue
+        return _ThemeColors(
+          primary: const Color(0xFF0A84FF),
+          secondary: const Color(0xFF5AC8FA),
+        );
+      case 1: // Emerald Night
+        return _ThemeColors(
+          primary: const Color(0xFF10BB7C), // Slightly more vibrant green
+          secondary: const Color(0xFF34D399),
+        );
+      case 2: // Ocean Blue
+        return _ThemeColors(
+          primary: const Color(0xFF2563EB),
+          secondary: const Color(0xFF60A5FA),
+        );
+      case 3: // Midnight Steel
+        return _ThemeColors(
+          primary: const Color(0xFF64748B),
+          secondary: const Color(0xFF94A3B8),
+        );
+      case 4: // Cherry Blossom
+        return _ThemeColors(
+          primary: const Color(0xFFDB2777),
+          secondary: const Color(0xFFFB7185),
+        );
+      case 5: // Obsidian
+        return _ThemeColors(
+          primary: const Color(0xFF334155),
+          secondary: const Color(0xFF475569),
+        );
+      case 6: // Sunburst
+        return _ThemeColors(
+          primary: const Color(0xFFD97706),
+          secondary: const Color(0xFFF59E0B),
+        );
+      case 7: // Forest
+        return _ThemeColors(
+          primary: const Color(0xFF059669),
+          secondary: const Color(0xFF10B981),
+        );
+      case 8: // Lavender
+        return _ThemeColors(
+          primary: const Color(0xFF7C3AED),
+          secondary: const Color(0xFFA78BFA),
+        );
+      case 9: // Rose Gold
+        return _ThemeColors(
+          primary: const Color(0xFFBE185D),
+          secondary: const Color(0xFFF472B6),
+        );
+      default:
+        return _ThemeColors(
+          primary: const Color(0xFF0A84FF),
+          secondary: const Color(0xFF5AC8FA),
+        );
+    }
+  }
+
+  Color _getDarkBgColor(int index) {
+    switch (index) {
+      case 0: return Colors.black;
+      case 1: return const Color(0xFF062016); // Deep Emerald
+      case 2: return const Color(0xFF06152B); // Deep Navy
+      case 3: return const Color(0xFF0F172A); // Slate Black
+      case 4: return const Color(0xFF210B13); // Deep Cherry
+      case 5: return const Color(0xFF121212); // Pure Obsidian
+      case 6: return const Color(0xFF1E1402); // Deep Amber
+      case 7: return const Color(0xFF021E14); // Deep Forest
+      case 8: return const Color(0xFF14021E); // Deep Lavender
+      case 9: return const Color(0xFF1E020D); // Deep Rose
+      default: return Colors.black;
+    }
+  }
+
+  Color _getLightBgColor(int index) {
+    switch (index) {
+      case 0: return Colors.white;
+      case 1: return const Color(0xFFF0FDF4); // Minty white
+      case 2: return const Color(0xFFEFF6FF); // Blue white
+      case 3: return const Color(0xFFF8FAFC); // Slate white
+      case 4: return const Color(0xFFFFF1F2); // Rose white
+      case 5: return const Color(0xFFF1F5F9); // Slate Gray white
+      case 6: return const Color(0xFFFFFBEB); // Amber white
+      case 7: return const Color(0xFFECFDF5); // Emerald white
+      case 8: return const Color(0xFFF5F3FF); // Violet white
+      case 9: return const Color(0xFFFDF2F8); // Pink white
+      default: return Colors.white;
+    }
+  }
+}
+
+class _ThemeColors {
+  final Color primary;
+  final Color secondary;
+  _ThemeColors({required this.primary, required this.secondary});
 }
 
 class MainNavigation extends StatefulWidget {
@@ -71,7 +203,6 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   void initState() {
     super.initState();
-    // Sync sound settings and play welcome sound
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final sProv = context.read<SettingsProvider>();
       SoundService.setEnabled(sProv.settings.soundsEnabled);
@@ -93,64 +224,83 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     final setProv = context.watch<SettingsProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final s = setProv.settings;
+    final themeIndex = s.themeIndex;
+    
     return Scaffold(
-      extendBody: true, // Allows content to flow behind the glass nav bar
-      backgroundColor: AppColors.background,
-      body: setProv.settings.tosAccepted 
-        ? (setProv.settings.tutorialSeen 
-            ? IndexedStack(
-                index: _index,
-                children: _pages,
-              )
-            : TutorialOverlay(onComplete: () => setProv.completeTutorial()))
-        : TermsOfServiceScreen(onAccept: () => setProv.acceptTOS()),
+      extendBody: true,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notif) {
+          if (notif is ScrollUpdateNotification || notif is UserScrollNotification) {
+            NimbusMascot.mascotKey.currentState?.onUserScroll();
+          }
+          return false;
+        },
+        child: Stack(
+          children: [
+            setProv.settings.tosAccepted 
+              ? (setProv.settings.tutorialSeen 
+                  ? IndexedStack(
+                      index: _index,
+                      children: _pages,
+                    )
+                  : TutorialOverlay(onComplete: () => setProv.completeTutorial()))
+              : TermsOfServiceScreen(onAccept: () => setProv.acceptTOS()),
+          
+          // Nimbus Mascot Overlay
+          if (s.mascotEnabled && (s.isPro || s.adsRemoved))
+            IgnorePointer(
+              ignoring: false,
+              child: Listener(
+                onPointerDown: (event) {
+                  NimbusMascot.mascotKey.currentState?.tapAt(event.position);
+                },
+                behavior: HitTestBehavior.translucent,
+                child: NimbusMascot(key: NimbusMascot.mascotKey),
+              ),
+            ),
+
+          // Security Lock Overlay
+          if (s.appLockEnabled && !s.securityUnlocked)
+            AuthOverlay(),
+          ],
+        ),
+      ),
       bottomNavigationBar: (setProv.settings.tosAccepted && setProv.settings.tutorialSeen) 
-        ? _buildAppleNavBar() 
+        ? _buildAppleNavBar(isDark) 
         : null,
     );
   }
 
-  Widget _buildAppleNavBar() {
+  Widget _buildAppleNavBar(bool isDark) {
+    final primaryColor = Theme.of(context).primaryColor;
+    
     return LayoutBuilder(builder: (context, constraints) {
-      // DYNAMIC MATH:
-      // Total Screen Width - (Margin 24 * 2) = Inner Nav Width
-      // Inner Nav Width / 5 = Exact Width per icon
       double totalNavWidth = constraints.maxWidth - 48;
       double itemWidth = totalNavWidth / 5;
 
+      final bottomPadding = MediaQuery.of(context).padding.bottom;
       return Container(
-        margin: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+        margin: EdgeInsets.fromLTRB(24, 0, 24, 12 + bottomPadding),
         height: 75,
         decoration: BoxDecoration(
-          // LIQUID GLASS: More transparent, more blur, subtle gradient
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withOpacity(0.08),
-              Colors.white.withOpacity(0.03),
-            ],
-          ),
           borderRadius: BorderRadius.circular(35),
-          border: Border.all(color: Colors.white.withOpacity(0.12)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 30,
-              spreadRadius: -5,
-              offset: const Offset(0, 15),
-            )
-          ],
+          border: Border.all(
+            color: isDark 
+                ? Colors.white.withOpacity(0.08) 
+                : Colors.black.withOpacity(0.06),
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(35),
           child: BackdropFilter(
-            // DEEPER BLUR for that liquid feel
-            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // THE SLIDING PILL - Liquid highlight
+                // THE SLIDING PILL - adapts to theme primary color
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOutCubic,
@@ -164,14 +314,14 @@ class _MainNavigationState extends State<MainNavigation> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.primary.withOpacity(0.2),
-                            AppColors.primary.withOpacity(0.05),
+                            primaryColor.withOpacity(0.2),
+                            primaryColor.withOpacity(0.05),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: primaryColor.withOpacity(0.1),
                             blurRadius: 10,
                           )
                         ],
@@ -185,14 +335,13 @@ class _MainNavigationState extends State<MainNavigation> {
                   children: List.generate(5, (i) => Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        // Play the 'pop' sound on every click
                         SoundService.tap();
                         setState(() => _index = i);
                       },
                       behavior: HitTestBehavior.opaque,
                       child: Icon(
                         _getIcon(i),
-                        color: _index == i ? AppColors.primary : AppColors.textDim,
+                        color: _index == i ? primaryColor : AppColors.textDim,
                         size: 24,
                       ),
                     ),

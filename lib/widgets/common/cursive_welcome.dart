@@ -34,7 +34,7 @@ class _CursiveWelcomeState extends State<CursiveWelcome>
       builder: (context, child) {
         return CustomPaint(
           size: const Size(300, 100),
-          painter: WelcomePainter(_controller.value),
+          painter: WelcomePainter(_controller.value, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
         );
       },
     );
@@ -43,12 +43,13 @@ class _CursiveWelcomeState extends State<CursiveWelcome>
 
 class WelcomePainter extends CustomPainter {
   final double progress;
-  WelcomePainter(this.progress);
+  final Color color;
+  WelcomePainter(this.progress, {required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
-      ..color = Colors.white
+      ..color = color
       ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

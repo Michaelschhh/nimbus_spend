@@ -34,15 +34,15 @@ class _AddGoalFormState extends State<AddGoalForm> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
         top: 24, left: 24, right: 24,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(widget.existingGoal == null ? "Set Financial Goal" : "Edit Financial Goal",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
           const SizedBox(height: 20),
           _field(_nameController, "Goal Name (e.g. New Car)"),
           const SizedBox(height: 12),
@@ -92,7 +92,7 @@ class _AddGoalFormState extends State<AddGoalForm> {
                 Navigator.pop(context);
               },
               child: Text(widget.existingGoal == null ? "Create Goal" : "Save Changes",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -104,13 +104,13 @@ class _AddGoalFormState extends State<AddGoalForm> {
     return TextField(
       controller: c,
       keyboardType: isNum ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
       decoration: InputDecoration(
         labelText: hint,
         labelStyle: const TextStyle(color: AppColors.textDim),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: Colors.white24)),
+            borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(color: AppColors.primary)),

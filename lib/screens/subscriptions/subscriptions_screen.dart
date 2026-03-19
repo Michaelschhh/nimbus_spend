@@ -35,7 +35,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     final paused = subProv.subscriptions.where((s) => !s.isActive).toList();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -46,10 +46,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               Row(children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 22),
+                  child: Icon(LucideIcons.arrowLeft, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), size: 22),
                 ),
                 const SizedBox(width: 16),
-                const Text("Subscriptions", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
+                Text("Subscriptions", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1)),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => showModalBottomSheet(
@@ -58,7 +58,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(color: AppColors.cardBg, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
                     child: const Icon(LucideIcons.plus, color: AppColors.primary, size: 20),
                   ),
                 ),
@@ -72,14 +72,14 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               Container(
                 width: double.infinity, padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
-                  color: AppColors.cardBg, borderRadius: BorderRadius.circular(28),
+                  color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(28),
                   border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   const Text("MONTHLY BURN", style: TextStyle(color: AppColors.textDim, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
                   const SizedBox(height: 8),
                   Text(Formatters.currency(subProv.monthlySubCost, s.currency),
-                      style: const TextStyle(fontSize: 38, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -2)),
+                      style: TextStyle(fontSize: 38, fontWeight: FontWeight.w700, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2)),
                   const SizedBox(height: 8),
                   if (s.monthlyBudget > 0)
                     Text("${(subProv.monthlySubCost / s.monthlyBudget * 100).toStringAsFixed(1)}% of your monthly allowance",
@@ -116,7 +116,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       child: Padding(
         padding: const EdgeInsets.all(60),
         child: Column(children: [
-          Icon(LucideIcons.refreshCw, color: Colors.white.withOpacity(0.1), size: 48),
+          Icon(LucideIcons.refreshCw, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.1), size: 48),
           const SizedBox(height: 16),
           const Text("No subscriptions yet", style: TextStyle(color: AppColors.textDim)),
         ]),
@@ -131,9 +131,9 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.cardBg,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: sub.isActive ? AppColors.primary.withOpacity(0.08) : Colors.white.withOpacity(0.04)),
+          border: Border.all(color: sub.isActive ? AppColors.primary.withOpacity(0.08) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04)),
         ),
         child: Row(children: [
           Container(
@@ -147,14 +147,14 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           ),
           const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(sub.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+            Text(sub.name, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600, fontSize: 15)),
             const SizedBox(height: 4),
             Text("${sub.frequency} • Next: ${DateFormat('MMM dd').format(sub.nextDueDate)}${sub.billingDay != null ? ' (Day ${sub.billingDay})' : ''}",
                 style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
           ])),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text(Formatters.currency(sub.amount, cur),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold, fontSize: 15)),
             if (!sub.isActive)
               const Text("Paused", style: TextStyle(color: AppColors.textDim, fontSize: 10)),
           ]),
@@ -177,18 +177,18 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               width: MediaQuery.of(context).size.width * 0.8,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.cardBg, borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white10),
+                color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
               ),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Text(sub.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                Text(sub.name, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold, fontSize: 20)),
                 const SizedBox(height: 6),
                 Text(sub.frequency, style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
                 const SizedBox(height: 30),
                 AppleButton(
                   label: sub.isActive ? "Pause Subscription" : "Resume Subscription",
                   bgColor: sub.isActive ? AppColors.warning : AppColors.success,
-                  textColor: Colors.white,
+                  textColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
                   onTap: () {
                     prov.toggleSubscription(sub);
                     SoundService.success();
@@ -207,7 +207,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   Navigator.pop(ctx);
                 }),
                 const SizedBox(height: 12),
-                AppleButton(label: "Cancel", bgColor: Colors.white10, textColor: Colors.white, onTap: () => Navigator.pop(ctx)),
+                AppleButton(label: "Cancel", bgColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), textColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), onTap: () => Navigator.pop(ctx)),
               ]),
             ),
           ),

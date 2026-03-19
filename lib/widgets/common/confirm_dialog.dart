@@ -41,7 +41,7 @@ class ConfirmDialog extends StatelessWidget {
           ),
           child: Text(
             confirmLabel,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
           ),
         ),
       ],

@@ -36,7 +36,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -46,7 +46,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Analysis", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text("Analysis", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
                   IconButton(
                     onPressed: () => _shareTranscript(context, expenses, total, settings.currency, settings.name),
                     icon: const Icon(Icons.ios_share, color: AppColors.primary),
@@ -73,7 +73,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Container(
                   height: 300, width: double.infinity,
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(32)),
+                  decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(32)),
                   child: _showBarChart ? _buildBarChart(dataMap, total) : _buildPieChart(dataMap, total),
                 ),
                 const SizedBox(height: 40),
@@ -95,10 +95,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.primary : AppColors.cardBg,
+          color: active ? AppColors.primary : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(label, style: TextStyle(color: active ? Colors.black : Colors.white, fontWeight: FontWeight.bold)),
+        child: Text(label, style: TextStyle(color: active ? Theme.of(context).scaffoldBackgroundColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -115,7 +115,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             value: entry.value,
             title: "${pct.toStringAsFixed(0)}%",
             radius: 30,
-            titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+            titleStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
           );
         }).toList(),
       ),
@@ -139,7 +139,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               final cat = entries[group.x].key;
               return BarTooltipItem(
                 '$cat\n${Formatters.currency(rod.toY, '')}',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold, fontSize: 12),
               );
             },
           ),
@@ -155,22 +155,22 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 if (label.length > 5) label = '${label.substring(0, 5)}..';
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(label, style: const TextStyle(color: Colors.white54, fontSize: 9, fontWeight: FontWeight.w600)),
+                  child: Text(label, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54), fontSize: 9, fontWeight: FontWeight.w600)),
                 );
               },
               reservedSize: 30,
             ),
           ),
-          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
           horizontalInterval: maxVal > 0 ? maxVal / 4 : 1,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.white.withOpacity(0.06),
+            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.06),
             strokeWidth: 1,
           ),
         ),
@@ -195,7 +195,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: maxVal * 1.3,
-                  color: Colors.white.withOpacity(0.03),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.03),
                 ),
               ),
             ],
@@ -237,12 +237,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _row(String k, double v, String cur) => Container(
     margin: const EdgeInsets.only(bottom: 12),
     padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(22)),
+    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(22)),
     child: Row(children: [
       CircleAvatar(radius: 5, backgroundColor: _colorFor(k)),
       const SizedBox(width: 15),
-      Expanded(child: Text(k, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600))),
-      Text(Formatters.currency(v, cur), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      Expanded(child: Text(k, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600))),
+      Text(Formatters.currency(v, cur), style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
     ]),
   );
 }

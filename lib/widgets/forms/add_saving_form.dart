@@ -84,14 +84,14 @@ class _AddSavingFormState extends State<AddSavingForm> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 30, top: 25, left: 24, right: 24),
-      decoration: const BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.vertical(top: Radius.circular(35))),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(35))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(height: 5, width: 40, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(10))),
+            Container(height: 5, width: 40, decoration: BoxDecoration(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), borderRadius: BorderRadius.circular(10))),
             const SizedBox(height: 25),
-            const Text("Initiate Wealth Goal", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("Initiate Wealth Goal", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 25),
             _input(_desc, "Goal Name", LucideIcons.target, false),
             _input(_amount, "Initial Capital", LucideIcons.banknote, true),
@@ -101,7 +101,7 @@ class _AddSavingFormState extends State<AddSavingForm> {
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(15)),
+              decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15)),
               child: Row(children: [
                 const Icon(LucideIcons.wallet, size: 18, color: AppColors.textDim),
                 const SizedBox(width: 15),
@@ -109,8 +109,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
                   child: DropdownButton<String>(
                     value: _fundingSource,
                     isExpanded: true,
-                    dropdownColor: AppColors.cardBg,
-                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: Theme.of(context).cardColor,
+                    style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
                     underline: const SizedBox(),
                     items: const [
                       DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
@@ -136,10 +136,10 @@ class _AddSavingFormState extends State<AddSavingForm> {
   Widget _input(TextEditingController c, String h, IconData i, bool n) => Container(
     margin: const EdgeInsets.only(bottom: 12),
     padding: const EdgeInsets.symmetric(horizontal: 16),
-    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(15)),
+    decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15)),
     child: TextField(
       controller: c, keyboardType: n ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
       decoration: InputDecoration(icon: Icon(i, size: 18, color: AppColors.textDim), hintText: h, border: InputBorder.none),
     ),
   );

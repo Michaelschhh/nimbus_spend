@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
@@ -25,7 +26,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -34,8 +35,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             children: [
               const SizedBox(height: 60),
               Expanded(
-                child: SingleChildScrollView(
-                  child: _buildContent(),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.05, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: SingleChildScrollView(
+                    key: ValueKey<int>(_step),
+                    child: _buildContent(),
+                  ),
                 ),
               ),
               _appleButton(_step == 4 ? "Unlock Nimbus" : "Continue", () {
@@ -65,8 +84,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildContent() {
     if (_step == 0) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text("Hello.",
-                style: TextStyle(fontSize: 72, fontWeight: FontWeight.bold, letterSpacing: -4, color: Colors.white))
+        const SizedBox(height: 80),
+        Text("Hello.",
+                style: TextStyle(fontSize: 72, fontWeight: FontWeight.bold, letterSpacing: -4, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
             .animate().fadeIn(duration: 800.ms).slideY(begin: 0.2),
         const Text("I'm Nimbus. What should I call you?",
                 style: TextStyle(color: AppColors.textDim, fontSize: 18))
@@ -75,16 +95,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         TextField(
           controller: _name,
           autofocus: true,
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-          decoration: const InputDecoration(
-              border: InputBorder.none, hintText: "Your Name", hintStyle: TextStyle(color: Colors.white10)),
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+          decoration: InputDecoration(
+              border: InputBorder.none, hintText: "Your Name", hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
         ),
       ]);
     }
     if (_step == 1) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text("Goals.",
-                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: Colors.white))
+        Text("Goals.",
+                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
             .animate().fadeIn().slideY(begin: 0.2),
         const Text("Set your monthly allowance target.",
             style: TextStyle(color: AppColors.textDim, fontSize: 18)),
@@ -93,16 +113,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           controller: _budget,
           autofocus: true,
           keyboardType: TextInputType.number,
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-          decoration: const InputDecoration(
-              border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: Colors.white10)),
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+          decoration: InputDecoration(
+              border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
         ),
       ]);
     }
     if (_step == 2) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text("Value.",
-                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: Colors.white))
+        Text("Value.",
+                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
             .animate().fadeIn().slideY(begin: 0.2),
         const Text("How much do you earn per hour?",
             style: TextStyle(color: AppColors.textDim, fontSize: 18)),
@@ -111,9 +131,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           controller: _wage,
           autofocus: true,
           keyboardType: TextInputType.number,
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-          decoration: const InputDecoration(
-              border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: Colors.white10)),
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+          decoration: InputDecoration(
+              border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
         ),
         const SizedBox(height: 30),
         const Text("Currency", style: TextStyle(color: AppColors.textDim, fontSize: 18)),
@@ -130,12 +150,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           },
           child: Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_selectedCurrency,
-                    style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 20, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
                 const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
               ],
             ),
@@ -146,8 +166,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_step == 3) {
       // Step 3: Available Resources
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text("Reserves.",
-                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: Colors.white))
+        Text("Reserves.",
+                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
             .animate().fadeIn().slideY(begin: 0.2),
         const SizedBox(height: 8),
         const Text("How much do you have available outside your monthly budget?",
@@ -157,9 +177,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           controller: _resources,
           autofocus: true,
           keyboardType: TextInputType.number,
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-          decoration: const InputDecoration(
-              border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: Colors.white10)),
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+          decoration: InputDecoration(
+              border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
         ),
         const SizedBox(height: 30),
         Container(
@@ -169,15 +189,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppColors.primary.withOpacity(0.15)),
           ),
-          child: const Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("What are Available Resources?",
+              const Text("What are Available Resources?",
                   style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 "This is the total value you have outside your monthly budget — savings, emergency funds, or liquid assets.\n\nWhen you pay bills, settle debts, or fund goals, you can choose to pull from this pool instead of your monthly allowance.\n\nYou can always update this in Settings.",
-                style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87), fontSize: 13, height: 1.5),
               ),
             ],
           ),
@@ -186,8 +206,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
     if (_step == 4) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text("Salary.",
-                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: Colors.white))
+        Text("Salary.",
+                style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, letterSpacing: -3, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))
             .animate().fadeIn().slideY(begin: 0.2),
         const Text("Are you a salary earner?",
             style: TextStyle(color: AppColors.textDim, fontSize: 18)),
@@ -200,10 +220,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: _isSalaryEarner ? AppColors.primary : AppColors.cardBg,
+                  color: _isSalaryEarner ? AppColors.primary : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Text("Yes, I am", style: TextStyle(color: _isSalaryEarner ? Colors.black : Colors.white, fontWeight: FontWeight.bold)),
+                child: Text("Yes, I am", style: TextStyle(color: _isSalaryEarner ? Theme.of(context).scaffoldBackgroundColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(width: 12),
@@ -212,10 +232,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: !_isSalaryEarner ? AppColors.textDim : AppColors.cardBg,
+                  color: !_isSalaryEarner ? AppColors.textDim : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Text("No, I'm not", style: TextStyle(color: !_isSalaryEarner ? Colors.black : Colors.white, fontWeight: FontWeight.bold)),
+                child: Text("No, I'm not", style: TextStyle(color: !_isSalaryEarner ? Theme.of(context).scaffoldBackgroundColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -228,9 +248,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             controller: _salaryAmount,
             autofocus: true,
             keyboardType: TextInputType.number,
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-            decoration: const InputDecoration(
-                border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: Colors.white10)),
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+            decoration: InputDecoration(
+                border: InputBorder.none, hintText: "0.00", hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
           ),
         ],
       ]);
@@ -244,10 +264,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Container(
         height: 65,
         width: double.infinity,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), borderRadius: BorderRadius.circular(20)),
         child: Center(
           child: Text(label,
-              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+              style: TextStyle(color: Theme.of(context).scaffoldBackgroundColor, fontWeight: FontWeight.bold, fontSize: 18)),
         ),
       ),
     );

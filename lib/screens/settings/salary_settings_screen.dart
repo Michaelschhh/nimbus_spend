@@ -33,7 +33,7 @@ class _SalarySettingsScreenState extends State<SalarySettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -43,20 +43,20 @@ class _SalarySettingsScreenState extends State<SalarySettingsScreen> {
               Row(children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 22),
+                  child: Icon(LucideIcons.arrowLeft, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), size: 22),
                 ),
                 const SizedBox(width: 16),
-                const Text("Salary", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
+                Text("Salary", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1)),
               ]),
               const SizedBox(height: 30),
               
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
                 child: Row(children: [
                   const Icon(LucideIcons.briefcase, color: AppColors.primary, size: 18),
                   const SizedBox(width: 14),
-                  const Expanded(child: Text("Salary Earning", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white))),
+                  Expanded(child: Text("Salary Earning", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))),
                   CustomSwitch(
                     value: _isSalaryEarner,
                     onChanged: (val) {
@@ -75,7 +75,7 @@ class _SalarySettingsScreenState extends State<SalarySettingsScreen> {
                 
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+                  decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -84,12 +84,12 @@ class _SalarySettingsScreenState extends State<SalarySettingsScreen> {
                       TextField(
                         controller: _amountController,
                         keyboardType: TextInputType.number,
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
                         onChanged: (v) => setState(() => _salaryAmount = double.tryParse(v) ?? 0),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           border: InputBorder.none,
                           hintText: "0.00",
-                          hintStyle: TextStyle(color: Colors.white10),
+                          hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
                         ),
                       ),
                     ],
@@ -100,14 +100,14 @@ class _SalarySettingsScreenState extends State<SalarySettingsScreen> {
                 
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(20)),
+                  decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
                   child: Row(children: [
                     const Icon(LucideIcons.calendar, color: AppColors.primary, size: 18),
                     const SizedBox(width: 14),
-                    const Expanded(child: Text("Frequency", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white))),
+                    Expanded(child: Text("Frequency", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))),
                     DropdownButton<String>(
                       value: _salaryFrequency,
-                      dropdownColor: AppColors.cardBg,
+                      dropdownColor: Theme.of(context).cardColor,
                       style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
                       underline: const SizedBox(),
                       items: ['Monthly'].map((f) => DropdownMenuItem(value: f, child: Text("Per $f"))).toList(),

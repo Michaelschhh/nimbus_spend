@@ -73,14 +73,14 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => const AlertDialog(
-        backgroundColor: AppColors.cardBg,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: AppColors.primary),
-            SizedBox(height: 20),
-            Text("Analyzing budget impact...", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const CircularProgressIndicator(color: AppColors.primary),
+            const SizedBox(height: 20),
+            Text("Analyzing budget impact...", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -107,18 +107,18 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
             context: context,
             barrierDismissible: false,
             builder: (ctx) => AlertDialog(
-              backgroundColor: AppColors.cardBg,
+              backgroundColor: Theme.of(context).cardColor,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: AppColors.warning)),
               title: Row(
                 children: [
                    const Icon(LucideIcons.brainCircuit, color: AppColors.warning),
                    const SizedBox(width: 8),
-                   const Text("AI Insight", style: TextStyle(color: Colors.white)),
+                   Text("AI Insight", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
                 ],
               ),
               content: Text(
                 "This ${_getCategoryLabel(_cat)} costs ${percentage.toStringAsFixed(1)}% of your $sourceLabel. Do you really need this right now?",
-                style: const TextStyle(color: Colors.white70, height: 1.4),
+                style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87), height: 1.4),
               ),
               actions: [
                 TextButton(
@@ -188,21 +188,21 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 30, top: 20, left: 24, right: 24),
-      decoration: const BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.vertical(top: Radius.circular(35))),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(35))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(height: 5, width: 40, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(10))),
+            Container(height: 5, width: 40, decoration: BoxDecoration(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), borderRadius: BorderRadius.circular(10))),
             const SizedBox(height: 25),
             Text(_isRec ? "Authorize Subscription" : "Authorize Payment", 
-              style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 17, fontWeight: FontWeight.bold)),
             
             TextField(
               controller: _amount,
               autofocus: widget.existingExpense == null,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 54, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -2),
+              style: TextStyle(fontSize: 54, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(border: InputBorder.none, hintText: "0.00"),
             ),
@@ -210,18 +210,18 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
             // RECURRING TOGGLE (Apple Style)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.white10)),
+              decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Recurring Payment", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                      Text("Recurring Payment", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600)),
                       CustomSwitch(value: _isRec, onChanged: (v) => setState(() => _isRec = v)),
                     ],
                   ),
                   if (_isRec) ...[
-                    const Divider(color: Colors.white10, height: 30),
+                    Divider(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), height: 30),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: ["Daily", "Weekly", "Monthly", "Yearly"].map((f) => GestureDetector(
@@ -229,7 +229,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(color: _freq == f ? AppColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(10)),
-                          child: Text(f, style: TextStyle(color: _freq == f ? Colors.white : AppColors.textDim, fontSize: 11, fontWeight: FontWeight.bold)),
+                          child: Text(f, style: TextStyle(color: _freq == f ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black) : AppColors.textDim, fontSize: 11, fontWeight: FontWeight.bold)),
                         ),
                       )).toList(),
                     )
@@ -243,7 +243,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
               const SizedBox(height: 15),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.white10)),
+                decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
                 child: Row(children: [
                   const Icon(LucideIcons.wallet, size: 18, color: AppColors.textDim),
                   const SizedBox(width: 12),
@@ -251,8 +251,8 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                     child: DropdownButton<String>(
                       value: _fundingSource,
                       isExpanded: true,
-                      dropdownColor: AppColors.cardBg,
-                      style: const TextStyle(color: Colors.white),
+                      dropdownColor: Theme.of(context).cardColor,
+                      style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
                       underline: const SizedBox(),
                       items: const [
                         DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
@@ -286,8 +286,8 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
         onTap: () => setState(() => _cat = c),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(color: _cat == c ? Colors.white : Colors.black, borderRadius: BorderRadius.circular(15), border: Border.all(color: AppColors.white10)),
-          child: Text(c, style: TextStyle(color: _cat == c ? Colors.black : Colors.white, fontWeight: FontWeight.bold)),
+          decoration: BoxDecoration(color: _cat == c ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black) : Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
+          child: Text(c, style: TextStyle(color: _cat == c ? Theme.of(context).scaffoldBackgroundColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
         ),
       )).toList(),
     );

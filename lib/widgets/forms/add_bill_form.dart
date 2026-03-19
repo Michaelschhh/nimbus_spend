@@ -48,24 +48,24 @@ class _AddBillFormState extends State<AddBillForm> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
         top: 24, left: 24, right: 24,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(widget.existingBill == null ? "Add New Bill" : "Edit Bill",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
           const SizedBox(height: 20),
           _field(_nameController, "Bill Name (e.g. Rent)"),
           const SizedBox(height: 12),
           _field(_amountController, "Amount", isNum: true),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _frequency,
-            dropdownColor: AppColors.cardBg,
-            style: const TextStyle(color: Colors.white),
+            initialValue: _frequency,
+            dropdownColor: Theme.of(context).cardColor,
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             items: ['Weekly', 'Monthly', 'Yearly', 'Once']
                 .map((f) => DropdownMenuItem(value: f, child: Text(f)))
                 .toList(),
@@ -76,7 +76,7 @@ class _AddBillFormState extends State<AddBillForm> {
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Colors.white24)),
+                  borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
             ),
           ),
           const SizedBox(height: 12),
@@ -84,7 +84,7 @@ class _AddBillFormState extends State<AddBillForm> {
             contentPadding: EdgeInsets.zero,
             title: const Text("Due Date", style: TextStyle(color: AppColors.textDim)),
             subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
             trailing: const Icon(Icons.calendar_today, color: AppColors.primary),
             onTap: () async {
               final date = await showDatePicker(
@@ -98,7 +98,7 @@ class _AddBillFormState extends State<AddBillForm> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Auto Pay on Due Date?", style: TextStyle(color: Colors.white, fontSize: 14)),
+              Text("Auto Pay on Due Date?", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 14)),
               CustomSwitch(
                 value: _autoPay,
                 onChanged: (v) => setState(() => _autoPay = v),
@@ -109,13 +109,13 @@ class _AddBillFormState extends State<AddBillForm> {
           const Text("Default Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 11)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _routing,
-            dropdownColor: AppColors.cardBg,
-            style: const TextStyle(color: Colors.white),
+            initialValue: _routing,
+            dropdownColor: Theme.of(context).cardColor,
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             decoration: InputDecoration(
-              prefixIcon: Icon(LucideIcons.wallet, color: AppColors.primary, size: 18),
+              prefixIcon: const Icon(LucideIcons.wallet, color: AppColors.primary, size: 18),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.white24)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
             ),
             items: const [
               DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
@@ -134,7 +134,7 @@ class _AddBillFormState extends State<AddBillForm> {
               ),
               onPressed: _save,
               child: Text(widget.existingBill == null ? "Save Bill" : "Save Changes",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -146,13 +146,13 @@ class _AddBillFormState extends State<AddBillForm> {
     return TextField(
       controller: c,
       keyboardType: isNum ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
       decoration: InputDecoration(
         labelText: hint,
         labelStyle: const TextStyle(color: AppColors.textDim),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: Colors.white24)),
+            borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(color: AppColors.primary)),

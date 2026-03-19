@@ -34,10 +34,10 @@ class DailyOverviewCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Today's Spend",
             style: TextStyle(
-              color: Colors.white70,
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
               fontSize: 14,
               letterSpacing: 1,
             ),
@@ -45,8 +45,8 @@ class DailyOverviewCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             Formatters.currency(spentToday, currency),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
               fontSize: 36,
               fontWeight: FontWeight.bold,
             ),

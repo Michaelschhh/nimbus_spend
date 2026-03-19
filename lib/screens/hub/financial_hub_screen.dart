@@ -16,7 +16,6 @@ import '../debts/debts_screen.dart';
 import '../goals/goals_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
 import '../../widgets/common/ad_placements.dart';
-import '../../services/ad_service.dart';
 
 class FinancialHubScreen extends StatelessWidget {
   const FinancialHubScreen({super.key});
@@ -32,7 +31,7 @@ class FinancialHubScreen extends StatelessWidget {
     final subProv = context.watch<SubscriptionProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -40,8 +39,8 @@ class FinancialHubScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              const Text("Finances",
-                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
+              Text("Finances",
+                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1)),
               const BannerAdSpace(),
               const SizedBox(height: 20),
 
@@ -50,7 +49,7 @@ class FinancialHubScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppColors.cardBg,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                 ),
@@ -61,7 +60,7 @@ class FinancialHubScreen extends StatelessWidget {
                         style: TextStyle(color: AppColors.textDim, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
                     const SizedBox(height: 8),
                     Text(Formatters.currency(s.availableResources, s.currency),
-                        style: const TextStyle(fontSize: 38, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -2)),
+                        style: TextStyle(fontSize: 38, fontWeight: FontWeight.w700, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2)),
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -160,7 +159,7 @@ class FinancialHubScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: color.withOpacity(0.12)),
               ),
@@ -180,14 +179,14 @@ class FinancialHubScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(title,
-                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 16, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 4),
                         Text(subtitle,
                             style: TextStyle(color: color.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
-                  Icon(LucideIcons.chevronRight, color: Colors.white.withOpacity(0.2), size: 20),
+                  Icon(LucideIcons.chevronRight, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.2), size: 20),
                 ],
               ),
             ),

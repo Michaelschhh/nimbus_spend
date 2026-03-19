@@ -16,43 +16,43 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   int _step = 0;
 
   final List<_TutorialStep> _steps = [
-    _TutorialStep(
+    const _TutorialStep(
       icon: LucideIcons.wallet,
       title: "Dashboard",
       body: "Your financial command center. See your available resources, monthly budget status, and recent expenses at a glance. Tap the + button to log a new expense.",
       gradient: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
     ),
-    _TutorialStep(
+    const _TutorialStep(
       icon: LucideIcons.history,
       title: "History",
       body: "Every expense you log appears here in chronological order. Swipe left on any entry to delete it. Your spending history is always at your fingertips.",
       gradient: [Color(0xFF06B6D4), Color(0xFF3B82F6)],
     ),
-    _TutorialStep(
+    const _TutorialStep(
       icon: LucideIcons.pieChart,
       title: "Reports",
       body: "Visual breakdowns of your spending by category. See where your money goes with beautiful charts and share reports as images.",
       gradient: [Color(0xFF10B981), Color(0xFF059669)],
     ),
-    _TutorialStep(
+    const _TutorialStep(
       icon: LucideIcons.briefcase,
       title: "Financial Hub",
       body: "Manage Bills, Debts, Subscriptions, Savings, and Goals — all in one place. Each section has its own tracker with funding source options.",
       gradient: [Color(0xFFF59E0B), Color(0xFFEF4444)],
     ),
-    _TutorialStep(
+    const _TutorialStep(
       icon: LucideIcons.arrowLeftRight,
       title: " Funding Sources",
       body: "When adding expenses or funding goals, you can choose where the money comes from:\n\n• Monthly Budget — counts against your allowance\n• Available Resources — deducts from your reserves\n• None — just track it without deductions",
       gradient: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
     ),
-    _TutorialStep(
+    const _TutorialStep(
       icon: LucideIcons.brainCircuit,
       title: "AI Insight",
       body: "Nimbus watches your spending patterns. If an expense takes a large percentage of your resources, you'll get a gentle nudge based on the expense category. Health and food have higher tolerance than shopping.",
       gradient: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
     ),
-    _TutorialStep(
+    const _TutorialStep(
       icon: LucideIcons.settings,
       title: "Settings",
       body: "Update your name, monthly budget, hourly wage, currency, and available resources anytime. You can also remove ads or restore purchases here.",
@@ -76,7 +76,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   Widget build(BuildContext context) {
     final step = _steps[_step];
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -90,7 +90,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                     height: 3,
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     decoration: BoxDecoration(
-                      color: i <= _step ? AppColors.primary : Colors.white.withOpacity(0.1),
+                      color: i <= _step ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -124,12 +124,12 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                             height: 60,
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
+                              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.08),
                               borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: Colors.white.withOpacity(0.1)),
+                              border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.1)),
                             ),
-                            child: const Center(
-                              child: Text("Back", style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 16)),
+                            child: Center(
+                              child: Text("Back", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87), fontWeight: FontWeight.w600, fontSize: 16)),
                             ),
                           ),
                         ),
@@ -141,13 +141,13 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         child: Container(
                           height: 60,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
                             borderRadius: BorderRadius.circular(18),
                           ),
                           child: Center(
                             child: Text(
                               _step == _steps.length - 1 ? "Get Started" : "Next",
-                              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+                              style: TextStyle(color: Theme.of(context).scaffoldBackgroundColor, fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                           ),
                         ),
@@ -179,11 +179,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
               BoxShadow(color: step.gradient.first.withOpacity(0.3), blurRadius: 30, spreadRadius: 5),
             ],
           ),
-          child: Icon(step.icon, color: Colors.white, size: 42),
+          child: Icon(step.icon, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), size: 42),
         ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.8, 0.8)),
         const SizedBox(height: 40),
         Text(step.title,
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1),
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.15),
         const SizedBox(height: 20),
@@ -199,15 +199,15 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.white.withOpacity(0.07),
-                    Colors.white.withOpacity(0.02),
+                    (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.07),
+                    (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.02),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.08)),
               ),
               child: Text(step.body,
-                style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.6),
+                style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87), fontSize: 15, height: 1.6),
                 textAlign: TextAlign.center,
               ),
             ),

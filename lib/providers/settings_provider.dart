@@ -16,7 +16,7 @@ class SettingsProvider extends ChangeNotifier {
   SettingsProvider();
 
   Future<void> init() async {
-    await _loadSettings();
+    await _loadSettings(initial: true);
   }
 
   Future<void> updateSalarySettings(bool enabled, double amount, String frequency) async {
@@ -27,9 +27,11 @@ class SettingsProvider extends ChangeNotifier {
     await _loadSettings();
   }
 
-  Future<void> _loadSettings() async {
-    _isInitializing = true;
-    notifyListeners();
+  Future<void> _loadSettings({bool initial = false}) async {
+    if (initial) {
+      _isInitializing = true;
+      notifyListeners();
+    }
     final prefs = await SharedPreferences.getInstance();
     _settings = AppSettings(
       name: prefs.getString('user_name') ?? 'User',
@@ -45,10 +47,34 @@ class SettingsProvider extends ChangeNotifier {
       isSalaryEarner: prefs.getBool('is_salary_earner') ?? false,
       salaryAmount: prefs.getDouble('salary_amount') ?? 0.0,
       salaryFrequency: prefs.getString('salary_frequency') ?? 'Monthly',
+      isDarkMode: prefs.getBool('is_dark_mode') ?? true,
+      themeIndex: prefs.getInt('theme_index') ?? 0,
+      themesUnlocked: prefs.getBool('themes_unlocked') ?? false,
+      adsRemoved: prefs.getBool('ads_removed') ?? false,
+      mascotEnabled: prefs.getBool('mascot_enabled') ?? true,
+      appLockEnabled: prefs.getBool('app_lock_enabled') ?? false,
+      appLockType: prefs.getString('app_lock_type') ?? 'passcode',
+      appLockCode: prefs.getString('app_lock_code') ?? '',
+      securityUnlocked: _settings.securityUnlocked,
     );
-    _isInitializing = false;
+    if (initial) _isInitializing = false;
     notifyListeners();
   }
+
+  // --- Security Logic ---
+  void setSecurityUnlocked(bool value) {
+    _settings = _settings.copyWith(securityUnlocked: value);
+    notifyListeners();
+  }
+
+  Future<void> updateSecuritySettings(bool enabled, String type, String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('app_lock_enabled', enabled);
+    await prefs.setString('app_lock_type', type);
+    await prefs.setString('app_lock_code', code);
+    await _loadSettings();
+  }
+  // ----------------------
 
   // --- Ad Tracking System ---
   int _adClickCounter = 0;
@@ -68,6 +94,15 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> upgradeToPro() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_pro', true);
+    await prefs.setBool('ads_removed', true);
+    await prefs.setBool('themes_unlocked', true);
+    await prefs.setBool('security_unlocked_iap', true); // New IAP flag
+    await _loadSettings();
+  }
+
+  Future<void> removeAds() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('ads_removed', true);
     await _loadSettings();
   }
 
@@ -86,21 +121,41 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> updateProfile(String name, double budget, double wage, String currency) async {
     final prefs = await SharedPreferences.getInstance();
     
-    // Calculate the budget delta and adjust available resources
-    double oldBudget = _settings.monthlyBudget;
-    double delta = budget - oldBudget;
-    
     await prefs.setString('user_name', name);
     await prefs.setDouble('monthly_budget', budget);
     await prefs.setDouble('hourly_wage', wage);
     await prefs.setString('currency', currency);
     
-    // Adjust available resources by the budget change
-    if (delta != 0) {
-      double currentResources = prefs.getDouble('available_resources') ?? 0;
-      await prefs.setDouble('available_resources', currentResources + delta);
-    }
-    
+    await _loadSettings();
+  }
+
+  Future<void> setDarkMode(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_dark_mode', isDark);
+    await _loadSettings();
+  }
+
+  Future<void> setThemeIndex(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('theme_index', index);
+    await _loadSettings();
+  }
+
+  Future<void> unlockThemes() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('themes_unlocked', true);
+    await _loadSettings();
+  }
+
+  Future<void> unlockSecurity() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('security_unlocked_iap', true);
+    await _loadSettings();
+  }
+
+  Future<void> setMascotEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('mascot_enabled', enabled);
     await _loadSettings();
   }
 
@@ -154,6 +209,11 @@ class SettingsProvider extends ChangeNotifier {
       hourlyWage: 20, availableResources: 0, onboardingComplete: false
     );
     notifyListeners();
+  }
+
+  bool isSecurityUnlockedIAP() {
+    // Check if security features are paid for
+    return _settings.isPro; 
   }
 
   Future<void> updateAvailableResources(double amount) async {

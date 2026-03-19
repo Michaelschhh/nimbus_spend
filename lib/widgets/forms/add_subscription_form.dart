@@ -49,24 +49,24 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
         top: 24, left: 24, right: 24,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(widget.existingSubscription == null ? "Add Recurring Payment" : "Edit Subscription",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
           const SizedBox(height: 20),
           _field(_nameController, "Service Name (e.g. Netflix)", LucideIcons.tv),
           const SizedBox(height: 15),
           _field(_amountController, "Amount", LucideIcons.banknote, isNum: true),
           const SizedBox(height: 15),
           DropdownButtonFormField<String>(
-            value: _selectedFrequency,
-            dropdownColor: AppColors.cardBg,
-            style: const TextStyle(color: Colors.white),
+            initialValue: _selectedFrequency,
+            dropdownColor: Theme.of(context).cardColor,
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             items: ['Weekly', 'Monthly', 'Yearly']
                 .map((f) => DropdownMenuItem(value: f, child: Text(f)))
                 .toList(),
@@ -78,7 +78,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Colors.white24)),
+                  borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
             ),
           ),
           if (_selectedFrequency == 'Monthly') ...[
@@ -89,7 +89,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Charge first interval immediately?", style: TextStyle(color: Colors.white, fontSize: 14)),
+              Text("Charge first interval immediately?", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 14)),
               CustomSwitch(
                 value: _chargeFirstInterval, 
                 onChanged: (v) => setState(() => _chargeFirstInterval = v),
@@ -100,13 +100,13 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
           const Text("Default Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 11)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _routing,
-            dropdownColor: AppColors.cardBg,
-            style: const TextStyle(color: Colors.white),
+            initialValue: _routing,
+            dropdownColor: Theme.of(context).cardColor,
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             decoration: InputDecoration(
               prefixIcon: const Icon(LucideIcons.wallet, color: AppColors.primary, size: 18),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.white24)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
             ),
             items: const [
               DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
@@ -125,7 +125,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
               child: Text(widget.existingSubscription == null ? "Track Subscription" : "Save Changes",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -137,7 +137,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
     return TextField(
       controller: controller,
       keyboardType: isNum ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
       decoration: InputDecoration(
         labelText: hint,
         labelStyle: const TextStyle(color: AppColors.textDim),
@@ -145,7 +145,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: Colors.white24)),
+            borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(color: AppColors.primary)),
@@ -162,7 +162,7 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
       billingDay = int.tryParse(_billingDayController.text);
       if (billingDay != null && (billingDay < 1 || billingDay > 31)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Billing day must be between 1 and 31', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.danger)
+          SnackBar(content: Text('Billing day must be between 1 and 31', style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))), backgroundColor: AppColors.danger)
         );
         return;
       }

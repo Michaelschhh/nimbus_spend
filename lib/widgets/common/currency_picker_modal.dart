@@ -27,16 +27,16 @@ class _CurrencyPickerModalState extends State<CurrencyPickerModal> {
       ),
       child: Column(
         children: [
-          const Text("Select Currency", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text("Select Currency", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
           const SizedBox(height: 20),
           TextField(
             onChanged: (v) => setState(() => query = v),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             decoration: InputDecoration(
               hintText: "Search currency code...",
               prefixIcon: const Icon(LucideIcons.search, color: AppColors.primary),
               filled: true,
-              fillColor: AppColors.cardBg,
+              fillColor: Theme.of(context).cardColor,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
             ),
           ),
@@ -45,7 +45,7 @@ class _CurrencyPickerModalState extends State<CurrencyPickerModal> {
             child: ListView.builder(
               itemCount: filtered.length,
               itemBuilder: (context, i) => ListTile(
-                title: Text(filtered[i], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                title: Text(filtered[i], style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
                 onTap: () => widget.onSelect(filtered[i]),
                 trailing: const Icon(LucideIcons.chevronRight, size: 16, color: AppColors.textDim),
               ),

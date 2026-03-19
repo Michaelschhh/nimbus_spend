@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/colors.dart';
 import '../../services/haptic_service.dart';
 import '../../services/sound_service.dart';
@@ -31,7 +30,8 @@ class CustomSwitch extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: value ? activeColor : Colors.white.withOpacity(0.15),
+          color: value ? activeColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12),
+          border: Border.all(color: value ? activeColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), width: 1.5),
         ),
         child: Stack(
           alignment: Alignment.center,
@@ -39,14 +39,16 @@ class CustomSwitch extends StatelessWidget {
             AnimatedPositioned(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
-              left: value ? 24 : 2,
-              right: value ? 2 : 24,
+              left: value ? 22 : 2,
               child: Container(
-                width: 24,
-                height: 24,
-                decoration: const BoxDecoration(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+                  ]
                 ),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
@@ -21,6 +22,15 @@ import 'services/recurring_service.dart';
 void main() async {
   // Ensure Flutter engine is connected
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Edge-to-edge: make system nav bar transparent
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.light,
+    statusBarColor: Colors.transparent,
+  ));
 
   // Initialize Core Infrastructure
   await NotificationService.init(); 
@@ -66,7 +76,18 @@ class _LogicInitializerState extends State<LogicInitializer> {
       final subProv = Provider.of<SubscriptionProvider>(context, listen: false);
       
       // Wire IAP callback
-      IAPService.onPurchaseSuccess = () => sProv.upgradeToPro();
+      IAPService.onPurchaseSuccess = (String productId) {
+        if (productId == IAPService.removeAdsProductId) {
+          sProv.removeAds();
+        } else if (productId == IAPService.unlockThemesProductId) {
+          sProv.unlockThemes();
+        } else if (productId == 'unlock_security') {
+          sProv.unlockSecurity();
+        } else if (productId == IAPService.bundleProProductId) {
+          sProv.upgradeToPro();
+          sProv.unlockThemes();
+        }
+      };
       
       // Await data load before checking cycles
       await sProv.init();

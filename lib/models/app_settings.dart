@@ -9,11 +9,20 @@ class AppSettings {
   final bool onboardingComplete;
   final bool soundsEnabled;
   final bool isPro;
+  final bool adsRemoved;
   final bool tosAccepted;
   final bool tutorialSeen;
   final bool isSalaryEarner;
   final double salaryAmount;
   final String salaryFrequency;
+  final bool isDarkMode;
+  final int themeIndex;
+  final bool themesUnlocked;
+  final bool mascotEnabled;
+  final bool appLockEnabled;
+  final String appLockType; // 'passcode' | 'password'
+  final String appLockCode;
+  final bool securityUnlocked; // Non-persistent session state
 
   AppSettings({
     required this.name,
@@ -26,11 +35,20 @@ class AppSettings {
     this.onboardingComplete = false,
     this.soundsEnabled = true,
     this.isPro = false,
+    this.adsRemoved = false,
     this.tosAccepted = false,
     this.tutorialSeen = false,
     this.isSalaryEarner = false,
     this.salaryAmount = 0.0,
     this.salaryFrequency = 'Monthly',
+    this.isDarkMode = true,
+    this.themeIndex = 0,
+    this.themesUnlocked = false,
+    this.mascotEnabled = true,
+    this.appLockEnabled = false,
+    this.appLockType = 'passcode',
+    this.appLockCode = '',
+    this.securityUnlocked = false,
   });
 
   AppSettings copyWith({
@@ -44,11 +62,20 @@ class AppSettings {
     bool? onboardingComplete,
     bool? soundsEnabled,
     bool? isPro,
+    bool? adsRemoved,
     bool? tosAccepted,
     bool? tutorialSeen,
     bool? isSalaryEarner,
     double? salaryAmount,
     String? salaryFrequency,
+    bool? isDarkMode,
+    int? themeIndex,
+    bool? themesUnlocked,
+    bool? mascotEnabled,
+    bool? appLockEnabled,
+    String? appLockType,
+    String? appLockCode,
+    bool? securityUnlocked,
   }) {
     return AppSettings(
       name: name ?? this.name,
@@ -61,11 +88,20 @@ class AppSettings {
       onboardingComplete: onboardingComplete ?? this.onboardingComplete,
       soundsEnabled: soundsEnabled ?? this.soundsEnabled,
       isPro: isPro ?? this.isPro,
+      adsRemoved: adsRemoved ?? this.adsRemoved,
       tosAccepted: tosAccepted ?? this.tosAccepted,
       tutorialSeen: tutorialSeen ?? this.tutorialSeen,
       isSalaryEarner: isSalaryEarner ?? this.isSalaryEarner,
       salaryAmount: salaryAmount ?? this.salaryAmount,
       salaryFrequency: salaryFrequency ?? this.salaryFrequency,
+      isDarkMode: isDarkMode ?? this.isDarkMode,
+      themeIndex: themeIndex ?? this.themeIndex,
+      themesUnlocked: themesUnlocked ?? this.themesUnlocked,
+      mascotEnabled: mascotEnabled ?? this.mascotEnabled,
+      appLockEnabled: appLockEnabled ?? this.appLockEnabled,
+      appLockType: appLockType ?? this.appLockType,
+      appLockCode: appLockCode ?? this.appLockCode,
+      securityUnlocked: securityUnlocked ?? this.securityUnlocked,
     );
   }
 }

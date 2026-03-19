@@ -24,6 +24,7 @@ class GoalsScreen extends StatefulWidget {
 }
 
 class _GoalsScreenState extends State<GoalsScreen> {
+  int _selectedTab = 0; // 0 = Active, 1 = Matured
   @override
   void initState() {
     super.initState();
@@ -36,7 +37,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final s = context.read<SettingsProvider>().settings;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -47,10 +48,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
               Row(children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 22),
+                  child: Icon(LucideIcons.arrowLeft, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), size: 22),
                 ),
                 const SizedBox(width: 16),
-                const Text("Goals", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
+                Text("Goals", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1)),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => showModalBottomSheet(
@@ -59,20 +60,29 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(color: AppColors.cardBg, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
                     child: const Icon(LucideIcons.plus, color: AppColors.primary, size: 20),
                   ),
                 ),
               ]),
               const SizedBox(height: 8),
-              Text("${goalProv.activeGoals.length} active • ${goalProv.completedGoals.length} achieved",
-                  style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
+              Row(
+                children: [
+                  _tabBtn("Active", 0, goalProv.activeGoals.length),
+                  const SizedBox(width: 12),
+                  _tabBtn("Matured", 1, goalProv.completedGoals.length),
+                ],
+              ),
+              const SizedBox(height: 16),
               const BannerAdSpace(),
 
-              if (goalProv.goals.isEmpty)
+              if ((_selectedTab == 0 && goalProv.activeGoals.isEmpty) || 
+                  (_selectedTab == 1 && goalProv.completedGoals.isEmpty))
                 _emptyState()
+              else if (_selectedTab == 0)
+                ...goalProv.activeGoals.map((g) => _goalCard(context, g, s, goalProv))
               else
-                ...goalProv.goals.map((g) => _goalCard(context, g, s, goalProv)),
+                ...goalProv.completedGoals.map((g) => _goalCard(context, g, s, goalProv)),
 
               const SizedBox(height: 140),
             ],
@@ -82,12 +92,28 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
+  Widget _tabBtn(String title, int index, int count) {
+    final isSelected = _selectedTab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedTab = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withOpacity(0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
+        ),
+        child: Text("$title ($count)", style: TextStyle(color: isSelected ? AppColors.primary : AppColors.textDim, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
   Widget _emptyState() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(60),
         child: Column(children: [
-          Icon(LucideIcons.target, color: Colors.white.withOpacity(0.1), size: 48),
+          Icon(LucideIcons.target, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.1), size: 48),
           const SizedBox(height: 16),
           const Text("No goals yet", style: TextStyle(color: AppColors.textDim)),
         ]),
@@ -106,13 +132,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
-          color: AppColors.cardBg,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: g.isCompleted ? AppColors.success.withOpacity(0.15) : Colors.white.withOpacity(0.04)),
+          border: Border.all(color: g.isCompleted ? AppColors.success.withOpacity(0.15) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04)),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Expanded(child: Text(g.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16))),
+            Expanded(child: Text(g.name, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold, fontSize: 16))),
             Icon(g.isCompleted ? LucideIcons.checkCircle : LucideIcons.target,
                 color: g.isCompleted ? AppColors.success : AppColors.lifeColor, size: 20),
           ]),
@@ -120,7 +146,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           LinearPercentIndicator(
             lineHeight: 8, padding: EdgeInsets.zero,
             percent: progress,
-            backgroundColor: Colors.white.withOpacity(0.06),
+            backgroundColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.06),
             progressColor: g.isCompleted ? AppColors.success : AppColors.lifeColor,
             barRadius: const Radius.circular(10),
             animation: true,
@@ -157,11 +183,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
               width: MediaQuery.of(context).size.width * 0.8,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.cardBg, borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white10),
+                color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
               ),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Text(g.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                Text(g.name, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold, fontSize: 20)),
                 const SizedBox(height: 6),
                 Text("${(g.currentAmount / g.targetAmount * 100).clamp(0, 100).toStringAsFixed(0)}% complete",
                     style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
@@ -180,11 +206,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 const SizedBox(height: 12),
                 AppleButton(label: "Delete Goal", isDestructive: true, onTap: () {
                   prov.deleteGoal(g.id);
+                  context.read<ExpenseProvider>().deleteExpenseByLinkedId(g.id, sProv);
                   SoundService.delete();
                   Navigator.pop(ctx);
                 }),
                 const SizedBox(height: 12),
-                AppleButton(label: "Cancel", bgColor: Colors.white10, textColor: Colors.white, onTap: () => Navigator.pop(ctx)),
+                AppleButton(label: "Cancel", bgColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), textColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), onTap: () => Navigator.pop(ctx)),
               ]),
             ),
           ),
@@ -200,19 +227,19 @@ class _GoalsScreenState extends State<GoalsScreen> {
     
     showDialog(context: context, builder: (ctx) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        title: const Text("Add Funds", style: TextStyle(color: Colors.white)),
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text("Add Funds", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: ctrl, keyboardType: TextInputType.number, autofocus: true,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
               decoration: InputDecoration(
                 hintText: Formatters.currency(remaining, sProv.settings.currency),
-                hintStyle: const TextStyle(color: Colors.white24),
-                enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26)),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
                 focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
               ),
             ),
@@ -222,9 +249,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
             DropdownButton<String>(
               value: source,
               isExpanded: true,
-              dropdownColor: AppColors.cardBg,
-              style: const TextStyle(color: Colors.white),
-              underline: Container(height: 1, color: Colors.white24),
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+              underline: Container(height: 1, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26)),
               items: const [
                 DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget (Expense)")),
                 DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
@@ -250,11 +277,21 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 date: DateTime.now(),
                 note: 'Goal: ${g.name}',
                 lifeCostHours: LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
+                linkedId: g.id,
+                fundingSource: 'allowance',
               );
               context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
-              sProv.deductFromResources(val);
             } else if (source == 'resources') {
-              sProv.deductFromResources(val);
+              final expense = Expense(
+                amount: val,
+                category: 'Goals 🎯',
+                date: DateTime.now(),
+                note: 'Goal: ${g.name}',
+                lifeCostHours: 0,
+                linkedId: g.id,
+                fundingSource: 'resources',
+              );
+              context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: false);
             }
             Navigator.pop(ctx);
           }, child: const Text("Fund", style: TextStyle(color: AppColors.primary))),

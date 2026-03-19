@@ -5,9 +5,16 @@ class AdService {
   static InterstitialAd? _interstitialAd;
   static bool _isAdLoaded = false;
 
-  // Production IDs
-  static const String interstitialAdUnitId = 'ca-app-pub-1530144408092330/9449178515';
-  static const String bannerAdUnitId = 'ca-app-pub-1530144408092330/8537432429';
+  // Ad Unit IDs
+  static String get interstitialAdUnitId => 
+    const bool.fromEnvironment('dart.vm.product') 
+      ? 'ca-app-pub-1530144408092330/9449178515' 
+      : 'ca-app-pub-3940256099942544/1033173712'; // Test ID
+
+  static String get bannerAdUnitId => 
+    const bool.fromEnvironment('dart.vm.product') 
+      ? 'ca-app-pub-1530144408092330/8537432429' 
+      : 'ca-app-pub-3940256099942544/6300978111'; // Test ID
 
   static Future<void> init() async {
     await MobileAds.instance.initialize();

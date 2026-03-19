@@ -102,4 +102,9 @@ class SavingsProvider extends ChangeNotifier {
       }
     }
   }
+
+  void clear() {
+    _savings = [];
+    notifyListeners();
+  }
 }

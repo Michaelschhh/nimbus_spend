@@ -43,14 +43,14 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 30, top: 25, left: 24, right: 24),
-      decoration: const BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.vertical(top: Radius.circular(35))),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(35))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(height: 5, width: 40, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(10))),
+            Container(height: 5, width: 40, decoration: BoxDecoration(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), borderRadius: BorderRadius.circular(10))),
             const SizedBox(height: 25),
-            Text(widget.existingSaving == null ? "New Saving Goal" : "Edit Saving Goal", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(widget.existingSaving == null ? "New Saving Goal" : "Edit Saving Goal", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 25),
             
             _input(_desc, "Description (e.g. New Car)", LucideIcons.target, false),
@@ -62,11 +62,11 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
               child: Container(
                 margin: const EdgeInsets.only(top: 15),
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.white.withOpacity(0.05))),
+                decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.05))),
                 child: Row(children: [
                   const Icon(LucideIcons.calendar, size: 18, color: AppColors.primary),
                   const SizedBox(width: 15),
-                  const Expanded(child: Text("Target Date", style: TextStyle(color: Colors.white))),
+                  Expanded(child: Text("Target Date", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)))),
                   Text(DateFormat('MMM dd, yyyy').format(_targetDate), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                 ]),
               ),
@@ -77,7 +77,7 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(15)),
+                decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15)),
                 child: Row(children: [
                   const Icon(LucideIcons.wallet, size: 18, color: AppColors.textDim),
                   const SizedBox(width: 15),
@@ -85,8 +85,8 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
                     child: DropdownButton<String>(
                       value: _fundingSource,
                       isExpanded: true,
-                      dropdownColor: AppColors.cardBg,
-                      style: const TextStyle(color: Colors.white),
+                      dropdownColor: Theme.of(context).cardColor,
+                      style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
                       underline: const SizedBox(),
                       items: const [
                         DropdownMenuItem(value: 'allowance', child: Text("Debit from Monthly Budget")),
@@ -186,11 +186,11 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
   Widget _input(TextEditingController c, String h, IconData i, bool n) => Container(
     margin: const EdgeInsets.only(bottom: 12),
     padding: const EdgeInsets.symmetric(horizontal: 16),
-    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(15)),
+    decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15)),
     child: TextField(
       controller: c, keyboardType: n ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(icon: Icon(i, size: 18, color: AppColors.textDim), hintText: h, hintStyle: const TextStyle(color: Colors.white10), border: InputBorder.none),
+      style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+      decoration: InputDecoration(icon: Icon(i, size: 18, color: AppColors.textDim), hintText: h, hintStyle: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)), border: InputBorder.none),
     ),
   );
 }

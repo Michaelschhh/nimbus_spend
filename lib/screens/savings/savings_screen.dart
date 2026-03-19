@@ -23,7 +23,7 @@ class SavingsScreen extends StatefulWidget {
 }
 
 class _SavingsScreenState extends State<SavingsScreen> {
-  bool _showHistory = false;
+  final bool _showHistory = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
     final active = prov.savings.where((sg) => !sg.isMatured).toList();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -45,12 +45,12 @@ class _SavingsScreenState extends State<SavingsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Wealth", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text("Wealth", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
                   GestureDetector(
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MaturedSavingsScreen())),
                     child: Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(color: AppColors.cardBg, shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
                       child: const Icon(LucideIcons.archive, color: AppColors.primary, size: 20),
                     ),
                   )
@@ -74,8 +74,8 @@ class _SavingsScreenState extends State<SavingsScreen> {
               AppleButton(
                 label: "Start New Goal", 
                 onTap: () => _openAdd(context),
-                bgColor: Colors.white,
-                textColor: Colors.black,
+                bgColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
+                textColor: Theme.of(context).scaffoldBackgroundColor 
               ),
               
               const SizedBox(height: 35),
@@ -89,27 +89,30 @@ class _SavingsScreenState extends State<SavingsScreen> {
   }
 
   Widget _buildATMCard(double total, String cur, String name) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity, height: 210,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2C2C2E), Color(0xFF000000)],
+        gradient: LinearGradient(
+          colors: isDark 
+              ? [const Color(0xFF2C2C2E), const Color(0xFF000000)]
+              : [const Color(0xFFF2F2F7), const Color(0xFFE5E5EA)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.08)),
       ),
       padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("NIMBUS PLATINUM", style: TextStyle(color: Colors.white24, letterSpacing: 2, fontSize: 10, fontWeight: FontWeight.bold)),
+          Text("NIMBUS PLATINUM", style: TextStyle(color: isDark ? Colors.white24 : Colors.black26, letterSpacing: 2, fontSize: 10, fontWeight: FontWeight.bold)),
           const Spacer(),
-          const Text("Total Stored Value", style: TextStyle(color: AppColors.textDim, fontSize: 14)),
+          Text("Total Stored Value", style: TextStyle(color: isDark ? AppColors.textDim : Colors.black54, fontSize: 14)),
           const SizedBox(height: 4),
-          Text(Formatters.currency(total, cur), style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: -1)),
+          Text(Formatters.currency(total, cur), style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: -1)),
           const Spacer(),
-          Text(name.toUpperCase(), style: const TextStyle(color: Colors.white54, fontSize: 13, letterSpacing: 1.2)),
+          Text(name.toUpperCase(), style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13, letterSpacing: 1.2)),
         ],
       ),
     );
@@ -125,20 +128,20 @@ class _SavingsScreenState extends State<SavingsScreen> {
         margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.cardBg, 
+          color: Theme.of(context).cardColor, 
           borderRadius: BorderRadius.circular(28), 
           border: Border.all(color: AppColors.glassBorder)
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(s.description, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text(s.description, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
             const Icon(LucideIcons.shieldCheck, color: AppColors.success, size: 18),
           ]),
           const SizedBox(height: 20),
-          _stat("Principal Sum", Formatters.currency(s.amount, cur)),
-          _stat("Accrued Interest", Formatters.currency(accrued, cur), valColor: AppColors.success),
-          _stat("1-Year Estimated Yield", Formatters.currency(projected, cur)),
-          const Divider(color: Colors.white10, height: 30),
+          _stat(context, "Principal Sum", Formatters.currency(s.amount, cur)),
+          _stat(context, "Accrued Interest", Formatters.currency(accrued, cur), valColor: AppColors.success),
+          _stat(context, "1-Year Estimated Yield", Formatters.currency(projected, cur)),
+          Divider(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), height: 30),
           GestureDetector(
             onTap: () => _showTopUpDialog(context, s, prov),
             child: const Text("Inject Capital +", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
@@ -148,11 +151,11 @@ class _SavingsScreenState extends State<SavingsScreen> {
     ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
   }
 
-  Widget _stat(String l, String v, {Color valColor = Colors.white}) => Padding(
+  Widget _stat(BuildContext context, String l, String v, {Color? valColor}) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Text(l, style: const TextStyle(color: AppColors.textDim)), 
-      Text(v, style: TextStyle(color: valColor, fontWeight: FontWeight.bold))
+      Text(v, style: TextStyle(color: valColor ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold))
     ]),
   );
 
@@ -170,19 +173,19 @@ class _SavingsScreenState extends State<SavingsScreen> {
     
     showDialog(context: context, builder: (ctx) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        backgroundColor: AppColors.cardBg,
+        backgroundColor: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-        title: const Text("Capital Injection", style: TextStyle(color: Colors.white)),
+        title: Text("Capital Injection", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: ctrl, keyboardType: TextInputType.number, autofocus: true, 
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+              decoration: InputDecoration(
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
+                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
               ),
             ),
             const SizedBox(height: 20),
@@ -191,9 +194,9 @@ class _SavingsScreenState extends State<SavingsScreen> {
             DropdownButton<String>(
               value: source,
               isExpanded: true,
-              dropdownColor: AppColors.cardBg,
-              style: const TextStyle(color: Colors.white),
-              underline: Container(height: 1, color: Colors.white24),
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+              underline: Container(height: 1, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26)),
               items: const [
                 DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget (Expense)")),
                 DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
@@ -255,14 +258,14 @@ class _SavingsScreenState extends State<SavingsScreen> {
               width: MediaQuery.of(context).size.width * 0.8,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.cardBg, 
+                color: Theme.of(context).cardColor, 
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white10),
+                border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(s.description, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                  Text(s.description, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold, fontSize: 20)),
                   const SizedBox(height: 30),
                   AppleButton(
                     label: "Add Funds", 
@@ -291,8 +294,8 @@ class _SavingsScreenState extends State<SavingsScreen> {
                   const SizedBox(height: 12),
                   AppleButton(
                     label: "Cancel", 
-                    bgColor: Colors.white10, 
-                    textColor: Colors.white, 
+                    bgColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), 
+                    textColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), 
                     onTap: () => Navigator.pop(ctx)
                   ),
                 ],

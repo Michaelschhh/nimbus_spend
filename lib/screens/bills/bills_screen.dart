@@ -37,7 +37,7 @@ class _BillsScreenState extends State<BillsScreen> {
     final paid = billProv.bills.where((b) => b.isPaid).toList();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -48,10 +48,10 @@ class _BillsScreenState extends State<BillsScreen> {
               Row(children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 22),
+                  child: Icon(LucideIcons.arrowLeft, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), size: 22),
                 ),
                 const SizedBox(width: 16),
-                const Text("Bills", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
+                Text("Bills", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1)),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => showModalBottomSheet(
@@ -60,7 +60,7 @@ class _BillsScreenState extends State<BillsScreen> {
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(color: AppColors.cardBg, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
                     child: const Icon(LucideIcons.plus, color: AppColors.primary, size: 20),
                   ),
                 ),
@@ -99,7 +99,7 @@ class _BillsScreenState extends State<BillsScreen> {
       child: Padding(
         padding: const EdgeInsets.all(60),
         child: Column(children: [
-          Icon(LucideIcons.fileText, color: Colors.white.withOpacity(0.1), size: 48),
+          Icon(LucideIcons.fileText, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.1), size: 48),
           const SizedBox(height: 16),
           const Text("No bills yet", style: TextStyle(color: AppColors.textDim)),
         ]),
@@ -116,9 +116,9 @@ class _BillsScreenState extends State<BillsScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.cardBg,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: isOverdue ? AppColors.danger.withOpacity(0.3) : (b.isPaid ? AppColors.success.withOpacity(0.1) : Colors.white.withOpacity(0.04))),
+          border: Border.all(color: isOverdue ? AppColors.danger.withOpacity(0.3) : (b.isPaid ? AppColors.success.withOpacity(0.1) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04))),
         ),
         child: Row(children: [
           Container(
@@ -135,7 +135,7 @@ class _BillsScreenState extends State<BillsScreen> {
           const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Flexible(child: Text(b.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15))),
+              Flexible(child: Text(b.name, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600, fontSize: 15))),
               if (b.autoPay) ...[
                 const SizedBox(width: 6),
                 Container(
@@ -150,7 +150,7 @@ class _BillsScreenState extends State<BillsScreen> {
                 style: TextStyle(color: isOverdue ? AppColors.danger : AppColors.textDim, fontSize: 11, fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal)),
           ])),
           Text(Formatters.currency(b.amount, cur),
-              style: TextStyle(color: b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : Colors.white), fontWeight: FontWeight.bold, fontSize: 15)),
+              style: TextStyle(color: b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)), fontWeight: FontWeight.bold, fontSize: 15)),
         ]),
       ),
     ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
@@ -171,11 +171,11 @@ class _BillsScreenState extends State<BillsScreen> {
               width: MediaQuery.of(context).size.width * 0.8,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.cardBg, borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white10),
+                color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
               ),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Text(b.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                Text(b.name, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold, fontSize: 20)),
                 const SizedBox(height: 6),
                 Text(Formatters.currency(b.amount, sProv.settings.currency),
                     style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
@@ -198,7 +198,7 @@ class _BillsScreenState extends State<BillsScreen> {
                   Navigator.pop(ctx);
                 }),
                 const SizedBox(height: 12),
-                AppleButton(label: "Cancel", bgColor: Colors.white10, textColor: Colors.white, onTap: () => Navigator.pop(ctx)),
+                AppleButton(label: "Cancel", bgColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), textColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), onTap: () => Navigator.pop(ctx)),
               ]),
             ),
           ),
@@ -212,22 +212,22 @@ class _BillsScreenState extends State<BillsScreen> {
     
     showDialog(context: context, builder: (ctx) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        title: const Text("Pay Bill", style: TextStyle(color: Colors.white)),
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text("Pay Bill", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Amount: ${Formatters.currency(b.amount, sProv.settings.currency)}", style: const TextStyle(color: Colors.white, fontSize: 16)),
+            Text("Amount: ${Formatters.currency(b.amount, sProv.settings.currency)}", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 16)),
             const SizedBox(height: 20),
             const Text("Funding Source", style: TextStyle(color: AppColors.textDim, fontSize: 12)),
             const SizedBox(height: 8),
             DropdownButton<String>(
               value: source,
               isExpanded: true,
-              dropdownColor: AppColors.cardBg,
-              style: const TextStyle(color: Colors.white),
-              underline: Container(height: 1, color: Colors.white24),
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+              underline: Container(height: 1, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26)),
               items: const [
                 DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
                 DropdownMenuItem(value: 'resources', child: Text("Available Resources")),

@@ -1,0 +1,164 @@
+Analyzing nimbus_spend...                                       
+
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app.dart:153:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app.dart:154:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app.dart:158:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app.dart:161:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app.dart:190:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app.dart:191:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app.dart:197:54 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/main.dart:86:49 • use_build_context_synchronously
+warning • The value of the local variable 's' isn't used • lib/providers/savings_provider.dart:71:13 • unused_local_variable
+   info • Don't use 'BuildContext's across async gaps • lib/screens/bills/bills_screen.dart:29:28 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/bills/bills_screen.dart:102:125 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/bills/bills_screen.dart:121:66 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/bills/bills_screen.dart:121:115 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/bills/bills_screen.dart:121:214 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/bills/bills_screen.dart:127:106 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/bills/bills_screen.dart:143:70 • deprecated_member_use
+  error • The named parameter 'isDestructive' isn't defined • lib/screens/bills/bills_screen.dart:195:46 • undefined_named_parameter
+  error • Undefined name 'context' • lib/screens/dashboard/dashboard_screen.dart:78:129 • undefined_identifier
+  error • Undefined name 'context' • lib/screens/dashboard/dashboard_screen.dart:80:48 • undefined_identifier
+  error • Undefined name 'context' • lib/screens/dashboard/dashboard_screen.dart:80:147 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/dashboard_screen.dart:90:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/dashboard_screen.dart:90:160 • deprecated_member_use
+  error • The named parameter 'isDestructive' isn't defined • lib/screens/dashboard/dashboard_screen.dart:160:58 • undefined_named_parameter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/dashboard_screen.dart:195:71 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/dashboard_screen.dart:195:108 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/screens/debts/debts_screen.dart:31:28 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/debts/debts_screen.dart:101:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/debts/debts_screen.dart:103:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/debts/debts_screen.dart:103:153 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/debts/debts_screen.dart:120:131 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/debts/debts_screen.dart:138:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/debts/debts_screen.dart:138:164 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/debts/debts_screen.dart:144:76 • deprecated_member_use
+  error • The named parameter 'isDestructive' isn't defined • lib/screens/debts/debts_screen.dart:213:46 • undefined_named_parameter
+   info • Don't use 'BuildContext's across async gaps • lib/screens/goals/goals_screen.dart:31:28 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/goals/goals_screen.dart:102:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/goals/goals_screen.dart:116:123 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/goals/goals_screen.dart:137:71 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/goals/goals_screen.dart:137:171 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/goals/goals_screen.dart:149:110 • deprecated_member_use
+  error • The named parameter 'isDestructive' isn't defined • lib/screens/goals/goals_screen.dart:207:51 • undefined_named_parameter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/hub/financial_hub_screen.dart:54:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/hub/financial_hub_screen.dart:70:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/hub/financial_hub_screen.dart:81:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/hub/financial_hub_screen.dart:162:104 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/hub/financial_hub_screen.dart:164:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/hub/financial_hub_screen.dart:171:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/hub/financial_hub_screen.dart:185:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/hub/financial_hub_screen.dart:189:137 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/onboarding_screen.dart:168:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/onboarding_screen.dart:170:57 • deprecated_member_use
+  error • Expected to find ',' • lib/screens/onboarding/onboarding_screen.dart:250:82 • expected_token
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tos_screen.dart:39:109 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tos_screen.dart:40:109 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tos_screen.dart:44:131 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tos_screen.dart:94:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tos_screen.dart:96:77 • deprecated_member_use
+  error • Expected to find ',' • lib/screens/onboarding/tos_screen.dart:125:90 • expected_token
+  error • Undefined name 'context' • lib/screens/onboarding/tos_screen.dart:148:41 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tutorial_screen.dart:93:143 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tutorial_screen.dart:127:118 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tutorial_screen.dart:129:137 • deprecated_member_use
+  error • Expected to find ',' • lib/screens/onboarding/tutorial_screen.dart:150:98 • expected_token
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tutorial_screen.dart:179:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tutorial_screen.dart:202:101 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tutorial_screen.dart:203:101 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/onboarding/tutorial_screen.dart:207:123 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/reports/reports_screen.dart:173:100 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/reports/reports_screen.dart:188:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/reports/reports_screen.dart:198:106 • deprecated_member_use
+  error • Undefined name 'context' • lib/screens/savings/matured_savings_screen.dart:70:25 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/savings/matured_savings_screen.dart:74:38 • deprecated_member_use
+  error • Undefined name 'context' • lib/screens/savings/matured_savings_screen.dart:83:83 • undefined_identifier
+warning • The value of the field '_showHistory' isn't used • lib/screens/savings/savings_screen.dart:26:14 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/savings/savings_screen.dart:100:115 • deprecated_member_use
+  error • Methods can't be invoked in constant expressions • lib/screens/savings/savings_screen.dart:151:55 • const_eval_method_invocation
+  error • The named parameter 'isDestructive' isn't defined • lib/screens/savings/savings_screen.dart:285:21 • undefined_named_parameter
+warning • Dead code • lib/screens/settings/paywall_screen.dart:51:33 • dead_code
+warning • Dead code • lib/screens/settings/paywall_screen.dart:76:87 • dead_code
+warning • Dead code • lib/screens/settings/paywall_screen.dart:79:25 • dead_code
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/settings/paywall_screen.dart:127:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/settings/paywall_screen.dart:174:75 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/settings/paywall_screen.dart:174:107 • deprecated_member_use
+  error • Undefined name 'context' • lib/screens/settings/paywall_screen.dart:175:46 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/settings/paywall_screen.dart:177:67 • deprecated_member_use
+  error • Undefined name 'context' • lib/screens/settings/paywall_screen.dart:180:51 • undefined_identifier
+  error • Undefined name 'context' • lib/screens/settings/paywall_screen.dart:182:87 • undefined_identifier
+  error • Undefined name 'context' • lib/screens/settings/paywall_screen.dart:186:64 • undefined_identifier
+  error • Undefined name 'context' • lib/screens/settings/paywall_screen.dart:189:66 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/settings/settings_screen.dart:83:73 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/settings/settings_screen.dart:83:105 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/settings/settings_screen.dart:85:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/settings/settings_screen.dart:118:67 • deprecated_member_use
+  error • Undefined name 'context' • lib/screens/settings/settings_screen.dart:234:49 • undefined_identifier
+  error • Undefined name 'context' • lib/screens/settings/settings_screen.dart:242:57 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps • lib/screens/subscriptions/subscriptions_screen.dart:27:28 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/subscriptions/subscriptions_screen.dart:76:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/subscriptions/subscriptions_screen.dart:119:126 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/subscriptions/subscriptions_screen.dart:136:70 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/subscriptions/subscriptions_screen.dart:136:170 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/subscriptions/subscriptions_screen.dart:142:77 • deprecated_member_use
+  error • The named parameter 'isDestructive' isn't defined • lib/screens/subscriptions/subscriptions_screen.dart:204:46 • undefined_named_parameter
+warning • The declaration '_calculateMissedMonths' isn't referenced • lib/services/recurring_service.dart:181:14 • unused_element
+   info • 'useTextTheme' is deprecated and shouldn't be used. This property has been replaced by the more aptly named useMaterial3Typography property and no longer has any function in V8 and will be removed in v9.0.0 • lib/theme/app_theme.dart:17:11 • deprecated_member_use
+   info • 'useTextTheme' is deprecated and shouldn't be used. This property has been replaced by the more aptly named useMaterial3Typography property and no longer has any function in V8 and will be removed in v9.0.0 • lib/theme/app_theme.dart:38:11 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/theme/colors.dart:26:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/theme/colors.dart:27:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/theme/colors.dart:28:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/theme/colors.dart:29:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/ad_placements.dart:81:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/ad_placements.dart:110:64 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/ad_placements.dart:135:58 • deprecated_member_use
+  error • All final variables must be initialized, but 'isDestructive' isn't • lib/widgets/common/apple_button.dart:12:3 • final_not_initialized_constructor
+  error • Methods can't be invoked in constant expressions • lib/widgets/common/apple_button.dart:16:21 • const_eval_method_invocation
+  error • Undefined name 'context' • lib/widgets/common/apple_button.dart:16:30 • undefined_identifier
+  error • Methods can't be invoked in constant expressions • lib/widgets/common/apple_button.dart:17:22 • const_eval_method_invocation
+  error • Undefined name 'context' • lib/widgets/common/apple_button.dart:17:31 • undefined_identifier
+  error • Expected to find '}' • lib/widgets/common/apple_button.dart:18:5 • expected_token
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/apple_button.dart:35:70 • deprecated_member_use
+  error • Expected to find ',' • lib/widgets/common/badge_celebration.dart:36:56 • expected_token
+  error • The method 'withOpacity' isn't defined for the type '_BadgeCelebrationState' • lib/widgets/common/badge_celebration.dart:36:56 • undefined_method
+  error • Too many positional arguments: 0 expected, but 1 found • lib/widgets/common/badge_celebration.dart:36:56 • extra_positional_arguments_could_be_named
+  error • Expected to find ',' • lib/widgets/common/badge_celebration.dart:65:109 • expected_token
+  error • Undefined name 'context' • lib/widgets/common/cursive_welcome.dart:51:27 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/custom_switch.dart:33:120 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/empty_state.dart:22:63 • deprecated_member_use
+  error • Methods can't be invoked in constant expressions • lib/widgets/common/glass_card.dart:15:19 • const_eval_method_invocation
+  error • Undefined name 'context' • lib/widgets/common/glass_card.dart:15:28 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/glass_card.dart:26:26 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/glass_card.dart:28:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/life_cost_badge.dart:17:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/life_cost_badge.dart:19:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/streak_badge.dart:14:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/common/streak_badge.dart:16:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/dashboard/bill_warning_card.dart:15:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/dashboard/daily_overview_card.dart:28:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/dashboard/danger_zone_alert.dart:15:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/dashboard/danger_zone_alert.dart:17:52 • deprecated_member_use
+  error • Expected to find ',' • lib/widgets/forms/add_expense_form.dart:213:91 • expected_token
+  error • The method 'App' isn't defined for the type '_AddExpenseFormState' • lib/widgets/forms/add_expense_form.dart:213:158 • undefined_method
+  error • Expected to find ',' • lib/widgets/forms/add_expense_form.dart:246:93 • expected_token
+  error • The method 'App' isn't defined for the type '_AddExpenseFormState' • lib/widgets/forms/add_expense_form.dart:246:160 • undefined_method
+  error • Expected to find ',' • lib/widgets/forms/add_expense_form.dart:289:181 • expected_token
+  error • The method 'App' isn't defined for the type '_AddExpenseFormState' • lib/widgets/forms/add_expense_form.dart:289:248 • undefined_method
+   info • Don't use 'BuildContext's across async gaps • lib/widgets/forms/add_saving_form.dart:45:21 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/widgets/forms/add_saving_form.dart:46:23 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/widgets/forms/add_saving_form.dart:68:19 • use_build_context_synchronously
+  error • Expected to find ',' • lib/widgets/forms/add_saving_form.dart:104:91 • expected_token
+  error • Expected to find ',' • lib/widgets/forms/add_saving_form.dart:139:81 • expected_token
+  error • Expected to find ',' • lib/widgets/forms/goal_creation_sheet.dart:65:93 • expected_token
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/forms/goal_creation_sheet.dart:65:240 • deprecated_member_use
+  error • Expected to find ',' • lib/widgets/forms/goal_creation_sheet.dart:80:93 • expected_token
+   info • Don't use 'BuildContext's across async gaps • lib/widgets/forms/goal_creation_sheet.dart:139:35 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/widgets/forms/goal_creation_sheet.dart:140:37 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/widgets/forms/goal_creation_sheet.dart:160:31 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/widgets/forms/goal_creation_sheet.dart:172:44 • use_build_context_synchronously
+  error • Expected to find ',' • lib/widgets/forms/goal_creation_sheet.dart:189:81 • expected_token
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/reports/pattern_card.dart:27:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/reports/spending_score_card.dart:42:43 • deprecated_member_use
+  error • Undefined name 'context' • lib/widgets/social/share_card_widget.dart:80:57 • undefined_identifier
+  error • Undefined name 'context' • lib/widgets/social/share_card_widget.dart:84:32 • undefined_identifier
+

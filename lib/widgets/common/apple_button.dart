@@ -5,21 +5,26 @@ import '../../services/haptic_service.dart';
 class AppleButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
-  final Color bgColor;
-  final Color textColor;
+  final Color? bgColor;
+  final Color? textColor;
   final bool isDestructive;
 
-  const AppleButton({
+  AppleButton({
     super.key,
     required this.label,
     required this.onTap,
-    this.bgColor = Colors.white,
-    this.textColor = Colors.black,
+    this.bgColor,
+    this.textColor,
     this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Color effectiveBg = bgColor ?? (isDestructive ? Colors.transparent : Theme.of(context).primaryColor);
+    final Color effectiveTextColor = isDestructive 
+        ? Colors.redAccent 
+        : (textColor ?? (ThemeData.estimateBrightnessForColor(effectiveBg) == Brightness.dark ? Colors.white : Colors.black));
+
     return GestureDetector(
       onTap: () {
         HapticService.light();
@@ -30,7 +35,7 @@ class AppleButton extends StatelessWidget {
         height: 56,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: isDestructive ? Colors.transparent : bgColor,
+          color: effectiveBg,
           borderRadius: BorderRadius.circular(16),
           border: isDestructive ? Border.all(color: Colors.redAccent.withOpacity(0.5)) : null,
         ),
@@ -38,7 +43,7 @@ class AppleButton extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: isDestructive ? Colors.redAccent : textColor,
+              color: effectiveTextColor,
               fontSize: 17,
               fontWeight: FontWeight.w600,
               letterSpacing: -0.5,

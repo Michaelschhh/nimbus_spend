@@ -13,6 +13,8 @@ import '../../widgets/forms/add_expense_form.dart';
 import '../../widgets/common/apple_button.dart';
 import '../../widgets/common/ad_placements.dart';
 import '../../services/sound_service.dart';
+import '../../services/local_ai_service.dart';
+import '../../models/expense.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -27,30 +29,54 @@ class DashboardScreen extends StatelessWidget {
     bool isOver = left < 0;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              _header(s.name, s.availableResources, s.currency),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _header(context, s.name, s.availableResources, s.currency),
+              ),
               const SizedBox(height: 10),
-              const BannerAdSpace(),
+              const Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: BannerAdSpace(),
+              ),
               const SizedBox(height: 10),
 
               // THE MAIN ALLOWANCE CARD
-              _mainCard(context, left, s.currency, isOver),
-              const SizedBox(height: 40),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _mainCard(context, left, s.currency, isOver),
+              ),
+              const SizedBox(height: 30),
 
-              const Text("Transactions", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5)),
+              // AI INSIGHTS SECTION
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text("AI Insights", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -0.5)),
+              ),
+              const SizedBox(height: 15),
+              _buildInsightsCarousel(context, exp.expenses, s.monthlyBudget, s.hourlyWage, exp.totalSpentThisMonth),
+              
+              const SizedBox(height: 30),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text("Transactions", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -0.5)),
+              ),
               const SizedBox(height: 15),
               
               if (exp.expenses.isEmpty)
                 const Center(child: Padding(padding: EdgeInsets.all(40), child: Text("Wallet Empty", style: TextStyle(color: AppColors.textDim))))
               else
-                ...exp.expenses.take(10).map((e) => _item(context, e, exp, sProv, s.currency)),
+                ...exp.expenses.take(10).map((e) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _item(context, e, exp, sProv, s.currency),
+                )),
               
               const SizedBox(height: 140),
             ],
@@ -60,15 +86,31 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _header(String name, double resource, String cur) {
+  Widget _header(BuildContext context, String name, double resource, String cur) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sProv = context.read<SettingsProvider>();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text("Available Resources", style: TextStyle(color: AppColors.textDim, fontSize: 13, fontWeight: FontWeight.bold)),
-          Text(Formatters.currency(resource, cur), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -1)),
+          Text(Formatters.currency(resource, cur), style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black, letterSpacing: -1)),
         ]),
-        CircleAvatar(backgroundColor: AppColors.cardBg, child: Text(name.isNotEmpty ? name[0] : "U", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+        Row(children: [
+          GestureDetector(
+            onTap: () => sProv.setDarkMode(!isDark),
+            child: Container(
+              width: 38, height: 38,
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(isDark ? LucideIcons.moon : LucideIcons.sun, size: 18, color: isDark ? Colors.white : Colors.black),
+            ),
+          ),
+          const SizedBox(width: 10),
+          CircleAvatar(backgroundColor: Theme.of(context).cardColor, child: Text(name.isNotEmpty ? name[0] : "U", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold))),
+        ]),
       ],
     );
   }
@@ -77,20 +119,20 @@ class DashboardScreen extends StatelessWidget {
     return Container(
       width: double.infinity, padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppColors.cardBg, borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: isOver ? AppColors.danger.withOpacity(0.5) : Colors.white.withOpacity(0.05)),
+        color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: isOver ? AppColors.danger.withOpacity(0.5) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.05)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text("MONTHLY ALLOWANCE", style: TextStyle(color: isOver ? AppColors.danger : AppColors.textDim, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
           GestureDetector(
             onTap: () => showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => const AddExpenseForm()),
-            child: const Icon(LucideIcons.plusCircle, color: Colors.white, size: 28),
+            child: Icon(LucideIcons.plusCircle, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), size: 28),
           ),
         ]),
         const SizedBox(height: 12),
         Text(Formatters.currency(left, cur), 
-          style: TextStyle(fontSize: 46, fontWeight: FontWeight.w700, color: isOver ? AppColors.danger : Colors.white, letterSpacing: -2)),
+          style: TextStyle(fontSize: 46, fontWeight: FontWeight.w700, color: isOver ? AppColors.danger : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2)),
         const SizedBox(height: 15),
         Text(isOver ? "DANGER: Budget Exceeded" : "Current Cycle Active", 
           style: TextStyle(color: isOver ? AppColors.danger : AppColors.success, fontWeight: FontWeight.bold, fontSize: 11)),
@@ -105,10 +147,17 @@ class DashboardScreen extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(22)),
         child: Row(children: [
-          Expanded(child: Text(e.category, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600))),
-          Text(Formatters.currency(e.amount, cur), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(e.category, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600)),
+              if (sProv.settings.hourlyWage > 0 && e.lifeCostHours != null && e.lifeCostHours > 0)
+                Text("Cost: ${e.lifeCostHours.toStringAsFixed(1)} hours of life", style: const TextStyle(color: AppColors.lifeColor, fontSize: 11, fontWeight: FontWeight.bold)),
+            ]
+          )),
+          Text(Formatters.currency(e.amount, cur), style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
         ]),
       ),
     ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
@@ -127,11 +176,11 @@ class DashboardScreen extends StatelessWidget {
             child: Container(
               width: MediaQuery.of(context).size.width * 0.8,
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(32), border: Border.all(color: Colors.white10)),
+              decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(32), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(e.category, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(e.category, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 30),
                   if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰') ...[
                     AppleButton(label: "Edit Entry", onTap: () {
@@ -147,11 +196,55 @@ class DashboardScreen extends StatelessWidget {
                       Navigator.pop(ctx);
                     }),
                   const SizedBox(height: 12),
-                  AppleButton(label: "Cancel", bgColor: Colors.white10, textColor: Colors.white, onTap: () => Navigator.pop(ctx)),
+                    AppleButton(label: "Cancel", bgColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), textColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), onTap: () => Navigator.pop(ctx)),
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInsightsCarousel(BuildContext context, List<dynamic> expenses, double budget, double wage, double totalSpentThisMonth) {
+    // Cast list back for service
+    final eList = expenses.cast<Expense>();
+    final insights = LocalAIService.generateInsights(eList, budget, wage, totalSpentThisMonth);
+
+    return SizedBox(
+      height: 110,
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          scrollDirection: Axis.horizontal,
+          itemCount: insights.length,
+          itemBuilder: (context, index) {
+            final isWarning = insights[index].contains('⚠️') || insights[index].contains('Cost') || insights[index].contains('hours');
+            return Container(
+              width: 280,
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: isWarning ? AppColors.warning.withOpacity(0.3) : AppColors.primary.withOpacity(0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(children: [
+                    Icon(LucideIcons.sparkles, color: isWarning ? AppColors.warning : AppColors.primary, size: 14),
+                    const SizedBox(width: 8),
+                    Text("NIMBUS AI", style: TextStyle(color: isWarning ? AppColors.warning : AppColors.primary, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                  ]),
+                  const SizedBox(height: 10),
+                  Text(insights[index], style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 13, height: 1.3), maxLines: 3, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );

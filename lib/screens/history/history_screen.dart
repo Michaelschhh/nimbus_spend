@@ -21,14 +21,14 @@ class HistoryScreen extends StatelessWidget {
     final cur = sProv.settings.currency;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
-              child: Text("History", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: Text("History", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
@@ -63,7 +63,7 @@ class HistoryScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(color: AppColors.danger, borderRadius: BorderRadius.circular(22)),
         alignment: Alignment.centerRight,
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: Icon(Icons.delete, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
       ),
       onDismissed: (_) {
         expProv.deleteExpense(e.id, sProv);
@@ -75,10 +75,10 @@ class HistoryScreen extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(22)),
           child: Row(children: [
-            Expanded(child: Text(e.category, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600))),
-            Text(Formatters.currency(e.amount, cur), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Expanded(child: Text(e.category, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600))),
+            Text(Formatters.currency(e.amount, cur), style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
           ]),
         ),
       ),
@@ -91,9 +91,9 @@ class HistoryScreen extends StatelessWidget {
       builder: (ctx) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: AlertDialog(
-          backgroundColor: AppColors.cardBg,
+          backgroundColor: Theme.of(context).cardColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          title: Text(e.category, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: Text(e.category, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
             if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰')

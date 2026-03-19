@@ -33,55 +33,55 @@ class ShareCardWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(LucideIcons.cloudRain, color: Colors.white, size: 40),
+          Icon(LucideIcons.cloudRain, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), size: 40),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             "NIMBUS SPEND",
             style: TextStyle(
-              color: Colors.white,
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
               fontWeight: FontWeight.bold,
               letterSpacing: 2,
             ),
           ),
-          const Divider(color: Colors.white24, height: 40),
+          Divider(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26), height: 40),
           Text(
             monthName.toUpperCase(),
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87), fontSize: 14),
           ),
           const SizedBox(height: 10),
           Text(
             Formatters.currency(totalSpent, currency),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
               fontSize: 36,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 30),
-          _buildStatRow("Spending Score", "$spendingScore/100"),
-          _buildStatRow("Top Category", topCategory),
-          _buildStatRow("Life Cost", "${lifeHours.toStringAsFixed(1)} Hours"),
+          _buildStatRow(context, "Spending Score", "$spendingScore/100"),
+          _buildStatRow(context, "Top Category", topCategory),
+          _buildStatRow(context, "Life Cost", "${lifeHours.toStringAsFixed(1)} Hours"),
           const SizedBox(height: 30),
-          const Text(
+          Text(
             "Tracked with Nimbus Spend",
-            style: TextStyle(color: Colors.white54, fontSize: 10),
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54), fontSize: 10),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatRow(String label, String value) {
+  Widget _buildStatRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70)),
+          Text(label, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87))),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
               fontWeight: FontWeight.bold,
             ),
           ),

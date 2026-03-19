@@ -8,11 +8,17 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 /// See iap_guide.md for full setup instructions.
 class IAPService {
   static const String removeAdsProductId = 'remove_ads';
+  static const String unlockThemesProductId = 'unlock_themes';
+  static const String unlockSecurityProductId = 'unlock_security';
+  static const String bundleProProductId = 'bundle_pro';
   
   static final InAppPurchase _iap = InAppPurchase.instance;
   static StreamSubscription<List<PurchaseDetails>>? _subscription;
   static bool _isAvailable = false;
   static ProductDetails? _removeAdsProduct;
+  static ProductDetails? _unlockThemesProduct;
+  static ProductDetails? _unlockSecurityProduct;
+  static ProductDetails? _bundleProProduct;
 
   /// Initialize the IAP system. Call once at app startup.
   static Future<void> init() async {
@@ -34,17 +40,23 @@ class IAPService {
   }
 
   static Future<void> _loadProducts() async {
-    final response = await _iap.queryProductDetails({removeAdsProductId});
+    final response = await _iap.queryProductDetails({
+      removeAdsProductId, 
+      unlockThemesProductId, 
+      unlockSecurityProductId,
+      bundleProProductId
+    });
     if (response.error != null) {
       log('IAP: Error loading products: ${response.error}');
       return;
     }
-    if (response.productDetails.isEmpty) {
-      log('IAP: No products found. Make sure "$removeAdsProductId" exists in Play Console.');
-      return;
+    for (var product in response.productDetails) {
+      if (product.id == removeAdsProductId) _removeAdsProduct = product;
+      if (product.id == unlockThemesProductId) _unlockThemesProduct = product;
+      if (product.id == unlockSecurityProductId) _unlockSecurityProduct = product;
+      if (product.id == bundleProProductId) _bundleProProduct = product;
     }
-    _removeAdsProduct = response.productDetails.first;
-    log('IAP: Product loaded — ${_removeAdsProduct!.title} (${_removeAdsProduct!.price})');
+    log('IAP: Products loaded — ${response.productDetails.length} items');
   }
 
   // Callback for when settings provider is connected
@@ -53,24 +65,62 @@ class IAPService {
   /// Trigger the purchase flow for ad removal
   static Future<void> buyRemoveAds() async {
     if (!_isAvailable || _removeAdsProduct == null) {
-      log('IAP: Purchase not available');
+      // Mock for development if store is not available
+      if (!_isAvailable) {
+        log('IAP: Store not available, using mock buyRemoveAds');
+        onPurchaseSuccess?.call('remove_ads');
+        return;
+      }
       return;
     }
-    final purchaseParam = PurchaseParam(productDetails: _removeAdsProduct!);
-    await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    await _iap.buyNonConsumable(purchaseParam: PurchaseParam(productDetails: _removeAdsProduct!));
+  }
+
+  static Future<void> buyUnlockThemes() async {
+    if (!_isAvailable || _unlockThemesProduct == null) {
+      if (!_isAvailable) {
+        log('IAP: Store not available, using mock buyUnlockThemes');
+        onPurchaseSuccess?.call('unlock_themes');
+        return;
+      }
+      return;
+    }
+    await _iap.buyNonConsumable(purchaseParam: PurchaseParam(productDetails: _unlockThemesProduct!));
+  }
+
+  static Future<void> buyUnlockSecurity() async {
+    if (!_isAvailable || _unlockSecurityProduct == null) {
+      if (!_isAvailable) {
+        log('IAP: Store not available, using mock buyUnlockSecurity');
+        onPurchaseSuccess?.call('unlock_security');
+        return;
+      }
+      return;
+    }
+    await _iap.buyNonConsumable(purchaseParam: PurchaseParam(productDetails: _unlockSecurityProduct!));
+  }
+
+  static Future<void> buyBundlePro() async {
+    if (!_isAvailable || _bundleProProduct == null) {
+      if (!_isAvailable) {
+        log('IAP: Store not available, using mock buyBundlePro');
+        onPurchaseSuccess?.call('bundle_pro');
+        return;
+      }
+      return;
+    }
+    await _iap.buyNonConsumable(purchaseParam: PurchaseParam(productDetails: _bundleProProduct!));
   }
 
   /// Handle purchase updates
   static void _onPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
     for (var purchase in purchaseDetailsList) {
-      if (purchase.productID == removeAdsProductId) {
-        if (purchase.status == PurchaseStatus.purchased ||
-            purchase.status == PurchaseStatus.restored) {
-          log('IAP: Purchase successful! User is now Pro.');
-          onPurchaseSuccess?.call();
-        } else if (purchase.status == PurchaseStatus.error) {
-          log('IAP: Purchase error: ${purchase.error}');
-        }
+      if (purchase.status == PurchaseStatus.purchased ||
+          purchase.status == PurchaseStatus.restored) {
+        log('IAP: Purchase successful: ${purchase.productID}');
+        onPurchaseSuccess?.call(purchase.productID);
+      } else if (purchase.status == PurchaseStatus.error) {
+        log('IAP: Purchase error: ${purchase.error}');
       }
 
       // Complete pending purchases

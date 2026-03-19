@@ -41,20 +41,20 @@ class _AddDebtFormState extends State<AddDebtForm> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
         top: 24, left: 24, right: 24,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(widget.existingDebt == null ? (_isOwedToMe ? "Money Owed to Me" : "Money I Owe") : "Edit Debt Entry",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
           const SizedBox(height: 15),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Is someone owing you?", style: TextStyle(color: Colors.white)),
+              Text("Is someone owing you?", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
               CustomSwitch(
                 value: _isOwedToMe,
                 onChanged: (v) => setState(() => _isOwedToMe = v),
@@ -69,9 +69,9 @@ class _AddDebtFormState extends State<AddDebtForm> {
           _field(_descController, "Description (Optional)"),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _routing,
-            dropdownColor: AppColors.cardBg,
-            style: const TextStyle(color: Colors.white),
+            initialValue: _routing,
+            dropdownColor: Theme.of(context).cardColor,
+            style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             items: ['Monthly Budget', 'Available Resources', 'None (Do not log)']
                 .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                 .toList(),
@@ -82,7 +82,7 @@ class _AddDebtFormState extends State<AddDebtForm> {
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Colors.white24)),
+                  borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
             ),
           ),
           const SizedBox(height: 20),
@@ -137,7 +137,7 @@ class _AddDebtFormState extends State<AddDebtForm> {
                 Navigator.pop(context);
               },
               child: Text(widget.existingDebt == null ? "Add Debt Entry" : "Save Changes",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -149,13 +149,13 @@ class _AddDebtFormState extends State<AddDebtForm> {
     return TextField(
       controller: c,
       keyboardType: isNum ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
       decoration: InputDecoration(
         labelText: hint,
         labelStyle: const TextStyle(color: AppColors.textDim),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: Colors.white24)),
+            borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(color: AppColors.primary)),

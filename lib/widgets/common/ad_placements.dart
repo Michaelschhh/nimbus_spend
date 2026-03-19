@@ -1,11 +1,10 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:provider/provider.dart';
-import '../../providers/settings_provider.dart';
-import '../../services/sound_service.dart';
 import '../../services/ad_service.dart';
+import '../../providers/settings_provider.dart';
 
 class BannerAdSpace extends StatefulWidget {
   const BannerAdSpace({super.key});
@@ -27,11 +26,10 @@ class _BannerAdSpaceState extends State<BannerAdSpace> {
   }
 
   void _loadAd() {
-    final width = MediaQuery.of(context).size.width.truncate();
     _bannerAd = BannerAd(
       adUnitId: AdService.bannerAdUnitId,
       request: const AdRequest(),
-      size: AdSize(width: width, height: 50),
+      size: AdSize.banner,
       listener: BannerAdListener(
         onAdLoaded: (_) {
           if (mounted) {
@@ -56,6 +54,8 @@ class _BannerAdSpaceState extends State<BannerAdSpace> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<SettingsProvider>().settings;
+    if (s.adsRemoved || s.isPro) return const SizedBox.shrink();
     if (!_isLoaded || _bannerAd == null) {
       return const SizedBox.shrink();
     }
@@ -75,12 +75,14 @@ class NativeAdSpace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<SettingsProvider>().settings;
+    if (s.adsRemoved || s.isPro) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
+        color: Theme.of(context).cardColor,
         border: Border.all(color: AppColors.primary.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(22),
       ),
@@ -91,21 +93,21 @@ class NativeAdSpace extends StatelessWidget {
             children: [
               Container(
                 width: 40, height: 40, 
-                decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
-                child: const Icon(LucideIcons.image, color: Colors.white54, size: 20),
+                decoration: BoxDecoration(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12), borderRadius: BorderRadius.circular(8)),
+                child: Icon(LucideIcons.image, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54), size: 20),
               ),
               const SizedBox(width: 12),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Sponsored Content", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text("Ad", style: TextStyle(color: AppColors.textDim, fontSize: 10)),
+                  Text("Sponsored Content", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
+                  const Text("Ad", style: TextStyle(color: AppColors.textDim, fontSize: 10)),
                 ]
               )
             ],
           ),
           const SizedBox(height: 12),
-          const Text("[ Native Ad Space ] - Placed natively in lists.", style: TextStyle(color: Colors.white54)),
+          Text("[ Native Ad Space ] - Placed natively in lists.", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54))),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
@@ -140,9 +142,9 @@ class VideoRewardedAdButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.video, color: Colors.white),
+            Icon(LucideIcons.video, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
             const SizedBox(width: 12),
-            Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(label, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -163,11 +165,11 @@ class AppOpenAdSimulation extends StatelessWidget {
           children: [
             const Icon(LucideIcons.monitorPlay, color: AppColors.primary, size: 64),
             const SizedBox(height: 20),
-            const Text("[ App Open Ad Space ]", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            Text("[ App Open Ad Space ]", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             const CircularProgressIndicator(color: AppColors.primary),
             const SizedBox(height: 20),
-            const Text("Loading your financial future...", style: TextStyle(color: Colors.white70)),
+            Text("Loading your financial future...", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87))),
             const SizedBox(height: 40),
             TextButton(
               onPressed: () => Navigator.pop(context), 

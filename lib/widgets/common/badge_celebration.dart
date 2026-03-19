@@ -33,7 +33,7 @@ class _BadgeCelebrationState extends State<BadgeCelebration> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withOpacity(0.9),
+      color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -53,7 +53,7 @@ class _BadgeCelebrationState extends State<BadgeCelebration> {
                 style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.w900, letterSpacing: 4, fontSize: 12),
               ),
               const SizedBox(height: 10),
-              Text(widget.badge.name, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+              Text(widget.badge.name, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 32, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Text(widget.badge.description, style: const TextStyle(color: AppColors.textDim)),
               const SizedBox(height: 50),
@@ -61,8 +61,8 @@ class _BadgeCelebrationState extends State<BadgeCelebration> {
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
-                  child: const Text("Collect", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), borderRadius: BorderRadius.circular(30)),
+                  child: Text("Collect", style: TextStyle(color: Theme.of(context).scaffoldBackgroundColor, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
