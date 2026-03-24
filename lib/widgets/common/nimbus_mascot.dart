@@ -562,10 +562,10 @@ class _SpeechBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor = isDark ? primaryColor.withOpacity(0.3) : const Color(0xFFC8E4F8);
-    final textColor = isDark ? Colors.white.withOpacity(0.9) : const Color(0xFF3A6EA8);
-    final shadowColor = isDark ? Colors.black.withOpacity(0.3) : const Color(0xFF508CD2).withOpacity(0.15);
+    final bgColor = Theme.of(context).cardColor;
+    final borderColor = primaryColor.withOpacity(isDark ? 0.3 : 0.5);
+    final textColor = isDark ? Colors.white.withOpacity(0.9) : Colors.black87;
+    final shadowColor = isDark ? Colors.black.withOpacity(0.3) : primaryColor.withOpacity(0.15);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

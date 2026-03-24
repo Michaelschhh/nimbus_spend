@@ -53,7 +53,7 @@ class HistoryScreen extends StatelessWidget {
   }
 
   Widget _buildExpenseItem(BuildContext context, int index, dynamic e, ExpenseProvider expProv, SettingsProvider sProv, String cur) {
-    return Dismissible(
+    var animated = Dismissible(
       key: Key(e.id),
       direction: (e.category == 'Bills 📄' || e.category == 'Debts 💳' || e.category == 'Goals 🎯' || e.category == 'Savings 💰' || e.category == 'Subscriptions 💎')
           ? DismissDirection.none 
@@ -83,6 +83,11 @@ class HistoryScreen extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.1);
+
+    if (sProv.settings.motionBlurEnabled) {
+      animated = animated.blurX(begin: 10, end: 0, duration: 300.ms, curve: Curves.easeOut);
+    }
+    return animated;
   }
 
   void _showBlurMenu(BuildContext context, dynamic e, ExpenseProvider prov, SettingsProvider sProv) {

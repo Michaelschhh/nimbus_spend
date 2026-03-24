@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
 import '../../widgets/common/apple_button.dart';
+import '../../services/biometric_service.dart';
 import 'paywall_screen.dart';
 
 class SecuritySettingsScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   String _type = 'passcode';
   final _codeController = TextEditingController();
   bool _isEditing = false;
+  bool _biometricEnabled = false;
 
   @override
   void initState() {
@@ -26,6 +28,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     _isEnabled = s.appLockEnabled;
     _type = s.appLockType;
     _codeController.text = s.appLockCode;
+    _biometricEnabled = s.biometricEnabled;
   }
 
   @override
@@ -66,6 +69,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                 style: const TextStyle(color: AppColors.textDim, fontSize: 13, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               _buildCodeInput(context),
+
+              const SizedBox(height: 30),
+              _buildBiometricToggle(context),
               
               const SizedBox(height: 40),
               AppleButton(
@@ -73,6 +79,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                 onTap: () {
                   if (_codeController.text.isEmpty) return;
                   sProv.updateSecuritySettings(_isEnabled, _type, _codeController.text);
+                  sProv.setBiometric(_biometricEnabled);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Security settings updated!"))
                   );
@@ -100,7 +107,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           const Text("Premium Security", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           const Text(
-            "Secure your financial data with a passcode or password. This feature requires a one-time purchase or Pro status.",
+            "Secure your financial data with a passcode, password, fingerprint, or face unlock. This feature requires a one-time purchase or Pro status.",
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textDim, fontSize: 14),
           ),
@@ -186,6 +193,52 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           border: InputBorder.none,
           hintText: _type == 'passcode' ? "Enter 4-6 digits" : "Enter password",
         ),
+      ),
+    );
+  }
+
+  Widget _buildBiometricToggle(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.fingerprint, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 15),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Biometric Unlock", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text(
+                "Use fingerprint or face to unlock",
+                style: const TextStyle(color: AppColors.textDim, fontSize: 11),
+              ),
+            ],
+          )),
+          Switch.adaptive(
+            value: _biometricEnabled,
+            activeColor: Theme.of(context).primaryColor,
+            onChanged: (val) async {
+              if (val) {
+                final available = await BiometricService.isAvailable();
+                if (!available) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No biometrics enrolled on this device. Set up fingerprint or face unlock in your device settings.')),
+                    );
+                  }
+                  return;
+                }
+                final authed = await BiometricService.authenticate(reason: 'Verify your identity to enable biometric unlock');
+                if (!authed) return;
+              }
+              setState(() => _biometricEnabled = val);
+            },
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense.dart';
+import '../models/bill.dart';
 import '../providers/settings_provider.dart';
 import '../providers/expense_provider.dart';
 import '../providers/bills_provider.dart';
@@ -63,6 +64,19 @@ class RecurringService {
         // Return unused allowance to resources (if positive)
         // If negative, it means they overspent their allowance (which is allowed but reduces resources)
         await sProv.addToResources(remainder);
+        
+        if (remainder > 0) {
+          final deposit = Expense(
+            amount: -remainder,
+            category: 'System 🤖',
+            date: now,
+            note: 'Monthly Rollover',
+            fundingSource: 'none',
+            isRecurring: false,
+            lifeCostHours: 0,
+          );
+          await eProv.addExpense(deposit, sProv, skipResourceUpdate: true);
+        }
         
         // --- SALARY AUTOMATION ---
         if (sProv.settings.isSalaryEarner) {
@@ -137,6 +151,34 @@ class RecurringService {
   static Future<void> _checkBillsAndDebts(SettingsProvider sProv, ExpenseProvider eProv, BillsProvider bProv, DebtProvider dProv) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+
+    for (var b in bProv.bills.where((b) => b.isPaid && b.frequency != 'Once')) {
+      final dueDay = DateTime(b.dueDate.year, b.dueDate.month, b.dueDate.day);
+      if (dueDay.isBefore(today)) {
+        DateTime nextDueDate = b.dueDate;
+        if (b.frequency == 'Weekly') {
+          nextDueDate = b.dueDate.add(const Duration(days: 7));
+        } else if (b.frequency == 'Monthly') {
+          nextDueDate = DateTime(b.dueDate.year, b.dueDate.month + 1, b.dueDate.day);
+        } else if (b.frequency == 'Yearly') {
+          nextDueDate = DateTime(b.dueDate.year + 1, b.dueDate.month, b.dueDate.day);
+        }
+        
+        final updated = Bill(
+          id: b.id,
+          name: b.name,
+          amount: b.amount,
+          dueDate: nextDueDate,
+          frequency: b.frequency,
+          category: b.category,
+          isPaid: false,
+          paidDate: null,
+          autoPay: b.autoPay,
+          defaultRouting: b.defaultRouting,
+        );
+        await bProv.updateBill(updated);
+      }
+    }
 
     for (var b in bProv.bills.where((b) => !b.isPaid)) {
       final dueDay = DateTime(b.dueDate.year, b.dueDate.month, b.dueDate.day);

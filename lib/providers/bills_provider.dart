@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/bill.dart';
 import '../services/storage_service.dart';
+import '../services/notification_service.dart';
 
 class BillsProvider extends ChangeNotifier {
   final StorageService _storage = StorageService();
@@ -21,11 +22,14 @@ class BillsProvider extends ChangeNotifier {
   Future<void> addBill(Bill bill) async {
     await _storage.insert('bills', bill.toMap());
     _bills.add(bill);
+    _scheduleBillNotifications(bill);
     await fetchBills();
   }
 
   Future<void> deleteBill(String id) async {
     await _storage.delete('bills', id);
+    NotificationService.cancelScheduled(id.hashCode);
+    NotificationService.cancelScheduled(id.hashCode + 1);
     await fetchBills();
   }
 
@@ -33,42 +37,52 @@ class BillsProvider extends ChangeNotifier {
     final index = _bills.indexWhere((b) => b.id == bill.id);
     if (index != -1) {
       await _storage.update('bills', bill.toMap(), bill.id);
+      NotificationService.cancelScheduled(bill.id.hashCode);
+      NotificationService.cancelScheduled(bill.id.hashCode + 1); // For the 3-day warning
+      if (!bill.isPaid) {
+        _scheduleBillNotifications(bill);
+      }
       await fetchBills();
     }
+  }
+
+  void _scheduleBillNotifications(Bill bill) {
+    if (bill.isPaid) return;
+    
+    // Day of
+    NotificationService.scheduleItemNotification(
+      id: bill.id.hashCode,
+      title: 'Bill Due Today!',
+      body: '${bill.name} for \$${bill.amount.toStringAsFixed(2)} is due today.',
+      date: bill.dueDate,
+    );
+    // 3 days before
+    final reminderDate = bill.dueDate.subtract(const Duration(days: 3));
+    NotificationService.scheduleItemNotification(
+      id: bill.id.hashCode + 1,
+      title: 'Bill Due Soon',
+      body: '${bill.name} for \$${bill.amount.toStringAsFixed(2)} is due in 3 days.',
+      date: reminderDate,
+    );
   }
 
   Future<void> markAsPaid(String id) async {
     final index = _bills.indexWhere((b) => b.id == id);
     if (index != -1) {
       final bill = _bills[index];
-      
-      bool isPaid = true;
-      DateTime nextDueDate = bill.dueDate;
-      
-      if (bill.frequency != 'Once') {
-        isPaid = false; // It's a recurring bill, so it's not permanently paid off
-        if (bill.frequency == 'Weekly') {
-          nextDueDate = bill.dueDate.add(const Duration(days: 7));
-        } else if (bill.frequency == 'Monthly') {
-          nextDueDate = DateTime(bill.dueDate.year, bill.dueDate.month + 1, bill.dueDate.day);
-        } else if (bill.frequency == 'Yearly') {
-          nextDueDate = DateTime(bill.dueDate.year + 1, bill.dueDate.month, bill.dueDate.day);
-        }
-      }
 
       final updated = Bill(
         id: bill.id,
         name: bill.name,
         amount: bill.amount,
-        dueDate: nextDueDate, // updated due date
+        dueDate: bill.dueDate, // keep same due date
         frequency: bill.frequency,
         category: bill.category,
-        isPaid: isPaid,
+        isPaid: true,        // mark as paid
         paidDate: DateTime.now(),
         autoPay: bill.autoPay,
       );
-      await _storage.update('bills', updated.toMap(), id);
-      await fetchBills();
+      await updateBill(updated);
     }
   }
 

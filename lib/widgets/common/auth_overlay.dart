@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
 import '../../widgets/common/apple_button.dart';
+import '../../services/biometric_service.dart';
 
 class AuthOverlay extends StatefulWidget {
   const AuthOverlay({super.key});
@@ -15,6 +16,29 @@ class AuthOverlay extends StatefulWidget {
 class _AuthOverlayState extends State<AuthOverlay> {
   final _controller = TextEditingController();
   String _error = '';
+  bool _biometricAttempted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tryBiometric();
+    });
+  }
+
+  Future<void> _tryBiometric() async {
+    final s = context.read<SettingsProvider>().settings;
+    if (!s.biometricEnabled || _biometricAttempted) return;
+    _biometricAttempted = true;
+
+    final available = await BiometricService.isAvailable();
+    if (!available) return;
+
+    final success = await BiometricService.authenticate();
+    if (success && mounted) {
+      context.read<SettingsProvider>().setSecurityUnlocked(true);
+    }
+  }
 
   void _verify() {
     final s = context.read<SettingsProvider>().settings;
@@ -22,7 +46,7 @@ class _AuthOverlayState extends State<AuthOverlay> {
       context.read<SettingsProvider>().setSecurityUnlocked(true);
     } else {
       setState(() {
-        _error = "Incorrect ${_controller.text.length > 0 ? s.appLockType : 'code'}";
+        _error = "Incorrect ${_controller.text.isNotEmpty ? s.appLockType : 'code'}";
         _controller.clear();
       });
     }
@@ -31,7 +55,6 @@ class _AuthOverlayState extends State<AuthOverlay> {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<SettingsProvider>().settings;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
@@ -41,13 +64,22 @@ class _AuthOverlayState extends State<AuthOverlay> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(LucideIcons.lock, size: 60, color: Theme.of(context).primaryColor),
+          Icon(
+            s.biometricEnabled ? LucideIcons.fingerprint : LucideIcons.lock, 
+            size: 60, 
+            color: Theme.of(context).primaryColor,
+          ),
           const SizedBox(height: 24),
           const Text("Nimbus Secure", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(
-            s.appLockType == 'passcode' ? "Enter your passcode to unlock" : "Enter your password to unlock",
+            s.biometricEnabled
+                ? "Use biometrics or enter your ${s.appLockType} to unlock"
+                : s.appLockType == 'passcode' 
+                    ? "Enter your passcode to unlock" 
+                    : "Enter your password to unlock",
             style: const TextStyle(color: AppColors.textDim),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
           
@@ -55,7 +87,7 @@ class _AuthOverlayState extends State<AuthOverlay> {
             controller: _controller,
             obscureText: true,
             textAlign: TextAlign.center,
-            autofocus: true,
+            autofocus: !s.biometricEnabled,
             keyboardType: s.appLockType == 'passcode' ? TextInputType.number : TextInputType.text,
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
             decoration: InputDecoration(
@@ -72,11 +104,24 @@ class _AuthOverlayState extends State<AuthOverlay> {
             Text(_error, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
           ],
           
-          const SizedBox(height: 60),
+          const SizedBox(height: 40),
           AppleButton(
             label: "Unlock",
             onTap: _verify,
           ),
+          
+          if (s.biometricEnabled) ...[
+            const SizedBox(height: 16),
+            AppleButton(
+              label: "Use Biometrics",
+              bgColor: Theme.of(context).primaryColor.withOpacity(0.15),
+              textColor: Theme.of(context).primaryColor,
+              onTap: () {
+                _biometricAttempted = false;
+                _tryBiometric();
+              },
+            ),
+          ],
           
           const SizedBox(height: 20),
         ],

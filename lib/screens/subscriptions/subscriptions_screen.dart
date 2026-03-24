@@ -125,7 +125,16 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   }
 
   Widget _subCard(BuildContext context, Subscription sub, String cur, SubscriptionProvider prov) {
-    return GestureDetector(
+    final daysLeft = sub.nextDueDate.difference(DateTime.now()).inDays;
+    Color borderColor = (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04);
+    
+    if (sub.isActive) {
+      if (daysLeft < 0) borderColor = AppColors.danger;
+      else if (daysLeft <= 7) borderColor = AppColors.warning;
+      else borderColor = Theme.of(context).primaryColor.withOpacity(0.08);
+    }
+
+    var animated = GestureDetector(
       onTap: () => _showBlurMenu(context, sub, prov),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -133,17 +142,17 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: sub.isActive ? Theme.of(context).primaryColor.withOpacity(0.08) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04)),
+          border: Border.all(color: borderColor, width: (sub.isActive && daysLeft <= 7) ? 1.5 : 1.0),
         ),
         child: Row(children: [
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: (sub.isActive ? Theme.of(context).primaryColor : AppColors.textDim).withOpacity(0.1),
+              color: (sub.isActive ? (daysLeft < 0 ? AppColors.danger : (daysLeft <= 7 ? AppColors.warning : Theme.of(context).primaryColor)) : AppColors.textDim).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(LucideIcons.refreshCw,
-                color: sub.isActive ? Theme.of(context).primaryColor : AppColors.textDim, size: 18),
+                color: sub.isActive ? (daysLeft < 0 ? AppColors.danger : (daysLeft <= 7 ? AppColors.warning : Theme.of(context).primaryColor)) : AppColors.textDim, size: 18),
           ),
           const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -151,6 +160,18 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
             const SizedBox(height: 4),
             Text("${sub.frequency} • Next: ${DateFormat('MMM dd').format(sub.nextDueDate)}${sub.billingDay != null ? ' (Day ${sub.billingDay})' : ''}",
                 style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
+            if (sub.isActive)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  daysLeft < 0 ? "Overdue" : (daysLeft == 0 ? "Due Today" : "Due in $daysLeft days"),
+                  style: TextStyle(
+                    color: daysLeft < 0 ? AppColors.danger : (daysLeft <= 7 ? AppColors.warning : AppColors.textDim),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ])),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text(Formatters.currency(sub.amount, cur),
@@ -161,6 +182,11 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         ]),
       ),
     ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
+    
+    if (context.read<SettingsProvider>().settings.motionBlurEnabled) {
+      animated = animated.blurY(begin: 10, end: 0, duration: 400.ms, curve: Curves.easeOut);
+    }
+    return animated;
   }
 
   void _showBlurMenu(BuildContext context, Subscription sub, SubscriptionProvider prov) {

@@ -109,8 +109,22 @@ class _BillsScreenState extends State<BillsScreen> {
 
   Widget _billCard(BuildContext context, Bill b, String cur, BillsProvider prov) {
     final now = DateTime.now();
-    final isOverdue = !b.isPaid && b.dueDate.isBefore(DateTime(now.year, now.month, now.day));
-    return GestureDetector(
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDay = DateTime(b.dueDate.year, b.dueDate.month, b.dueDate.day);
+    final daysLeft = dueDay.difference(today).inDays;
+    
+    Color borderColor = (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04);
+    
+    if (b.isPaid) {
+      borderColor = AppColors.success.withOpacity(0.1);
+    } else {
+      if (daysLeft < 0) borderColor = AppColors.danger;
+      else if (daysLeft <= 7) borderColor = AppColors.warning;
+    }
+
+    final isOverdue = !b.isPaid && daysLeft < 0;
+
+    var animated = GestureDetector(
       onTap: () => _showBlurMenu(context, b, prov),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -118,18 +132,18 @@ class _BillsScreenState extends State<BillsScreen> {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: isOverdue ? AppColors.danger.withOpacity(0.3) : (b.isPaid ? AppColors.success.withOpacity(0.1) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04))),
+          border: Border.all(color: borderColor, width: (!b.isPaid && daysLeft <= 7) ? 1.5 : 1.0),
         ),
         child: Row(children: [
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: (b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : AppColors.warning)).withOpacity(0.1),
+              color: (b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : (daysLeft <= 7 ? AppColors.warning : Theme.of(context).primaryColor))).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              b.isPaid ? LucideIcons.checkCircle : (isOverdue ? LucideIcons.alertTriangle : LucideIcons.clock),
-              color: b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : AppColors.warning), size: 18,
+              b.isPaid ? LucideIcons.checkCircle : (isOverdue ? LucideIcons.alertTriangle : (daysLeft <= 7 ? LucideIcons.clock : LucideIcons.fileText)),
+              color: b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : (daysLeft <= 7 ? AppColors.warning : Theme.of(context).primaryColor)), size: 18,
             ),
           ),
           const SizedBox(width: 16),
@@ -146,14 +160,31 @@ class _BillsScreenState extends State<BillsScreen> {
               ],
             ]),
             const SizedBox(height: 4),
-            Text("${b.frequency} • ${isOverdue ? 'OVERDUE' : 'Due ${Formatters.date(b.dueDate)}'}",
-                style: TextStyle(color: isOverdue ? AppColors.danger : AppColors.textDim, fontSize: 11, fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal)),
+            Text(b.isPaid ? "${b.frequency} • Paid on ${b.paidDate != null ? Formatters.date(b.paidDate!) : 'Unknown'}" : "${b.frequency} • ${Formatters.date(b.dueDate)}",
+                style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
+            if (!b.isPaid)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  isOverdue ? "Overdue" : (daysLeft == 0 ? "Due Today" : "Due in $daysLeft days"),
+                  style: TextStyle(
+                    color: isOverdue ? AppColors.danger : (daysLeft <= 7 ? AppColors.warning : AppColors.textDim),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ])),
           Text(Formatters.currency(b.amount, cur),
               style: TextStyle(color: b.isPaid ? AppColors.success : (isOverdue ? AppColors.danger : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)), fontWeight: FontWeight.bold, fontSize: 15)),
         ]),
       ),
     ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
+    
+    if (context.read<SettingsProvider>().settings.motionBlurEnabled) {
+      animated = animated.blurY(begin: 10, end: 0, duration: 400.ms, curve: Curves.easeOut);
+    }
+    return animated;
   }
 
   void _showBlurMenu(BuildContext context, Bill b, BillsProvider prov) {

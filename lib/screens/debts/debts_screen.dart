@@ -127,7 +127,20 @@ class _DebtsScreenState extends State<DebtsScreen> {
 
   Widget _debtCard(BuildContext context, Debt d, String cur, DebtProvider prov) {
     final settled = d.isSettled;
-    return GestureDetector(
+    int? daysLeft;
+    if (d.dueDate != null) {
+      daysLeft = d.dueDate!.difference(DateTime.now()).inDays;
+    }
+    
+    Color borderColor = (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04);
+    if (settled) {
+      borderColor = AppColors.success.withOpacity(0.1);
+    } else if (daysLeft != null) {
+      if (daysLeft < 0) borderColor = AppColors.danger;
+      else if (daysLeft <= 7) borderColor = AppColors.warning;
+    }
+
+    var animated = GestureDetector(
       onTap: () => _showBlurMenu(context, d, prov),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -135,7 +148,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: settled ? AppColors.success.withOpacity(0.1) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.04)),
+          border: Border.all(color: borderColor, width: (daysLeft != null && daysLeft <= 7 && !settled) ? 1.5 : 1.0),
         ),
         child: Row(children: [
           Container(
@@ -155,6 +168,18 @@ class _DebtsScreenState extends State<DebtsScreen> {
             const SizedBox(height: 4),
             Text(d.description.isNotEmpty ? d.description : Formatters.date(d.date),
                 style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
+            if (!settled && daysLeft != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  daysLeft < 0 ? "Overdue" : (daysLeft == 0 ? "Due Today" : "Due in $daysLeft days"),
+                  style: TextStyle(
+                    color: daysLeft < 0 ? AppColors.danger : (daysLeft <= 7 ? AppColors.warning : AppColors.textDim),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ])),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text(Formatters.currency(d.remainingAmount, cur),
@@ -165,6 +190,11 @@ class _DebtsScreenState extends State<DebtsScreen> {
         ]),
       ),
     ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut);
+    
+    if (context.read<SettingsProvider>().settings.motionBlurEnabled) {
+      animated = animated.blurY(begin: 10, end: 0, duration: 400.ms, curve: Curves.easeOut);
+    }
+    return animated;
   }
 
   void _showBlurMenu(BuildContext context, Debt d, DebtProvider prov) {

@@ -12,6 +12,7 @@ import '../../widgets/common/currency_picker_modal.dart';
 import '../../widgets/common/custom_switch.dart';
 import '../../services/sound_service.dart';
 import '../../services/iap_service.dart';
+import '../../services/notification_service.dart';
 import '../../providers/savings_provider.dart';
 import '../../widgets/common/ad_placements.dart';
 import '../../utils/responsive.dart';
@@ -67,9 +68,11 @@ class SettingsScreen extends StatelessWidget {
             ]),
 
             const SizedBox(height: 20),
+            _notificationsCard(context),
             _soundCard(context, prov),
             _darkModeCard(context, prov),
             _performanceModeCard(context, prov),
+            _motionBlurCard(context, prov),
 
 
             // Nimbus Mascot toggle (Pro/adsRemoved only)
@@ -388,6 +391,51 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
       ]),
+    );
+  }
+
+  Widget _motionBlurCard(BuildContext context, SettingsProvider prov) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+      child: Row(children: [
+        Icon(LucideIcons.wind, color: Theme.of(context).primaryColor, size: 18),
+        const SizedBox(width: 14),
+        const Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Motion Blur", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            Text("Smooth UI transitions", style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+          ],
+        )),
+        CustomSwitch(
+          value: prov.settings.motionBlurEnabled,
+          onChanged: (val) {
+            prov.setMotionBlur(val);
+          },
+        ),
+      ]),
+    );
+  }
+
+  Widget _notificationsCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        await NotificationService.requestPermission();
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification permissions requested.')));
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+        child: Row(children: [
+          Icon(LucideIcons.bell, color: Theme.of(context).primaryColor, size: 18),
+          const SizedBox(width: 14),
+          const Expanded(child: Text("Enable Notifications", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
+          Icon(LucideIcons.chevronRight, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26), size: 16),
+        ]),
+      ),
     );
   }
 }

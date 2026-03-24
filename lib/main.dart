@@ -18,6 +18,14 @@ import 'services/notification_service.dart';
 import 'services/haptic_service.dart';
 import 'services/sound_service.dart';
 import 'services/recurring_service.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+
+// Background alarm callback — runs even when the app is dead or after reboot.
+@pragma('vm:entry-point')
+void backgroundAlarmCallback() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.init();
+}
 
 void main() async {
   // Ensure Flutter engine is connected
@@ -100,6 +108,21 @@ class _LogicInitializerState extends State<LogicInitializer> {
       
       // Perform automated checks for month rollover and recurring payments
       await RecurringService.checkAllCycles(sProv, eProv, bProv, dProv, subProv, prov);
+
+      // Initialize background alarm (non-blocking, after app is running)
+      try {
+        await AndroidAlarmManager.initialize();
+        await AndroidAlarmManager.periodic(
+          const Duration(minutes: 15),
+          0,
+          backgroundAlarmCallback,
+          exact: true,
+          wakeup: true,
+          rescheduleOnReboot: true,
+        );
+      } catch (e) {
+        debugPrint('AlarmManager init failed (non-critical): $e');
+      }
     });
   }
 

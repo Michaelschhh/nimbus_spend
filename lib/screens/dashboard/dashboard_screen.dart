@@ -189,7 +189,12 @@ class DashboardScreen extends StatelessWidget {
     );
     
     if (sProv.settings.performanceModeEnabled) return item;
-    return item.animate().fadeIn(duration: 300.ms, curve: Curves.easeOut);
+    
+    var animated = item.animate().fadeIn(duration: 300.ms, curve: Curves.easeOut);
+    if (sProv.settings.motionBlurEnabled) {
+      animated = animated.blurY(begin: 10, end: 0, duration: 300.ms, curve: Curves.easeOut);
+    }
+    return animated;
   }
 
 
@@ -391,7 +396,7 @@ class DashboardScreen extends StatelessWidget {
     final insights = LocalAIService.generateInsights(eList, budget, wage, totalSpentThisMonth);
 
     return SizedBox(
-      height: 110,
+      height: 125,
       child: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: ListView.builder(
@@ -399,7 +404,9 @@ class DashboardScreen extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           itemCount: insights.length,
           itemBuilder: (context, index) {
-            final isWarning = insights[index].contains('⚠️') || insights[index].contains('Cost') || insights[index].contains('hours');
+            final insight = insights[index];
+            final isWarning = insight.title.contains('Warning') || insight.title.contains('Exhausted') || insight.title.contains('Velocity') || insight.title.contains('Creep');
+            
             return Container(
               width: 280,
               margin: const EdgeInsets.only(right: 16),
@@ -414,12 +421,29 @@ class DashboardScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(children: [
-                    Icon(LucideIcons.sparkles, color: isWarning ? AppColors.warning : Theme.of(context).primaryColor, size: 14),
+                    Icon(insight.icon, color: isWarning ? AppColors.warning : Theme.of(context).primaryColor, size: 14),
                     const SizedBox(width: 8),
-                    Text("NIMBUS AI", style: TextStyle(color: isWarning ? AppColors.warning : Theme.of(context).primaryColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                    Text(insight.title.toUpperCase(), style: TextStyle(color: isWarning ? AppColors.warning : Theme.of(context).primaryColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
                   ]),
                   const SizedBox(height: 10),
-                  Text(insights[index], style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 13, height: 1.3), maxLines: 3, overflow: TextOverflow.ellipsis),
+                  Text(insight.body, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 13, height: 1.3), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  if (insight.actionLabel != null && insight.route != null) ...[
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        // In a real app we would push the route `insight.route`
+                        // For now we just show a snackbar or attempt pushNamed
+                        try {
+                           Navigator.pushNamed(context, insight.route!);
+                        } catch(e) { /* ignore */ }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                        child: Text(insight.actionLabel!, style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );

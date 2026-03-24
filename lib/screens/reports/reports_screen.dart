@@ -106,11 +106,26 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _buildPieChart(Map<String, double> dataMap, double total) {
+    if (total == 0) return const SizedBox();
+    
+    Map<String, double> groupedMap = {};
+    double otherTotal = 0;
+    for (var entry in dataMap.entries) {
+      if ((entry.value / total) < 0.03) {
+        otherTotal += entry.value;
+      } else {
+        groupedMap[entry.key] = entry.value;
+      }
+    }
+    if (otherTotal > 0) {
+      groupedMap["Other 📦"] = otherTotal;
+    }
+
     return PieChart(
       PieChartData(
         sectionsSpace: 6,
         centerSpaceRadius: 60,
-        sections: dataMap.entries.map((entry) {
+        sections: groupedMap.entries.map((entry) {
           double pct = (entry.value / total) * 100;
           return PieChartSectionData(
             color: ColorUtils.categoryColor(entry.key, context),

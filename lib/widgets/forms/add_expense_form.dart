@@ -70,27 +70,6 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     final sProv = context.read<SettingsProvider>();
     final eProv = context.read<ExpenseProvider>();
 
-    // 1. Forced Reflection Timer
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).cardColor,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: Theme.of(context).primaryColor),
-            const SizedBox(height: 20),
-            Text("Analyzing budget impact...", style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
-
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    Navigator.pop(context);
-
     // 2. Percentage-based AI Insight (varies by category)
     if (widget.existingExpense == null) {
       final resources = sProv.settings.availableResources;
@@ -273,9 +252,23 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                 ]),
               ),
             ],
-            
             const SizedBox(height: 25),
             _categoryGrid(),
+            const SizedBox(height: 15),
+            
+            TextField(
+              controller: _note,
+              textCapitalization: TextCapitalization.sentences,
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: Responsive.fs(14, context)),
+              decoration: InputDecoration(
+                hintText: "Note (Optional)...",
+                hintStyle: const TextStyle(color: AppColors.textDim),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Theme.of(context).primaryColor)),
+              ),
+            ),
             const SizedBox(height: 35),
 
             AppleButton(label: "Confirm Authorization", onTap: _submit),

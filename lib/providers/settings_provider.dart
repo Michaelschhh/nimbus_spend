@@ -13,17 +13,20 @@ class SettingsProvider extends ChangeNotifier {
   );
 
   AppSettings get settings => _settings;
+  SharedPreferences? _prefs;
+
   SettingsProvider();
 
   Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
     await _loadSettings(initial: true);
   }
 
   Future<void> updateSalarySettings(bool enabled, double amount, String frequency) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_salary_earner', enabled);
-    await prefs.setDouble('salary_amount', amount);
-    await prefs.setString('salary_frequency', frequency);
+    if (_prefs == null) return;
+    await _prefs!.setBool('is_salary_earner', enabled);
+    await _prefs!.setDouble('salary_amount', amount);
+    await _prefs!.setString('salary_frequency', frequency);
     await _loadSettings();
   }
 
@@ -32,7 +35,8 @@ class SettingsProvider extends ChangeNotifier {
       _isInitializing = true;
       notifyListeners();
     }
-    final prefs = await SharedPreferences.getInstance();
+    if (_prefs == null) return;
+    final prefs = _prefs!;
     _settings = AppSettings(
       name: prefs.getString('user_name') ?? 'User',
       currency: prefs.getString('currency') ?? 'USD',
@@ -53,6 +57,8 @@ class SettingsProvider extends ChangeNotifier {
       themeExpiryTimestamp: prefs.getInt('theme_expiry_timestamp'),
       adsRemoved: prefs.getBool('ads_removed') ?? false,
       performanceModeEnabled: prefs.getBool('performance_mode_enabled') ?? false,
+      motionBlurEnabled: prefs.getBool('motion_blur_enabled') ?? true,
+      biometricEnabled: prefs.getBool('biometric_enabled') ?? false,
 
 
       mascotEnabled: prefs.getBool('mascot_enabled') ?? true,
@@ -74,10 +80,10 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> updateSecuritySettings(bool enabled, String type, String code) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('app_lock_enabled', enabled);
-    await prefs.setString('app_lock_type', type);
-    await prefs.setString('app_lock_code', code);
+    if (_prefs == null) return;
+    await _prefs!.setBool('app_lock_enabled', enabled);
+    await _prefs!.setString('app_lock_type', type);
+    await _prefs!.setString('app_lock_code', code);
     await _loadSettings();
   }
   // ----------------------
@@ -98,24 +104,24 @@ class SettingsProvider extends ChangeNotifier {
   // --------------------------
 
   Future<void> upgradeToPro() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_pro', true);
-    await prefs.setBool('ads_removed', true);
-    await prefs.setBool('themes_unlocked', true);
-    await prefs.setBool('security_unlocked_iap', true); // New IAP flag
+    if (_prefs == null) return;
+    await _prefs!.setBool('is_pro', true);
+    await _prefs!.setBool('ads_removed', true);
+    await _prefs!.setBool('themes_unlocked', true);
+    await _prefs!.setBool('security_unlocked_iap', true); // New IAP flag
     await _loadSettings();
   }
 
   Future<void> removeAds() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('ads_removed', true);
+    if (_prefs == null) return;
+    await _prefs!.setBool('ads_removed', true);
     await _loadSettings();
   }
 
   Future<void> updateResources(double delta) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (_prefs == null) return;
     double newValue = _settings.availableResources + delta;
-    await prefs.setDouble('available_resources', newValue);
+    await _prefs!.setDouble('available_resources', newValue);
     _settings = _settings.copyWith(availableResources: newValue);
     notifyListeners();
   }
@@ -125,50 +131,62 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> updateProfile(String name, double budget, double wage, String currency) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (_prefs == null) return;
     
-    await prefs.setString('user_name', name);
-    await prefs.setDouble('monthly_budget', budget);
-    await prefs.setDouble('hourly_wage', wage);
-    await prefs.setString('currency', currency);
+    await _prefs!.setString('user_name', name);
+    await _prefs!.setDouble('monthly_budget', budget);
+    await _prefs!.setDouble('hourly_wage', wage);
+    await _prefs!.setString('currency', currency);
     
     await _loadSettings();
   }
 
   Future<void> setDarkMode(bool isDark) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_dark_mode', isDark);
+    if (_prefs == null) return;
+    await _prefs!.setBool('is_dark_mode', isDark);
     await _loadSettings();
   }
 
   Future<void> setThemeIndex(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('theme_index', index);
+    if (_prefs == null) return;
+    await _prefs!.setInt('theme_index', index);
     await _loadSettings();
   }
 
   Future<void> setPerformanceMode(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('performance_mode_enabled', enabled);
+    if (_prefs == null) return;
+    await _prefs!.setBool('performance_mode_enabled', enabled);
+    await _loadSettings();
+  }
+
+  Future<void> setMotionBlur(bool enabled) async {
+    if (_prefs == null) return;
+    await _prefs!.setBool('motion_blur_enabled', enabled);
+    await _loadSettings();
+  }
+
+  Future<void> setBiometric(bool enabled) async {
+    if (_prefs == null) return;
+    await _prefs!.setBool('biometric_enabled', enabled);
     await _loadSettings();
   }
 
   Future<void> unlockThemes() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('themes_unlocked', true);
+    if (_prefs == null) return;
+    await _prefs!.setBool('themes_unlocked', true);
     await _loadSettings();
   }
 
   Future<void> unlockSecurity() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('security_unlocked_iap', true);
+    if (_prefs == null) return;
+    await _prefs!.setBool('security_unlocked_iap', true);
     await _loadSettings();
   }
   
   Future<void> unlockThemeFor24h() async {
-    final prefs = await SharedPreferences.getInstance();
+    if (_prefs == null) return;
     final expiry = DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch;
-    await prefs.setInt('theme_expiry_timestamp', expiry);
+    await _prefs!.setInt('theme_expiry_timestamp', expiry);
     await _loadSettings();
   }
 
@@ -182,49 +200,49 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> setMascotEnabled(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('mascot_enabled', enabled);
+    if (_prefs == null) return;
+    await _prefs!.setBool('mascot_enabled', enabled);
     await _loadSettings();
   }
 
   Future<void> setMascotTipsEnabled(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('mascot_tips_enabled', enabled);
+    if (_prefs == null) return;
+    await _prefs!.setBool('mascot_tips_enabled', enabled);
     await _loadSettings();
   }
 
   Future<void> completeOnboarding(String name, double budget, double wage, String currency, {double? availableResources, bool? isSalaryEarner, double? salaryAmount}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_name', name);
-    await prefs.setDouble('monthly_budget', budget);
-    await prefs.setDouble('hourly_wage', wage);
-    await prefs.setString('currency', currency);
+    if (_prefs == null) return;
+    await _prefs!.setString('user_name', name);
+    await _prefs!.setDouble('monthly_budget', budget);
+    await _prefs!.setDouble('hourly_wage', wage);
+    await _prefs!.setString('currency', currency);
     
     // Only set available resources on initial setup
     if (!(_settings.onboardingComplete)) {
-      await prefs.setDouble('available_resources', availableResources ?? budget);
+      await _prefs!.setDouble('available_resources', availableResources ?? budget);
       
       // Handle salary onboarding
       if (isSalaryEarner != null) {
-        await prefs.setBool('is_salary_earner', isSalaryEarner);
-        await prefs.setDouble('salary_amount', salaryAmount ?? 0);
-        await prefs.setString('salary_frequency', 'Monthly');
+        await _prefs!.setBool('is_salary_earner', isSalaryEarner);
+        await _prefs!.setDouble('salary_amount', salaryAmount ?? 0);
+        await _prefs!.setString('salary_frequency', 'Monthly');
       }
       
-      await prefs.setBool('onboarding_complete', true);
+      await _prefs!.setBool('onboarding_complete', true);
     }
     await _loadSettings();
   }
 
   Future<void> acceptTOS() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('tos_accepted', true);
+    if (_prefs == null) return;
+    await _prefs!.setBool('tos_accepted', true);
     await _loadSettings();
   }
 
   Future<void> completeTutorial() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('tutorial_seen', true);
+    if (_prefs == null) return;
+    await _prefs!.setBool('tutorial_seen', true);
     await _loadSettings();
   }
 
@@ -233,9 +251,10 @@ class SettingsProvider extends ChangeNotifier {
     await StorageService().clearAll();
     
     // 2. Prefs wipe
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    await prefs.setBool('onboarding_complete', false);
+    if (_prefs != null) {
+      await _prefs!.clear();
+      await _prefs!.setBool('onboarding_complete', false);
+    }
     
     // 3. Reset local state
     _settings = AppSettings(
@@ -251,28 +270,28 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> updateAvailableResources(double amount) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('available_resources', amount);
+    if (_prefs == null) return;
+    await _prefs!.setDouble('available_resources', amount);
     await _loadSettings();
   }
 
   Future<void> deductFromResources(double amount) async {
-    final prefs = await SharedPreferences.getInstance();
-    double current = prefs.getDouble('available_resources') ?? 0;
-    await prefs.setDouble('available_resources', (current - amount).clamp(0, double.infinity));
+    if (_prefs == null) return;
+    double current = _prefs!.getDouble('available_resources') ?? 0;
+    await _prefs!.setDouble('available_resources', (current - amount).clamp(0, double.infinity));
     await _loadSettings();
   }
 
   Future<void> addToResources(double amount) async {
-    final prefs = await SharedPreferences.getInstance();
-    double current = prefs.getDouble('available_resources') ?? 0;
-    await prefs.setDouble('available_resources', current + amount);
+    if (_prefs == null) return;
+    double current = _prefs!.getDouble('available_resources') ?? 0;
+    await _prefs!.setDouble('available_resources', current + amount);
     await _loadSettings();
   }
 
   Future<void> toggleSounds(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('sounds_enabled', value);
+    if (_prefs == null) return;
+    await _prefs!.setBool('sounds_enabled', value);
     await _loadSettings();
   }
 }

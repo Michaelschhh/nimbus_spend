@@ -18,7 +18,12 @@ class DebtProvider extends ChangeNotifier {
   Future<void> fetchDebts() async {
     final data = await _storage.queryAll('debts');
     _debts = data.map((d) => Debt.fromMap(d)).toList();
-    _debts.sort((a, b) => b.date.compareTo(a.date));
+    _debts.sort((a, b) {
+      if (a.dueDate == null && b.dueDate == null) return a.date.compareTo(b.date);
+      if (a.dueDate == null) return 1;
+      if (b.dueDate == null) return -1;
+      return a.dueDate!.compareTo(b.dueDate!);
+    });
     notifyListeners();
   }
 

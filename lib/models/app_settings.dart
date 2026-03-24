@@ -27,6 +27,8 @@ class AppSettings {
   final bool securityUnlockedIAP; // Persisted IAP state
   final int? themeExpiryTimestamp; // UTC milliseconds
   final bool performanceModeEnabled; // Optimization for low-end devices
+  final bool motionBlurEnabled;      // Visual polish for transitions
+  final bool biometricEnabled;       // Fingerprint / Face unlock
 
 
 
@@ -59,6 +61,8 @@ class AppSettings {
     this.securityUnlockedIAP = false,
     this.themeExpiryTimestamp,
     this.performanceModeEnabled = false,
+    this.motionBlurEnabled = true,
+    this.biometricEnabled = false,
   });
 
   AppSettings copyWith({
@@ -90,6 +94,8 @@ class AppSettings {
     bool? securityUnlockedIAP,
     int? themeExpiryTimestamp,
     bool? performanceModeEnabled,
+    bool? motionBlurEnabled,
+    bool? biometricEnabled,
   }) {
 
 
@@ -122,6 +128,8 @@ class AppSettings {
       securityUnlockedIAP: securityUnlockedIAP ?? this.securityUnlockedIAP,
       themeExpiryTimestamp: themeExpiryTimestamp ?? this.themeExpiryTimestamp,
       performanceModeEnabled: performanceModeEnabled ?? this.performanceModeEnabled,
+      motionBlurEnabled: motionBlurEnabled ?? this.motionBlurEnabled,
+      biometricEnabled: biometricEnabled ?? this.biometricEnabled,
     );
 
 

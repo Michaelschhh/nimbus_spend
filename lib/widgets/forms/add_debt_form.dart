@@ -149,6 +149,7 @@ class _AddDebtFormState extends State<AddDebtForm> {
     return TextField(
       controller: c,
       keyboardType: isNum ? TextInputType.number : TextInputType.text,
+      textCapitalization: isNum ? TextCapitalization.none : TextCapitalization.sentences,
       style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
       decoration: InputDecoration(
         labelText: hint,

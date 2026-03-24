@@ -20,14 +20,69 @@ class NotificationService {
           playSound: true,
         )
       ],
-      debug: true,
+      debug: false,
     );
 
-    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-      if (!isAllowed) {
-        AwesomeNotifications().requestPermissionToSendNotifications();
-      }
-    });
+    // Set listeners so AwesomeNotifications can handle actions
+    // even when the app was killed and relaunched by notification tap.
+    await AwesomeNotifications().setListeners(
+      onActionReceivedMethod: _onActionReceived,
+      onNotificationCreatedMethod: _onNotificationCreated,
+      onNotificationDisplayedMethod: _onNotificationDisplayed,
+      onDismissActionReceivedMethod: _onDismissActionReceived,
+    );
+  }
+
+  // These must be top-level or static to work in background isolates.
+  @pragma('vm:entry-point')
+  static Future<void> _onActionReceived(ReceivedAction receivedAction) async {}
+
+  @pragma('vm:entry-point')
+  static Future<void> _onNotificationCreated(ReceivedNotification receivedNotification) async {}
+
+  @pragma('vm:entry-point')
+  static Future<void> _onNotificationDisplayed(ReceivedNotification receivedNotification) async {}
+
+  @pragma('vm:entry-point')
+  static Future<void> _onDismissActionReceived(ReceivedAction receivedAction) async {}
+
+  static Future<void> requestPermission() async {
+    final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!isAllowed) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
+  }
+
+  static Future<void> scheduleItemNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime date,
+  }) async {
+    // Only schedule if date is in the future
+    if (date.isBefore(DateTime.now())) return;
+    
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+         id: id,
+         channelKey: 'nimbus_alerts',
+         title: title,
+         body: body,
+         notificationLayout: NotificationLayout.Default,
+         category: NotificationCategory.Reminder,
+         backgroundColor: Colors.black,
+      ),
+      schedule: NotificationCalendar(
+        year: date.year, month: date.month, day: date.day, hour: 9, minute: 0, 
+        allowWhileIdle: true,
+        preciseAlarm: true,
+        repeats: false,
+      )
+    );
+  }
+
+  static Future<void> cancelScheduled(int id) async {
+    await AwesomeNotifications().cancel(id);
   }
 
   static Future<void> showNotification({
