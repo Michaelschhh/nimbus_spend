@@ -32,16 +32,39 @@ class DebtProvider extends ChangeNotifier {
     await fetchDebts();
   }
 
-  Future<void> deleteDebt(String id) async {
-    await _storage.delete('debts', id);
-    await fetchDebts();
-  }
-
   Future<void> updateDebt(Debt debt) async {
     final index = _debts.indexWhere((d) => d.id == debt.id);
     if (index != -1) {
       await _storage.update('debts', debt.toMap(), debt.id);
       await fetchDebts();
+    }
+  }
+
+  Future<void> fullyDeleteDebt(String id, dynamic eProv, dynamic sProv) async {
+    await _storage.delete('debts', id);
+    await fetchDebts();
+    await eProv.deleteExpenseByLinkedId(id, sProv);
+  }
+
+  Future<void> refundDebt(String id, dynamic eProv, dynamic sProv) async {
+    final index = _debts.indexWhere((d) => d.id == id);
+    if (index != -1) {
+      final debt = _debts[index];
+      final updated = Debt(
+        id: debt.id,
+        personName: debt.personName,
+        amount: debt.amount,
+        description: debt.description,
+        date: debt.date,
+        dueDate: debt.dueDate,
+        isOwedToMe: debt.isOwedToMe,
+        isSettled: false,
+        remainingAmount: debt.amount,
+        defaultRouting: debt.defaultRouting,
+      );
+      await _storage.update('debts', updated.toMap(), id);
+      await fetchDebts();
+      await eProv.deleteExpenseByLinkedId(id, sProv);
     }
   }
 

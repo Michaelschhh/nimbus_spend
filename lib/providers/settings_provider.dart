@@ -7,6 +7,11 @@ class SettingsProvider extends ChangeNotifier {
   bool _isInitializing = true;
   bool get isInitializing => _isInitializing;
 
+  String _currentAccountId = 'default';
+  String get currentAccountId => _currentAccountId;
+  
+  String get _pfx => _currentAccountId == 'default' ? '' : '${_currentAccountId}_';
+
   AppSettings _settings = AppSettings(
     name: 'User', currency: 'USD', monthlyBudget: 1000, 
     hourlyWage: 20, availableResources: 0
@@ -19,14 +24,32 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    _currentAccountId = _prefs!.getString('current_account_id') ?? 'default';
+    await StorageService().switchDatabase(_currentAccountId);
     await _loadSettings(initial: true);
+  }
+
+  Future<void> switchAccount(String accountId, Function() onDbSwitched) async {
+    _currentAccountId = accountId;
+    if (_prefs != null) {
+      await _prefs!.setString('current_account_id', accountId);
+    }
+    await StorageService().switchDatabase(accountId);
+    await _loadSettings();
+    onDbSwitched(); // trigger refresh in other providers
   }
 
   Future<void> updateSalarySettings(bool enabled, double amount, String frequency) async {
     if (_prefs == null) return;
-    await _prefs!.setBool('is_salary_earner', enabled);
-    await _prefs!.setDouble('salary_amount', amount);
-    await _prefs!.setString('salary_frequency', frequency);
+    await _prefs!.setBool('${_pfx}is_salary_earner', enabled);
+    await _prefs!.setDouble('${_pfx}salary_amount', amount);
+    await _prefs!.setString('${_pfx}salary_frequency', frequency);
+    await _loadSettings();
+  }
+
+  Future<void> toggleMonthlyAllowance(bool value) async {
+    if (_prefs == null) return;
+    await _prefs!.setBool('${_pfx}has_monthly_allowance', value);
     await _loadSettings();
   }
 
@@ -38,19 +61,22 @@ class SettingsProvider extends ChangeNotifier {
     if (_prefs == null) return;
     final prefs = _prefs!;
     _settings = AppSettings(
-      name: prefs.getString('user_name') ?? 'User',
-      currency: prefs.getString('currency') ?? 'USD',
-      monthlyBudget: prefs.getDouble('monthly_budget') ?? 1000,
-      hourlyWage: prefs.getDouble('hourly_wage') ?? 20,
-      availableResources: prefs.getDouble('available_resources') ?? 0,
-      onboardingComplete: prefs.getBool('onboarding_complete') ?? false,
+      name: prefs.getString('${_pfx}user_name') ?? 'User',
+      currency: prefs.getString('${_pfx}currency') ?? 'USD',
+      monthlyBudget: prefs.getDouble('${_pfx}monthly_budget') ?? 1000,
+      hourlyWage: prefs.getDouble('${_pfx}hourly_wage') ?? 20,
+      availableResources: prefs.getDouble('${_pfx}available_resources') ?? 0,
+      hasMonthlyAllowance: prefs.getBool('${_pfx}has_monthly_allowance') ?? true,
+      onboardingComplete: prefs.getBool('${_pfx}onboarding_complete') ?? false,
+      isSalaryEarner: prefs.getBool('${_pfx}is_salary_earner') ?? false,
+      salaryAmount: prefs.getDouble('${_pfx}salary_amount') ?? 0.0,
+      salaryFrequency: prefs.getString('${_pfx}salary_frequency') ?? 'Monthly',
+      customCategories: prefs.getStringList('${_pfx}custom_categories') ?? [],
+      
       soundsEnabled: prefs.getBool('sounds_enabled') ?? true,
       isPro: prefs.getBool('is_pro') ?? false,
       tosAccepted: prefs.getBool('tos_accepted') ?? false,
       tutorialSeen: prefs.getBool('tutorial_seen') ?? false,
-      isSalaryEarner: prefs.getBool('is_salary_earner') ?? false,
-      salaryAmount: prefs.getDouble('salary_amount') ?? 0.0,
-      salaryFrequency: prefs.getString('salary_frequency') ?? 'Monthly',
       isDarkMode: prefs.getBool('is_dark_mode') ?? true,
       themeIndex: prefs.getInt('theme_index') ?? 0,
       themesUnlocked: prefs.getBool('themes_unlocked') ?? false,
@@ -133,10 +159,10 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> updateProfile(String name, double budget, double wage, String currency) async {
     if (_prefs == null) return;
     
-    await _prefs!.setString('user_name', name);
-    await _prefs!.setDouble('monthly_budget', budget);
-    await _prefs!.setDouble('hourly_wage', wage);
-    await _prefs!.setString('currency', currency);
+    await _prefs!.setString('${_pfx}user_name', name);
+    await _prefs!.setDouble('${_pfx}monthly_budget', budget);
+    await _prefs!.setDouble('${_pfx}hourly_wage', wage);
+    await _prefs!.setString('${_pfx}currency', currency);
     
     await _loadSettings();
   }
@@ -168,6 +194,12 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setBiometric(bool enabled) async {
     if (_prefs == null) return;
     await _prefs!.setBool('biometric_enabled', enabled);
+    await _loadSettings();
+  }
+
+  Future<void> setSoundsEnabled(bool enabled) async {
+    if (_prefs == null) return;
+    await _prefs!.setBool('sounds_enabled', enabled);
     await _loadSettings();
   }
 
@@ -213,23 +245,23 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> completeOnboarding(String name, double budget, double wage, String currency, {double? availableResources, bool? isSalaryEarner, double? salaryAmount}) async {
     if (_prefs == null) return;
-    await _prefs!.setString('user_name', name);
-    await _prefs!.setDouble('monthly_budget', budget);
-    await _prefs!.setDouble('hourly_wage', wage);
-    await _prefs!.setString('currency', currency);
+    await _prefs!.setString('${_pfx}user_name', name);
+    await _prefs!.setDouble('${_pfx}monthly_budget', budget);
+    await _prefs!.setDouble('${_pfx}hourly_wage', wage);
+    await _prefs!.setString('${_pfx}currency', currency);
     
     // Only set available resources on initial setup
     if (!(_settings.onboardingComplete)) {
-      await _prefs!.setDouble('available_resources', availableResources ?? budget);
+      await _prefs!.setDouble('${_pfx}available_resources', availableResources ?? budget);
       
       // Handle salary onboarding
       if (isSalaryEarner != null) {
-        await _prefs!.setBool('is_salary_earner', isSalaryEarner);
-        await _prefs!.setDouble('salary_amount', salaryAmount ?? 0);
-        await _prefs!.setString('salary_frequency', 'Monthly');
+        await _prefs!.setBool('${_pfx}is_salary_earner', isSalaryEarner);
+        await _prefs!.setDouble('${_pfx}salary_amount', salaryAmount ?? 0);
+        await _prefs!.setString('${_pfx}salary_frequency', 'Monthly');
       }
       
-      await _prefs!.setBool('onboarding_complete', true);
+      await _prefs!.setBool('${_pfx}onboarding_complete', true);
     }
     await _loadSettings();
   }
@@ -250,10 +282,14 @@ class SettingsProvider extends ChangeNotifier {
     // 1. Storage wipe
     await StorageService().clearAll();
     
-    // 2. Prefs wipe
+    // 2. Prefs wipe (only for current instance)
     if (_prefs != null) {
-      await _prefs!.clear();
-      await _prefs!.setBool('onboarding_complete', false);
+      await _prefs!.remove('${_pfx}user_name');
+      await _prefs!.remove('${_pfx}monthly_budget');
+      await _prefs!.remove('${_pfx}hourly_wage');
+      await _prefs!.remove('${_pfx}currency');
+      await _prefs!.remove('${_pfx}available_resources');
+      await _prefs!.setBool('${_pfx}onboarding_complete', false);
     }
     
     // 3. Reset local state
@@ -271,27 +307,41 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> updateAvailableResources(double amount) async {
     if (_prefs == null) return;
-    await _prefs!.setDouble('available_resources', amount);
+    await _prefs!.setDouble('${_pfx}available_resources', amount);
     await _loadSettings();
   }
 
   Future<void> deductFromResources(double amount) async {
     if (_prefs == null) return;
-    double current = _prefs!.getDouble('available_resources') ?? 0;
-    await _prefs!.setDouble('available_resources', (current - amount).clamp(0, double.infinity));
+    double current = _prefs!.getDouble('${_pfx}available_resources') ?? 0;
+    await _prefs!.setDouble('${_pfx}available_resources', (current - amount).clamp(0, double.infinity));
     await _loadSettings();
   }
 
   Future<void> addToResources(double amount) async {
     if (_prefs == null) return;
-    double current = _prefs!.getDouble('available_resources') ?? 0;
-    await _prefs!.setDouble('available_resources', current + amount);
+    double current = _prefs!.getDouble('${_pfx}available_resources') ?? 0;
+    await _prefs!.setDouble('${_pfx}available_resources', current + amount);
     await _loadSettings();
   }
 
-  Future<void> toggleSounds(bool value) async {
+  Future<void> toggleCustomCategory(String category, {bool remove = false}) async {
     if (_prefs == null) return;
-    await _prefs!.setBool('sounds_enabled', value);
+    final List<String> current = _settings.customCategories;
+    List<String> updated = List<String>.from(current);
+    
+    if (remove) {
+      updated.remove(category);
+    } else if (!current.contains(category)) {
+      updated.add(category);
+    }
+    await _prefs!.setStringList('${_pfx}custom_categories', updated);
     await _loadSettings();
   }
+
+  Future<void> addCustomCategory(String category) async {
+    await toggleCustomCategory(category, remove: false);
+  }
+
+  List<String> get allCategories => ["Shopping", "Food", "Transport", "Bills", "Health", ..._settings.customCategories];
 }

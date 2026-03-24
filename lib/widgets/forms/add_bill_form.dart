@@ -8,6 +8,7 @@ import '../common/custom_switch.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/ad_service.dart';
+import '../common/apple_button.dart';
 
 class AddBillForm extends StatefulWidget {
   final Bill? existingBill;
@@ -125,17 +126,9 @@ class _AddBillFormState extends State<AddBillForm> {
             onChanged: (v) => setState(() => _routing = v!),
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity, height: 55,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-              ),
-              onPressed: _save,
-              child: Text(widget.existingBill == null ? "Save Bill" : "Save Changes",
-                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
-            ),
+          AppleButton(
+            label: widget.existingBill == null ? "Save Bill" : "Save Changes",
+            onTap: _save,
           ),
         ],
       ),

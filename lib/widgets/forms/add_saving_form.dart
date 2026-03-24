@@ -13,16 +13,23 @@ import '../../services/sound_service.dart';
 import '../../services/ad_service.dart';
 
 class AddSavingForm extends StatefulWidget {
-  const AddSavingForm({super.key});
+  final double? initialAmount;
+  const AddSavingForm({super.key, this.initialAmount});
   @override
   State<AddSavingForm> createState() => _AddSavingFormState();
 }
 
 class _AddSavingFormState extends State<AddSavingForm> {
   final _desc = TextEditingController();
-  final _amount = TextEditingController();
+  late final TextEditingController _amount;
   final _rate = TextEditingController();
   String _fundingSource = 'allowance';
+
+  @override
+  void initState() {
+    super.initState();
+    _amount = TextEditingController(text: widget.initialAmount?.toString() ?? "");
+  }
 
   void _submit() async {
     if (_desc.text.isEmpty || _amount.text.isEmpty) return;

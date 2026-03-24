@@ -14,6 +14,9 @@ import '../../services/sound_service.dart';
 import '../../services/iap_service.dart';
 import '../../services/notification_service.dart';
 import '../../providers/savings_provider.dart';
+import '../../providers/income_provider.dart';
+import '../../providers/shopping_provider.dart';
+import '../../providers/account_provider.dart';
 import '../../widgets/common/ad_placements.dart';
 import '../../utils/responsive.dart';
 import 'security_settings_screen.dart';
@@ -40,17 +43,25 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 15),
             
             _editCard(context, "Identity", s.name, LucideIcons.user, (v) => prov.updateProfile(v, s.monthlyBudget, s.hourlyWage, s.currency)),
-            _editCard(context, "Monthly Allocation", s.monthlyBudget.toStringAsFixed(0), LucideIcons.wallet, (v) => prov.updateProfile(s.name, double.tryParse(v) ?? 1000, s.hourlyWage, s.currency)),
+            
+            _allowanceTrackingCard(context, prov),
+
+            if (s.hasMonthlyAllowance)
+              _editCard(context, "Monthly Allocation", s.monthlyBudget.toStringAsFixed(0), LucideIcons.wallet, (v) => prov.updateProfile(s.name, double.tryParse(v) ?? 1000, s.hourlyWage, s.currency)),
+            
             _editCard(context, "Available Resources", s.availableResources.toStringAsFixed(0), LucideIcons.landmark, (v) {
               final val = double.tryParse(v);
               if (val != null) prov.updateAvailableResources(val);
             }),
-            _editCard(context, "Hourly Wage", s.hourlyWage.toStringAsFixed(0), LucideIcons.clock, (v) => prov.updateProfile(s.name, s.monthlyBudget, double.tryParse(v) ?? 20, s.currency)),
             
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const SalarySettingsScreen())),
-              child: _staticCard(context, "Salary", s.isSalaryEarner ? "Active" : "Disabled", LucideIcons.briefcase),
-            ),
+            if (s.hasMonthlyAllowance)
+              _editCard(context, "Hourly Wage", s.hourlyWage.toStringAsFixed(0), LucideIcons.clock, (v) => prov.updateProfile(s.name, s.monthlyBudget, double.tryParse(v) ?? 20, s.currency)),
+            
+            if (s.hasMonthlyAllowance)
+              GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const SalarySettingsScreen())),
+                child: _staticCard(context, "Salary", s.isSalaryEarner ? "Active" : "Disabled", LucideIcons.briefcase),
+              ),
             
             GestureDetector(
               onTap: () => _showCurrencyPicker(context, prov),
@@ -243,8 +254,8 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(width: 10),
         CustomSwitch(
           value: prov.settings.soundsEnabled,
-          onChanged: (val) {
-            prov.toggleSounds(val);
+          onChanged: (val) async {
+            await prov.setSoundsEnabled(val);
             SoundService.setEnabled(val);
           },
         ),
@@ -347,6 +358,9 @@ class SettingsScreen extends StatelessWidget {
           context.read<GoalsProvider>().clear();
           context.read<SubscriptionProvider>().clear();
           context.read<SavingsProvider>().clear();
+          context.read<IncomeProvider>().clear();
+          context.read<ShoppingProvider>().clear();
+          context.read<AccountProvider>().clear();
           Navigator.pop(ctx); 
         }, child: const Text("PURGE", style: TextStyle(color: AppColors.danger))),
       ],
@@ -436,6 +450,31 @@ class SettingsScreen extends StatelessWidget {
           Icon(LucideIcons.chevronRight, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26), size: 16),
         ]),
       ),
+    );
+  }
+
+  Widget _allowanceTrackingCard(BuildContext context, SettingsProvider prov) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+      child: Row(children: [
+        Icon(LucideIcons.calendarCheck, color: Theme.of(context).primaryColor, size: 18),
+        const SizedBox(width: 14),
+        const Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Monthly Allowance", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            Text("Enable budgeting & salary features", style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+          ],
+        )),
+        CustomSwitch(
+          value: prov.settings.hasMonthlyAllowance,
+          onChanged: (val) {
+            prov.toggleMonthlyAllowance(val);
+          },
+        ),
+      ]),
     );
   }
 }

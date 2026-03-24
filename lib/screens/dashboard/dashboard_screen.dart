@@ -15,6 +15,8 @@ import '../../widgets/common/ad_placements.dart';
 import '../../services/sound_service.dart';
 import '../../services/local_ai_service.dart';
 import '../../models/expense.dart';
+import '../../widgets/common/account_management_sheet.dart';
+import '../../widgets/common/transaction_details_sheet.dart';
 import '../../utils/responsive.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -51,7 +53,9 @@ class DashboardScreen extends StatelessWidget {
               // THE MAIN ALLOWANCE CARD
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: Responsive.sp(24, context)),
-                child: _mainCard(context, left, s.currency, isOver),
+                child: s.hasMonthlyAllowance
+                   ? _mainCard(context, left, s.currency, isOver, "MONTHLY ALLOWANCE")
+                   : _mainCard(context, exp.totalSpentThisMonth, s.currency, false, "MONTHLY SPEND (LEDGER)"),
               ),
               SizedBox(height: Responsive.sp(30, context)),
 
@@ -128,13 +132,24 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          CircleAvatar(backgroundColor: Theme.of(context).cardColor, child: Text(name.isNotEmpty ? name[0] : "U", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold))),
+          GestureDetector(
+            onTap: () => showModalBottomSheet(
+              context: context, 
+              isScrollControlled: true, 
+              backgroundColor: Colors.transparent, 
+              builder: (ctx) => const AccountManagementBottomSheet()
+            ),
+            child: CircleAvatar(
+              backgroundColor: Theme.of(context).cardColor, 
+              child: Text(name.isNotEmpty ? name[0] : "U", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold))
+            ),
+          ),
         ]),
       ],
     );
   }
 
-  Widget _mainCard(BuildContext context, double left, String cur, bool isOver) {
+  Widget _mainCard(BuildContext context, double amount, String cur, bool isOver, String title) {
     return Container(
       width: double.infinity, padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -143,17 +158,17 @@ class DashboardScreen extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text("MONTHLY ALLOWANCE", style: TextStyle(color: isOver ? AppColors.danger : AppColors.textDim, fontSize: Responsive.fs(10, context), fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+          Text(title, style: TextStyle(color: isOver ? AppColors.danger : AppColors.textDim, fontSize: Responsive.fs(10, context), fontWeight: FontWeight.w900, letterSpacing: 1.2)),
           GestureDetector(
             onTap: () => showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => const AddExpenseForm()),
             child: Icon(LucideIcons.plusCircle, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), size: Responsive.sp(28, context)),
           ),
         ]),
         SizedBox(height: Responsive.sp(12, context)),
-        Text(Formatters.currency(left, cur), 
+        Text(Formatters.currency(amount, cur), 
           style: TextStyle(fontSize: Responsive.fs(46, context), fontWeight: FontWeight.w700, color: isOver ? AppColors.danger : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -2)),
         SizedBox(height: Responsive.sp(15, context)),
-        Text(isOver ? "DANGER: Budget Exceeded" : "Current Cycle Active", 
+        Text(title == "MONTHLY ALLOWANCE" ? (isOver ? "DANGER: Budget Exceeded" : "Current Cycle Active") : "Tracking Mode Instance", 
           style: TextStyle(color: isOver ? AppColors.danger : AppColors.success, fontWeight: FontWeight.bold, fontSize: Responsive.fs(11, context))),
       ]),
     );
@@ -161,7 +176,14 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _item(BuildContext context, dynamic e, ExpenseProvider prov, SettingsProvider sProv, String cur, {bool isHidden = false}) {
     final item = InkWell(
-      onTap: null,
+      onTap: () {
+        showModalBottomSheet(
+          context: context, 
+          isScrollControlled: true, 
+          backgroundColor: Colors.transparent, 
+          builder: (ctx) => TransactionDetailsSheet(expense: e, currency: cur)
+        );
+      },
       onLongPress: () => _showAppleMenu(context, e, prov, sProv, isFromHidden: isHidden),
       borderRadius: BorderRadius.circular(16),
       child: Container(
@@ -287,7 +309,7 @@ class DashboardScreen extends StatelessWidget {
         children: [
           Text(e.category, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 30),
-          if (!isFromHidden && e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰') ...[
+          if (!isFromHidden && e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰' && e.category != 'Income 💰') ...[
             AppleButton(label: "Edit Entry", onTap: () {
               Navigator.pop(context);
               showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddExpenseForm(existingExpense: e));
@@ -307,7 +329,7 @@ class DashboardScreen extends StatelessWidget {
             }
           ),
           const SizedBox(height: 12),
-          if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰' && e.category != 'Subscriptions 💎')
+          if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰' && e.category != 'Subscriptions 💎' && e.category != 'Income 💰')
             AppleButton(label: "Delete Payment", isDestructive: true, onTap: () {
               prov.deleteExpense(e.id, sProv);
               SoundService.delete();

@@ -9,4 +9,8 @@ class Formatters {
   static String date(DateTime date) {
     return DateFormat('MMM dd, yyyy').format(date);
   }
+
+  static String dateMonthYear(DateTime date) {
+    return DateFormat('MMM yyyy').format(date);
+  }
 }

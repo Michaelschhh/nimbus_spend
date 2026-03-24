@@ -14,7 +14,6 @@ import 'screens/reports/reports_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/hub/financial_hub_screen.dart';
 import 'screens/onboarding/tos_screen.dart';
-import 'screens/onboarding/tutorial_screen.dart';
 
 // Logic & Theme
 import 'providers/settings_provider.dart';
@@ -23,6 +22,9 @@ import 'services/sound_service.dart';
 import 'services/haptic_service.dart';
 import 'widgets/common/auth_overlay.dart';
 import 'widgets/common/nimbus_mascot.dart';
+import 'widgets/common/tutorial_overlay.dart';
+import 'package:home_widget/home_widget.dart';
+import 'widgets/forms/add_expense_form.dart';
 
 class NimbusSpendApp extends StatelessWidget {
   const NimbusSpendApp({super.key});
@@ -230,6 +232,28 @@ class _MainNavigationState extends State<MainNavigation> {
       
       Future.delayed(const Duration(milliseconds: 500), () {
         SoundService.welcome();
+      });
+
+      HomeWidget.widgetClicked.listen((Uri? uri) {
+        if (uri != null && uri.host == 'add_expense') {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (ctx) => const AddExpenseForm(),
+          );
+        }
+      });
+
+      HomeWidget.initiallyLaunchedFromHomeWidget().then((Uri? uri) {
+        if (uri != null && uri.host == 'add_expense') {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (ctx) => const AddExpenseForm(),
+          );
+        }
       });
     });
   }

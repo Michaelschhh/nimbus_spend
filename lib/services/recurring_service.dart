@@ -9,6 +9,7 @@ import '../providers/subscription_provider.dart';
 import '../providers/savings_provider.dart';
 import 'notification_service.dart';
 import '../utils/life_cost_utils.dart';
+import '../utils/date_utils.dart';
 
 class RecurringService {
   static Future<void> checkAllCycles(SettingsProvider sProv, ExpenseProvider eProv, BillsProvider bProv, DebtProvider dProv, SubscriptionProvider subProv, SavingsProvider prov) async {
@@ -127,9 +128,9 @@ class RecurringService {
         if (sub.frequency == 'Weekly') {
           next = sub.nextDueDate.add(const Duration(days: 7));
         } else if (sub.frequency == 'Yearly') {
-          next = DateTime(sub.nextDueDate.year + 1, sub.nextDueDate.month, sub.nextDueDate.day);
+          next = DateUtils.clampedDateTime(sub.nextDueDate.year + 1, sub.nextDueDate.month, sub.nextDueDate.day);
         } else {
-          next = DateTime(sub.nextDueDate.year, sub.nextDueDate.month + 1, sub.nextDueDate.day);
+          next = DateUtils.clampedDateTime(sub.nextDueDate.year, sub.nextDueDate.month + 1, sub.nextDueDate.day);
         }
         await subProv.updateSubscription(sub.copyWith(nextDueDate: next));
         await NotificationService.showAutoPayNotification(sub.name, sub.amount);
@@ -159,9 +160,9 @@ class RecurringService {
         if (b.frequency == 'Weekly') {
           nextDueDate = b.dueDate.add(const Duration(days: 7));
         } else if (b.frequency == 'Monthly') {
-          nextDueDate = DateTime(b.dueDate.year, b.dueDate.month + 1, b.dueDate.day);
+          nextDueDate = DateUtils.clampedDateTime(b.dueDate.year, b.dueDate.month + 1, b.dueDate.day);
         } else if (b.frequency == 'Yearly') {
-          nextDueDate = DateTime(b.dueDate.year + 1, b.dueDate.month, b.dueDate.day);
+          nextDueDate = DateUtils.clampedDateTime(b.dueDate.year + 1, b.dueDate.month, b.dueDate.day);
         }
         
         final updated = Bill(

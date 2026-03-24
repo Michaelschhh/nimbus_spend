@@ -16,7 +16,13 @@ import '../debts/debts_screen.dart';
 import '../goals/goals_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
 import '../../widgets/common/ad_placements.dart';
+import '../../widgets/common/calculator_widget.dart';
 import '../../utils/responsive.dart';
+import '../../widgets/forms/add_income_form.dart';
+import '../shopping/shopping_lists_screen.dart';
+import '../../providers/shopping_provider.dart';
+import '../../widgets/common/account_management_sheet.dart';
+import '../income/income_screen.dart';
 
 class FinancialHubScreen extends StatelessWidget {
   const FinancialHubScreen({super.key});
@@ -30,6 +36,7 @@ class FinancialHubScreen extends StatelessWidget {
     final debtProv = context.watch<DebtProvider>();
     final goalProv = context.watch<GoalsProvider>();
     final subProv = context.watch<SubscriptionProvider>();
+    final shopProv = context.watch<ShoppingProvider>();
 
     return Scaffold(
       
@@ -44,6 +51,41 @@ class FinancialHubScreen extends StatelessWidget {
                   style: TextStyle(fontSize: Responsive.fs(34, context), fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), letterSpacing: -1)),
               const BannerAdSpace(),
               const SizedBox(height: 20),
+
+              Text("Quick Actions",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDim)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _quickAction(
+                      context,
+                      icon: LucideIcons.calculator,
+                      label: "Calculator",
+                      onTap: () => showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => const CalculatorWidget()),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _quickAction(
+                      context,
+                      icon: LucideIcons.trendingUp,
+                      label: "Log Income",
+                      onTap: () => showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => const AddIncomeForm()),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _quickAction(
+                      context,
+                      icon: LucideIcons.users,
+                      label: "Portfolios",
+                      onTap: () => showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => const AccountManagementBottomSheet()),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
 
               // Smart Net Worth Summary
               Container(
@@ -132,6 +174,22 @@ class FinancialHubScreen extends StatelessWidget {
                 color: Theme.of(context).primaryColor,
                 screen: const SubscriptionsScreen(),
               ),
+              _glassCard(
+                context,
+                icon: LucideIcons.shoppingBag,
+                title: "Shopping Lists",
+                subtitle: "${shopProv.lists.where((l) => !l.isCompleted).length} active lists",
+                color: Colors.orange,
+                screen: const ShoppingListsScreen(),
+              ),
+              _glassCard(
+                context,
+                icon: LucideIcons.banknote,
+                title: "Income Ledger",
+                subtitle: "Manage logged incomes",
+                color: AppColors.success,
+                screen: const IncomeScreen(),
+              ),
 
               const SizedBox(height: 140),
             ],
@@ -197,4 +255,24 @@ class FinancialHubScreen extends StatelessWidget {
     );
   }
 
+  Widget _quickAction(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.05)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Theme.of(context).primaryColor, size: 24),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
 }

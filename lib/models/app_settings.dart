@@ -29,8 +29,8 @@ class AppSettings {
   final bool performanceModeEnabled; // Optimization for low-end devices
   final bool motionBlurEnabled;      // Visual polish for transitions
   final bool biometricEnabled;       // Fingerprint / Face unlock
-
-
+  final List<String> customCategories;
+  final bool hasMonthlyAllowance;
 
   AppSettings({
     required this.name,
@@ -63,6 +63,8 @@ class AppSettings {
     this.performanceModeEnabled = false,
     this.motionBlurEnabled = true,
     this.biometricEnabled = false,
+    this.customCategories = const [],
+    this.hasMonthlyAllowance = true,
   });
 
   AppSettings copyWith({
@@ -96,6 +98,8 @@ class AppSettings {
     bool? performanceModeEnabled,
     bool? motionBlurEnabled,
     bool? biometricEnabled,
+    List<String>? customCategories,
+    bool? hasMonthlyAllowance,
   }) {
 
 
@@ -130,6 +134,8 @@ class AppSettings {
       performanceModeEnabled: performanceModeEnabled ?? this.performanceModeEnabled,
       motionBlurEnabled: motionBlurEnabled ?? this.motionBlurEnabled,
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+      customCategories: customCategories ?? this.customCategories,
+      hasMonthlyAllowance: hasMonthlyAllowance ?? this.hasMonthlyAllowance,
     );
 
 

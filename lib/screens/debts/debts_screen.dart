@@ -80,8 +80,19 @@ class _DebtsScreenState extends State<DebtsScreen> {
 
               if (filtered.isEmpty)
                 _emptyState()
-              else
-                ...filtered.map((d) => _debtCard(context, d, s.currency, debtProv)),
+              else ...[
+                if (filtered.any((d) => !d.isSettled)) ...[
+                  Text("Active Debts", style: TextStyle(color: AppColors.textDim, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 12),
+                  ...filtered.where((d) => !d.isSettled).map((d) => _debtCard(context, d, s.currency, debtProv)),
+                  const SizedBox(height: 24),
+                ],
+                if (filtered.any((d) => d.isSettled)) ...[
+                  Text("Settled Debts", style: TextStyle(color: AppColors.textDim, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 12),
+                  ...filtered.where((d) => d.isSettled).map((d) => _debtCard(context, d, s.currency, debtProv)),
+                ]
+              ],
 
               const SizedBox(height: 140),
             ],
@@ -221,14 +232,20 @@ class _DebtsScreenState extends State<DebtsScreen> {
                 Text(Formatters.currency(d.remainingAmount, sProv.settings.currency),
                     style: const TextStyle(color: AppColors.textDim, fontSize: 14)),
                 const SizedBox(height: 30),
+                if (d.isSettled) ...[
+                  AppleButton(label: "Refund Payments", onTap: () {
+                    prov.refundDebt(d.id, context.read<ExpenseProvider>(), sProv);
+                    SoundService.success();
+                    Navigator.pop(ctx);
+                  }),
+                  const SizedBox(height: 12),
+                ],
                 if (!d.isSettled) ...[
                   AppleButton(label: d.isOwedToMe ? "Receive Payment" : "Make Payment", onTap: () {
                     Navigator.pop(ctx);
                     _showPaymentDialog(d, prov, sProv);
                   }),
                   const SizedBox(height: 12),
-                ],
-                if (!d.isSettled)
                   AppleButton(label: "Settle All", bgColor: AppColors.success, textColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), onTap: () {
                     final val = d.remainingAmount;
                     prov.settleDebt(d.id);
@@ -243,6 +260,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                         note: d.isOwedToMe ? 'Debt Received (Settled): ${d.personName}' : 'Debt Paid (Settled): ${d.personName}',
                         lifeCostHours: d.isOwedToMe ? 0 : LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
                         fundingSource: sourceStr,
+                        linkedId: d.id,
                       );
                       context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
                       
@@ -256,15 +274,15 @@ class _DebtsScreenState extends State<DebtsScreen> {
                     }
                     Navigator.pop(ctx);
                   }),
-                if (!d.isSettled)
-                  const SizedBox(height: 12),
+                ],
+                const SizedBox(height: 12),
                 AppleButton(label: "Edit Debt", onTap: () {
                   Navigator.pop(ctx);
                   showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddDebtForm(existingDebt: d));
                 }),
                 const SizedBox(height: 12),
                 AppleButton(label: "Delete", isDestructive: true, onTap: () {
-                  prov.deleteDebt(d.id);
+                  prov.fullyDeleteDebt(d.id, context.read<ExpenseProvider>(), sProv);
                   SoundService.delete();
                   Navigator.pop(ctx);
                 }),
@@ -336,6 +354,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                 note: d.isOwedToMe ? 'Debt Received: ${d.personName}' : 'Debt Paid: ${d.personName}',
                 lifeCostHours: d.isOwedToMe ? 0 : LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
                 fundingSource: 'allowance',
+                linkedId: d.id,
               );
               context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
             } else if (source == 'resources') {
@@ -346,6 +365,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                 note: d.isOwedToMe ? 'Debt Received: ${d.personName}' : 'Debt Paid: ${d.personName}',
                 lifeCostHours: d.isOwedToMe ? 0 : LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
                 fundingSource: 'resources',
+                linkedId: d.id,
               );
               context.read<ExpenseProvider>().addExpense(expense, sProv, skipResourceUpdate: true);
               if (d.isOwedToMe) {

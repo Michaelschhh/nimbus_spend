@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense.dart';
 import '../services/storage_service.dart';
-import '../services/notification_service.dart';
+import '../services/widget_service.dart'; // Added import
+import '../services/notification_service.dart'; // Corrected import
 import '../providers/settings_provider.dart';
 
 class ExpenseProvider extends ChangeNotifier {
@@ -19,6 +20,13 @@ class ExpenseProvider extends ChangeNotifier {
     final now = DateTime.now();
     return _expenses
         .where((e) => e.date.year == now.year && e.date.month == now.month && e.fundingSource == 'allowance')
+        .fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double get totalSpentToday {
+    final now = DateTime.now();
+    return _expenses
+        .where((e) => e.date.year == now.year && e.date.month == now.month && e.date.day == now.day && e.fundingSource == 'allowance')
         .fold(0.0, (sum, item) => sum + item.amount);
   }
 
@@ -69,6 +77,13 @@ class ExpenseProvider extends ChangeNotifier {
         await settings.updateResources(-expense.amount);
       }
       notifyListeners();
+
+      // Update Home Widget
+      WidgetService.updateWidgetData(
+        balance: settings.settings.availableResources,
+        spentToday: totalSpentToday,
+        currency: settings.settings.currency,
+      );
     } catch (e) {
       debugPrint("Error adding expense: $e");
     }
@@ -89,6 +104,13 @@ class ExpenseProvider extends ChangeNotifier {
         }
         // Note: For 'allowance', removing from list automatically restores 'totalSpentThisMonth'
         notifyListeners();
+
+        // Update Home Widget
+        WidgetService.updateWidgetData(
+          balance: settings.settings.availableResources,
+          spentToday: totalSpentToday,
+          currency: settings.settings.currency,
+        );
       } catch (e) {
         debugPrint("Error deleting expense: $e");
       }

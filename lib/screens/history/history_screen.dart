@@ -10,6 +10,7 @@ import '../../utils/formatters.dart';
 import '../../widgets/forms/add_expense_form.dart';
 import '../../widgets/common/ad_placements.dart';
 import '../../services/sound_service.dart';
+import '../../services/pdf_service.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -28,7 +29,60 @@ class HistoryScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-              child: Text("History", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("History", style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black))),
+                  IconButton(
+                    icon: Icon(Icons.print, color: Theme.of(context).primaryColor),
+                    onPressed: () async {
+                      // Step 1: Pick start date
+                      final startDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().subtract(const Duration(days: 30)),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                        helpText: 'Select starting date for summary',
+                      );
+                      if (startDate == null) return;
+
+                      // Step 2: Generate PDF
+                      final filePath = await PdfService.generateTaxSummary(
+                        allTransactions: expProv.expenses,
+                        sProv: sProv,
+                        startDate: startDate,
+                      );
+
+                      // Step 3: Show confirmation dialog
+                      if (context.mounted) {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: Theme.of(context).cardColor,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                            title: Row(children: [
+                              Icon(Icons.check_circle, color: Theme.of(context).primaryColor, size: 28),
+                              const SizedBox(width: 12),
+                              const Expanded(child: Text("PDF Generated")),
+                            ]),
+                            content: Text(
+                              "Your tax summary has been saved to:\n\n$filePath",
+                              style: const TextStyle(fontSize: 13, height: 1.5),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: Text("Okay", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
@@ -55,7 +109,7 @@ class HistoryScreen extends StatelessWidget {
   Widget _buildExpenseItem(BuildContext context, int index, dynamic e, ExpenseProvider expProv, SettingsProvider sProv, String cur) {
     var animated = Dismissible(
       key: Key(e.id),
-      direction: (e.category == 'Bills 📄' || e.category == 'Debts 💳' || e.category == 'Goals 🎯' || e.category == 'Savings 💰' || e.category == 'Subscriptions 💎')
+      direction: (e.category == 'Bills 📄' || e.category == 'Debts 💳' || e.category == 'Goals 🎯' || e.category == 'Savings 💰' || e.category == 'Subscriptions 💎' || e.category == 'Income 💰')
           ? DismissDirection.none 
           : DismissDirection.endToStart,
       background: Container(
@@ -101,12 +155,12 @@ class HistoryScreen extends StatelessWidget {
           title: Text(e.category, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
-            if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰')
+            if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰' && e.category != 'Income 💰')
               TextButton(onPressed: () {
                 Navigator.pop(ctx);
                 showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => AddExpenseForm(existingExpense: e));
               }, child: Text("Edit", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold))),
-            if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰' && e.category != 'Subscriptions 💎')
+            if (e.category != 'Bills 📄' && e.category != 'Debts 💳' && e.category != 'Goals 🎯' && e.category != 'Savings 💰' && e.category != 'Subscriptions 💎' && e.category != 'Income 💰')
               TextButton(onPressed: () {
                 prov.deleteExpense(e.id, sProv);
                 SoundService.delete();

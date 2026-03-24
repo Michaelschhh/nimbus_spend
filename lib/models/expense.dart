@@ -11,6 +11,8 @@ class Expense {
   final double lifeCostHours;
   final String fundingSource;
   final String? linkedId;
+  final String? receiptImagePath;
+  final String? voiceMemoPath;
 
   Expense({
     String? id,
@@ -23,6 +25,8 @@ class Expense {
     required this.lifeCostHours,
     this.fundingSource = 'allowance',
     this.linkedId,
+    this.receiptImagePath,
+    this.voiceMemoPath,
   }) : id = id ?? const Uuid().v4();
 
   Map<String, dynamic> toMap() {
@@ -37,6 +41,8 @@ class Expense {
       'lifeCostHours': lifeCostHours,
       'fundingSource': fundingSource,
       'linkedId': linkedId,
+      'receiptImagePath': receiptImagePath,
+      'voiceMemoPath': voiceMemoPath,
     };
   }
 
@@ -52,6 +58,8 @@ class Expense {
       lifeCostHours: (map['lifeCostHours'] as num).toDouble(),
       fundingSource: map['fundingSource'] ?? 'allowance',
       linkedId: map['linkedId'],
+      receiptImagePath: map['receiptImagePath'],
+      voiceMemoPath: map['voiceMemoPath'],
     );
   }
 }

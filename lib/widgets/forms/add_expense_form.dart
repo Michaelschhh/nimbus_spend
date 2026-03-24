@@ -11,6 +11,11 @@ import '../../services/ad_service.dart';
 import '../common/apple_button.dart';
 import '../common/custom_switch.dart';
 import '../../utils/responsive.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import '../common/account_management_sheet.dart';
 
 class AddExpenseForm extends StatefulWidget {
   final Expense? existingExpense;
@@ -27,6 +32,10 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   late bool _isRec;
   late String _freq;
   String _fundingSource = 'allowance';
+  String? _receiptPath;
+  String? _voicePath;
+  bool _isRecording = false;
+  final AudioRecorder _recorder = AudioRecorder();
 
   @override
   void initState() {
@@ -36,6 +45,79 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     _cat = widget.existingExpense?.category ?? "Shopping";
     _isRec = widget.existingExpense?.isRecurring ?? false;
     _freq = widget.existingExpense?.recurringFrequency ?? "Monthly";
+    _receiptPath = widget.existingExpense?.receiptImagePath;
+    _voicePath = widget.existingExpense?.voiceMemoPath;
+  }
+
+  @override
+  void dispose() {
+    _recorder.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final sProv = context.read<SettingsProvider>();
+    if (!sProv.settings.hasMonthlyAllowance && _fundingSource == 'allowance') {
+      _fundingSource = 'none';
+    }
+  }
+
+  Future<void> _pickReceipt() async {
+    final ImagePicker picker = ImagePicker();
+    final ImageSource? source = await showDialog<ImageSource>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text("Attach Receipt", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(LucideIcons.camera, color: Theme.of(context).primaryColor),
+              title: Text("Take Photo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: Icon(LucideIcons.image, color: Theme.of(context).primaryColor),
+              title: Text("Upload from Gallery", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      final XFile? image = await picker.pickImage(source: source);
+      if (image != null) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final String fileName = "receipt_img_${DateTime.now().millisecondsSinceEpoch}.jpg";
+        final savedImage = await File(image.path).copy('${appDir.path}/$fileName');
+        setState(() => _receiptPath = savedImage.path);
+      }
+    }
+  }
+
+  Future<void> _toggleVoice() async {
+    if (_isRecording) {
+      final path = await _recorder.stop();
+      setState(() {
+        _isRecording = false;
+        _voicePath = path;
+      });
+    } else {
+      if (await _recorder.hasPermission()) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final String fileName = "voice_${DateTime.now().millisecondsSinceEpoch}.m4a";
+        final path = '${appDir.path}/$fileName';
+        
+        await _recorder.start(const RecordConfig(), path: path);
+        setState(() => _isRecording = true);
+      }
+    }
   }
 
   // Category-aware thresholds for AI insight
@@ -114,6 +196,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
           );
 
           if (shouldProceed != true) return;
+          if (!mounted) return;
         }
       }
     }
@@ -128,6 +211,8 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
       lifeCostHours: LifeCostUtils.calculate(val, sProv.settings.hourlyWage),
       note: _note.text,
       fundingSource: _fundingSource,
+      receiptImagePath: _receiptPath,
+      voiceMemoPath: _voicePath,
     );
 
     if (widget.existingExpense != null) {
@@ -166,6 +251,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
 
   @override
   Widget build(BuildContext context) {
+    final sProv = context.watch<SettingsProvider>();
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + Responsive.sp(30, context),
@@ -239,10 +325,11 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                       dropdownColor: Theme.of(context).cardColor,
                       style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
                       underline: const SizedBox(),
-                      items: const [
-                        DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
-                        DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
-                        DropdownMenuItem(value: 'none', child: Text("None (Track Only)")),
+                      items: [
+                        if (sProv.settings.hasMonthlyAllowance)
+                          const DropdownMenuItem(value: 'allowance', child: Text("Monthly Budget")),
+                        const DropdownMenuItem(value: 'resources', child: Text("Available Resources")),
+                        const DropdownMenuItem(value: 'none', child: Text("None (Track Only)")),
                       ],
                       onChanged: (val) {
                         if (val != null) setState(() => _fundingSource = val);
@@ -253,7 +340,28 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
               ),
             ],
             const SizedBox(height: 25),
-            _categoryGrid(),
+            _categoryGrid(sProv),
+            const SizedBox(height: 20),
+
+            // MEDIA ATTACHMENTS
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _mediaButton(
+                  icon: LucideIcons.camera,
+                  label: "Attach Receipt",
+                  isActive: _receiptPath != null,
+                  onTap: _pickReceipt,
+                ),
+                _mediaButton(
+                  icon: _isRecording ? LucideIcons.stopCircle : LucideIcons.mic,
+                  label: _isRecording ? "Recording..." : (_voicePath == null ? "Voice Note" : "Recorded"),
+                  isActive: _voicePath != null || _isRecording,
+                  onTap: _toggleVoice,
+                ),
+              ],
+            ),
+
             const SizedBox(height: 15),
             
             TextField(
@@ -278,17 +386,107 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     );
   }
 
-  Widget _categoryGrid() {
+  Widget _categoryGrid(SettingsProvider sProv) {
+    List<String> cats = sProv.allCategories;
     return Wrap(
       spacing: 10, runSpacing: 10,
-      children: ["Shopping", "Food", "Transport", "Bills", "Health"].map((c) => GestureDetector(
-        onTap: () => setState(() => _cat = c),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(color: _cat == c ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black) : Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
-          child: Text(c, style: TextStyle(color: _cat == c ? Theme.of(context).scaffoldBackgroundColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
+      children: [
+        ...cats.map((c) => GestureDetector(
+          onTap: () => setState(() => _cat = c),
+          onLongPress: () {
+            if (sProv.settings.customCategories.contains(c)) {
+              _showDeleteCategoryDialog(sProv, c);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(color: _cat == c ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black) : Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(15), border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12))),
+            child: Text(c, style: TextStyle(color: _cat == c ? Theme.of(context).scaffoldBackgroundColor : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
+          ),
+        )),
+        GestureDetector(
+          onTap: () => _showAddCategoryDialog(sProv),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(15), border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2))),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(LucideIcons.plus, size: 16, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 4),
+                Text("New", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
         ),
-      )).toList(),
+      ],
     );
   }
+
+  void _showAddCategoryDialog(SettingsProvider sProv) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("New Category"),
+        content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(hintText: "Category name...")),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                sProv.addCustomCategory(controller.text);
+                setState(() => _cat = controller.text);
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text("Add"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteCategoryDialog(SettingsProvider sProv, String c) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Delete Category?"),
+        content: Text("Are you sure you want to delete '$c'? Existing expenses will keep the text label, but it won't appear as an active category."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () {
+              sProv.toggleCustomCategory(c, remove: true);
+              if (_cat == c) setState(() => _cat = "Shopping");
+              Navigator.pop(ctx);
+            },
+            child: const Text("Delete", style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _mediaButton({required IconData icon, required String label, required bool isActive, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isActive ? Theme.of(context).primaryColor : Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
+            ),
+            child: Icon(icon, color: isActive ? Colors.white : AppColors.textDim, size: 20),
+          ),
+          const SizedBox(height: 6),
+          Text(label, style: TextStyle(color: AppColors.textDim, fontSize: Responsive.fs(10, context), fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
 }

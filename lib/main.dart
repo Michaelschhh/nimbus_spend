@@ -11,6 +11,9 @@ import 'providers/bills_provider.dart';
 import 'providers/debt_provider.dart';
 import 'providers/goals_provider.dart';
 import 'providers/subscription_provider.dart';
+import 'providers/account_provider.dart';
+import 'providers/income_provider.dart';
+import 'providers/shopping_provider.dart';
 
 import 'services/ad_service.dart';
 import 'services/iap_service.dart';
@@ -18,6 +21,7 @@ import 'services/notification_service.dart';
 import 'services/haptic_service.dart';
 import 'services/sound_service.dart';
 import 'services/recurring_service.dart';
+import 'services/widget_service.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 // Background alarm callback — runs even when the app is dead or after reboot.
@@ -47,6 +51,8 @@ void main() async {
   await HapticService.init();
   await SoundService.init();
 
+  // Request notification permission moved to LogicInitializer
+
   runApp(
     MultiProvider(
       providers: [
@@ -58,6 +64,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => GoalsProvider()..fetchGoals()),
         ChangeNotifierProvider(create: (_) => BillsProvider()..fetchBills()),
         ChangeNotifierProvider(create: (_) => DebtProvider()..fetchDebts()),
+        ChangeNotifierProvider(create: (_) => AccountProvider()..fetchAccounts()),
+        ChangeNotifierProvider(create: (_) => IncomeProvider()..fetchIncomes()),
+        ChangeNotifierProvider(create: (_) => ShoppingProvider()..fetchLists()),
       ],
       child: const LogicInitializer(child: NimbusSpendApp()),
     ),
@@ -72,10 +81,46 @@ class LogicInitializer extends StatefulWidget {
   State<LogicInitializer> createState() => _LogicInitializerState();
 }
 
-class _LogicInitializerState extends State<LogicInitializer> {
+class _LogicInitializerState extends State<LogicInitializer> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initLogic();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkCycles();
+    }
+  }
+
+  Future<void> _checkCycles() async {
+    final sProv = Provider.of<SettingsProvider>(context, listen: false);
+    final eProv = Provider.of<ExpenseProvider>(context, listen: false);
+    final bProv = Provider.of<BillsProvider>(context, listen: false);
+    final dProv = Provider.of<DebtProvider>(context, listen: false);
+    final subProv = Provider.of<SubscriptionProvider>(context, listen: false);
+    final prov = Provider.of<SavingsProvider>(context, listen: false);
+    
+    await RecurringService.checkAllCycles(sProv, eProv, bProv, dProv, subProv, prov);
+
+    // Refresh home screen widget with real data
+    WidgetService.updateWidgetData(
+      balance: sProv.settings.availableResources,
+      spentToday: eProv.totalSpentToday,
+      currency: sProv.settings.currency,
+    );
+  }
+
+  void _initLogic() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sProv = Provider.of<SettingsProvider>(context, listen: false);
       final eProv = Provider.of<ExpenseProvider>(context, listen: false);
@@ -103,11 +148,17 @@ class _LogicInitializerState extends State<LogicInitializer> {
       await bProv.fetchBills();
       await dProv.fetchDebts();
       await subProv.fetchSubscriptions();
+      await Provider.of<AccountProvider>(context, listen: false).fetchAccounts();
+      await Provider.of<IncomeProvider>(context, listen: false).fetchIncomes();
+      await Provider.of<ShoppingProvider>(context, listen: false).fetchLists();
       final prov = Provider.of<SavingsProvider>(context, listen: false);
       await prov.fetchSavings();
       
       // Perform automated checks for month rollover and recurring payments
-      await RecurringService.checkAllCycles(sProv, eProv, bProv, dProv, subProv, prov);
+      await _checkCycles();
+
+      // Request notification permission late so UI context exists
+      await NotificationService.requestPermission();
 
       // Initialize background alarm (non-blocking, after app is running)
       try {

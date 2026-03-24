@@ -75,7 +75,7 @@ class NotificationService {
       schedule: NotificationCalendar(
         year: date.year, month: date.month, day: date.day, hour: 9, minute: 0, 
         allowWhileIdle: true,
-        preciseAlarm: true,
+        preciseAlarm: false,
         repeats: false,
       )
     );

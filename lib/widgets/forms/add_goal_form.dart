@@ -5,6 +5,7 @@ import '../../providers/goals_provider.dart';
 import '../../theme/colors.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/ad_service.dart';
+import '../common/apple_button.dart';
 
 class AddGoalForm extends StatefulWidget {
   final Goal? existingGoal;
@@ -48,15 +49,10 @@ class _AddGoalFormState extends State<AddGoalForm> {
           const SizedBox(height: 12),
           _field(_targetController, "Target Amount", isNum: true),
           const SizedBox(height: 25),
-          SizedBox(
-            width: double.infinity, height: 55,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-              ),
-              onPressed: () {
-                if (_nameController.text.isEmpty) return;
+          AppleButton(
+            label: widget.existingGoal == null ? "Create Goal" : "Save Changes",
+            onTap: () {
+              if (_nameController.text.isEmpty) return;
                 
                 if (widget.existingGoal != null) {
                   final goal = Goal(
@@ -91,9 +87,6 @@ class _AddGoalFormState extends State<AddGoalForm> {
 
                 Navigator.pop(context);
               },
-              child: Text(widget.existingGoal == null ? "Create Goal" : "Save Changes",
-                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
-            ),
           ),
         ],
       ),

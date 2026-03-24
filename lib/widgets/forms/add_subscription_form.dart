@@ -10,6 +10,7 @@ import '../../theme/colors.dart';
 import '../common/custom_switch.dart';
 import '../../utils/life_cost_utils.dart';
 import '../../services/ad_service.dart';
+import '../common/apple_button.dart';
 
 class AddSubscriptionForm extends StatefulWidget {
   final Subscription? existingSubscription;
@@ -116,17 +117,9 @@ class _AddSubscriptionFormState extends State<AddSubscriptionForm> {
             onChanged: (v) => setState(() => _routing = v!),
           ),
           const SizedBox(height: 25),
-          SizedBox(
-            width: double.infinity, height: 55,
-            child: ElevatedButton(
-              onPressed: _save,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-              ),
-              child: Text(widget.existingSubscription == null ? "Track Subscription" : "Save Changes",
-                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.bold)),
-            ),
+          AppleButton(
+            label: widget.existingSubscription == null ? "Track Subscription" : "Save Changes",
+            onTap: _save,
           ),
         ],
       ),
