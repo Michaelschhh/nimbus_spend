@@ -33,7 +33,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
       } else if (label == "=") {
         try {
           Parser p = Parser();
-          Expression exp = p.parse(_input.replaceAll('x', '*').replaceAll('÷', '/'));
+          Expression exp = p.parse(_input.replaceAll('x', '*').replaceAll('÷', '/').replaceAll('%', '/100'));
           ContextModel cm = ContextModel();
           double eval = exp.evaluate(EvaluationType.REAL, cm);
           _result = eval.toStringAsFixed(2);
@@ -86,11 +86,12 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
               children: [
-                "C", "÷", "x", "⌫",
-                "7", "8", "9", "-",
-                "4", "5", "6", "+",
-                "1", "2", "3", "=",
-                "0", ".", " ", " "
+                "C", "(", ")", "⌫",
+                "7", "8", "9", "÷",
+                "4", "5", "6", "x",
+                "1", "2", "3", "-",
+                "0", ".", "%", "+",
+                " ", " ", " ", "="
               ].map((label) {
                 if (label == " ") return const SizedBox();
                 bool isOp = ["÷", "x", "-", "+", "=", "C", "⌫"].contains(label);

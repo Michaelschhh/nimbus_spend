@@ -22,16 +22,23 @@ class DailyOverviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Theme.of(context).primaryColor, Theme.of(context).colorScheme.secondary],
+          colors: [
+            Theme.of(context).primaryColor.withOpacity(0.85),
+            Theme.of(context).colorScheme.secondary.withOpacity(0.95),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).primaryColor.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),

@@ -26,7 +26,9 @@ class _BillsScreenState extends State<BillsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<BillsProvider>().fetchBills());
+    Future.microtask(() {
+      if (mounted) context.read<BillsProvider>().fetchBills();
+    });
   }
 
   @override

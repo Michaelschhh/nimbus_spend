@@ -102,51 +102,7 @@ class PaywallScreen extends StatelessWidget {
             const Text("THEMES GALLERY", style: TextStyle(color: AppColors.textDim, fontSize: 13, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             
-            ...List.generate(10, (i) {
-              final isLocked = !sProv.isThemeUnlocked() && i > 0;
-              final selected = s.themeIndex == i;
-              final isDark = Theme.of(context).brightness == Brightness.dark;
-
-              return GestureDetector(
-                onTap: () {
-                  if (isLocked) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Unlock themes below to use this!")));
-                  } else {
-                    sProv.setThemeIndex(i);
-                  }
-                },
-                child: Container(
-
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: selected ? Theme.of(context).primaryColor : (isDark ? Colors.white10 : Colors.black12), width: 1.5),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 14, height: 14,
-                        decoration: BoxDecoration(
-                          color: _getThemePreviewColor(i), 
-                          shape: BoxShape.circle,
-                          boxShadow: [BoxShadow(color: _getThemePreviewColor(i).withOpacity(0.3), blurRadius: 4)]
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(_getThemeName(i), style: TextStyle(fontSize: 15, fontWeight: selected ? FontWeight.bold : FontWeight.w500, letterSpacing: -0.2)),
-                      ),
-                      if (isLocked)
-                        Icon(LucideIcons.lock, color: (isDark ? Colors.white24 : Colors.black26), size: 14)
-                      else if (selected)
-                        const Icon(LucideIcons.checkCircle, color: AppColors.success, size: 18)
-                    ],
-                  ),
-                ),
-              );
-            }),
+            _themesGrid(context, s.themeIndex, sProv.isThemeUnlocked(), sProv),
             
             if (s.themeExpiryTimestamp != null && !s.themesUnlocked && !s.isPro) ...[
               const SizedBox(height: 12),

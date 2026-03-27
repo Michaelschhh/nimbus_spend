@@ -322,4 +322,4 @@ warning • The value of the local variable 'index' isn't used • lib/widgets/r
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/reports/spending_score_card.dart:42:43 • deprecated_member_use
 warning • Unused import: '../../theme/colors.dart' • lib/widgets/social/share_card_widget.dart:2:8 • unused_import
 
-321 issues found. (ran in 45.3s)
+321 issues found. (ran in 47.6s)

@@ -146,9 +146,9 @@ class _TransferFundsSheetState extends State<TransferFundsSheet> {
                     setState(() => _isLoading = true);
                     try {
                       await aProv.transferFunds(_fromId!, _toId!, amount, sProv, context.read<ExpenseProvider>());
-                      if (mounted) Navigator.pop(context);
+                      if (context.mounted) Navigator.pop(context);
                     } catch (e) {
-                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("$e")));
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("$e")));
                     } finally {
                       if (mounted) setState(() => _isLoading = false);
                     }

@@ -28,7 +28,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<GoalsProvider>().fetchGoals());
+    Future.microtask(() {
+      if (mounted) context.read<GoalsProvider>().fetchGoals();
+    });
   }
 
   @override

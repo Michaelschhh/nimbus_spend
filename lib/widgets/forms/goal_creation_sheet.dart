@@ -134,6 +134,8 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
                   await context.read<SavingsProvider>().addSaving(goal);
                   SoundService.chaching();
 
+                  if (!mounted) return;
+
                   // Handle funding source debit
                   if (amount > 0 && _fundingSource != 'none') {
                     final sProv = context.read<SettingsProvider>();

@@ -6,14 +6,20 @@ class WidgetService {
   static const String _androidWidgetName = 'NimbusWidget';
   
   static Future<void> updateWidgetData({
-    required double balance,
+    required double monthlyAllowance,
     required double spentToday,
     required String currency,
+    required Color primaryColor,
+    required Color backgroundColor,
+    required Color textColor,
   }) async {
     try {
-      await HomeWidget.saveWidgetData<double>('balance', balance);
-      await HomeWidget.saveWidgetData<double>('spentToday', spentToday);
+      await HomeWidget.saveWidgetData<String>('monthlyAllowance', monthlyAllowance.toStringAsFixed(2));
+      await HomeWidget.saveWidgetData<String>('spentToday', spentToday.toStringAsFixed(2));
       await HomeWidget.saveWidgetData<String>('currency', currency);
+      await HomeWidget.saveWidgetData<String>('primaryColor', '#${primaryColor.value.toRadixString(16).padLeft(8, '0')}');
+      await HomeWidget.saveWidgetData<String>('backgroundColor', '#${backgroundColor.value.toRadixString(16).padLeft(8, '0')}');
+      await HomeWidget.saveWidgetData<String>('textColor', '#${textColor.value.toRadixString(16).padLeft(8, '0')}');
       
       await HomeWidget.updateWidget(
         name: _androidWidgetName,

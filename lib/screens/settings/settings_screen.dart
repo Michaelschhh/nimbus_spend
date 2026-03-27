@@ -13,6 +13,7 @@ import '../../widgets/common/custom_switch.dart';
 import '../../services/sound_service.dart';
 import '../../services/iap_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/export_service.dart';
 import '../../providers/savings_provider.dart';
 import '../../providers/income_provider.dart';
 import '../../providers/shopping_provider.dart';
@@ -135,7 +136,28 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () async {
+                final expenses = context.read<ExpenseProvider>().expenses;
+                await ExportService.exportExpensesToCsv(context, expenses, prov);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor, 
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12)),
+                ),
+                child: const Row(children: [
+                  Icon(LucideIcons.downloadCloud, color: AppColors.success, size: 18),
+                  SizedBox(width: 14),
+                  Expanded(child: Text("Export Data (CSV)", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold))),
+                ]),
+              ),
+            ),
+
+            const SizedBox(height: 30),
             GestureDetector(
               onTap: () => _confirmPurge(context, prov),
               child: Container(

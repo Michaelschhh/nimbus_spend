@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:printing/printing.dart';
 import 'dart:ui';
+import 'dart:io';
 
 import '../../providers/expense_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -46,14 +49,7 @@ class HistoryScreen extends StatelessWidget {
                       );
                       if (startDate == null) return;
 
-                      // Step 2: Generate PDF
-                      final filePath = await PdfService.generateTaxSummary(
-                        allTransactions: expProv.expenses,
-                        sProv: sProv,
-                        startDate: startDate,
-                      );
-
-                      // Step 3: Show confirmation dialog
+                      // Show loading dialog
                       if (context.mounted) {
                         showDialog(
                           context: context,
@@ -61,23 +57,50 @@ class HistoryScreen extends StatelessWidget {
                           builder: (ctx) => AlertDialog(
                             backgroundColor: Theme.of(context).cardColor,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                            title: Row(children: [
-                              Icon(Icons.check_circle, color: Theme.of(context).primaryColor, size: 28),
-                              const SizedBox(width: 12),
-                              const Expanded(child: Text("PDF Generated")),
-                            ]),
-                            content: Text(
-                              "Your tax summary has been saved to:\n\n$filePath",
-                              style: const TextStyle(fontSize: 13, height: 1.5),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: 20),
+                                CircularProgressIndicator(color: Theme.of(context).primaryColor),
+                                const SizedBox(height: 24),
+                                const Text("Generating Tax Summary...", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                const SizedBox(height: 8),
+                                const Text("Estimated time: ~2s", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                                const SizedBox(height: 20),
+                              ],
                             ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: Text("Okay", style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
-                              ),
-                            ],
                           ),
                         );
+                      }
+
+                      // Small delay for UX/Timer
+                      await Future.delayed(const Duration(seconds: 2));
+
+                      try {
+                        // Step 2: Generate PDF Bytes
+                        final pdfData = await PdfService.generateTaxSummaryBytes(
+                          allTransactions: expProv.expenses,
+                          sProv: sProv,
+                          startDate: startDate,
+                        );
+
+                        // Close loading dialog
+                        if (context.mounted) Navigator.pop(context);
+
+                        // Step 3: Layout PDF for Preview/Print
+                        await Printing.layoutPdf(
+                          onLayout: (format) async => pdfData,
+                          name: 'Nimbus_Tax_Summary_${Formatters.date(startDate).replaceAll('/', '_')}',
+                        );
+                      } catch (e) {
+                        // Close loading dialog on error
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Error generating PDF: $e"),
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ));
+                        }
                       }
                     },
                   ),

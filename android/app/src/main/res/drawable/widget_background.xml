@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer Glow / Glass Stroke -->
     <item>
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#1A1B2E"
-                android:centerColor="#16182D"
-                android:endColor="#0D0F1A"
+                android:startColor="#33FFFFFF"
+                android:endColor="#0DFFFFFF"
                 android:angle="315"
                 android:type="linear" />
-            <corners android:radius="24dp" />
+            <corners android:radius="28dp" />
         </shape>
     </item>
-    <item android:top="1dp" android:left="1dp" android:right="1dp" android:bottom="1dp">
+    
+    <!-- Main Glassy Body -->
+    <item android:top="1.5dp" android:left="1.5dp" android:right="1.5dp" android:bottom="1.5dp">
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#1E2040"
-                android:centerColor="#161830"
-                android:endColor="#0F1020"
+                android:startColor="#CC1A1B2E"
+                android:centerColor="#D916182D"
+                android:endColor="#E60D0F1A"
                 android:angle="315"
                 android:type="linear" />
-            <corners android:radius="23dp" />
+            <corners android:radius="26dp" />
         </shape>
     </item>
 </layer-list>

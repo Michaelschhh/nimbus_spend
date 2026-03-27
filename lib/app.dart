@@ -235,6 +235,7 @@ class _MainNavigationState extends State<MainNavigation> {
       });
 
       HomeWidget.widgetClicked.listen((Uri? uri) {
+        if (!mounted) return;
         if (uri != null && uri.host == 'add_expense') {
           showModalBottomSheet(
             context: context,
@@ -246,6 +247,7 @@ class _MainNavigationState extends State<MainNavigation> {
       });
 
       HomeWidget.initiallyLaunchedFromHomeWidget().then((Uri? uri) {
+        if (!mounted) return;
         if (uri != null && uri.host == 'add_expense') {
           showModalBottomSheet(
             context: context,

@@ -8,6 +8,7 @@ import 'dart:ui';
 
 import '../../providers/expense_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/local_ai_service.dart';
 import '../../theme/colors.dart';
 import '../../utils/formatters.dart';
 import '../../utils/color_utils.dart';
@@ -581,18 +582,30 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Widget _buildInsightSummary(ExpenseProvider eProv, SettingsProvider sProv, bool isDark) {
     final s = sProv.settings;
-    final totalSpent = eProv.totalSpentThisMonth;
-    final daysPassed = DateTime.now().day;
-    final avgDaily = daysPassed > 0 ? totalSpent / daysPassed : 0.0;
-    final projectedMonth = avgDaily * 30;
+    final insights = LocalAIService.generateInsights(
+      eProv.expenses, 
+      s.monthlyBudget, 
+      s.hourlyWage, 
+      eProv.totalSpentThisMonth
+    );
 
     return Column(
-      children: [
-        _insightTile("Monthly Projection", Formatters.currency(projectedMonth, s.currency),
-            projectedMonth > s.monthlyBudget ? AppColors.danger : AppColors.success, LucideIcons.target, isDark),
-        _insightTile("Daily Average", Formatters.currency(avgDaily, s.currency), AppColors.lifeColor, LucideIcons.activity, isDark),
-        _insightTile("Dominant Category", _getTopCategory(eProv), Theme.of(context).primaryColor, LucideIcons.award, isDark),
-      ],
+      children: insights.map((insight) {
+        final isWarning = insight.title.contains('Warning') || 
+                         insight.title.contains('Exhausted') || 
+                         insight.title.contains('Velocity') || 
+                         insight.title.contains('Creep');
+        final color = isWarning ? AppColors.warning : Theme.of(context).primaryColor;
+        
+        return _insightTile(
+          insight.title, 
+          insight.body, 
+          color, 
+          insight.icon, 
+          isDark,
+          isBodyValue: true
+        );
+      }).toList(),
     ).animate().fadeIn(delay: 500.ms, duration: 400.ms).slideY(begin: 0.2, curve: Curves.easeOut);
   }
 
@@ -606,7 +619,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return _cleanCategoryName(sorted.first.key);
   }
 
-  Widget _insightTile(String label, String value, Color color, IconData icon, bool isDark) {
+  Widget _insightTile(String label, String value, Color color, IconData icon, bool isDark, {bool isBodyValue = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -618,8 +631,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
           BoxShadow(color: color.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
         ]
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -632,7 +645,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
               Text(label, style: const TextStyle(color: AppColors.textDim, fontWeight: FontWeight.w700, fontSize: 13)),
             ],
           ),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: -0.5)),
+          const SizedBox(height: 12),
+          Text(
+            value, 
+            style: TextStyle(
+              color: isBodyValue ? (isDark ? Colors.white70 : Colors.black87) : color, 
+              fontWeight: isBodyValue ? FontWeight.normal : FontWeight.w900, 
+              fontSize: isBodyValue ? 14 : 16, 
+              letterSpacing: isBodyValue ? 0 : -0.5,
+              height: 1.4
+            )
+          ),
         ],
       ),
     );

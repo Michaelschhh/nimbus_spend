@@ -282,15 +282,34 @@ class SettingsProvider extends ChangeNotifier {
     // 1. Storage wipe
     await StorageService().clearAll();
     
-    // 2. Prefs wipe (only for current instance)
-    if (_prefs != null) {
-      await _prefs!.remove('${_pfx}user_name');
-      await _prefs!.remove('${_pfx}monthly_budget');
-      await _prefs!.remove('${_pfx}hourly_wage');
-      await _prefs!.remove('${_pfx}currency');
-      await _prefs!.remove('${_pfx}available_resources');
-      await _prefs!.setBool('${_pfx}onboarding_complete', false);
-    }
+      // 2. Prefs wipe (only for current instance)
+      if (_prefs != null) {
+        // Base keys
+        await _prefs!.remove('${_pfx}user_name');
+        await _prefs!.remove('${_pfx}monthly_budget');
+        await _prefs!.remove('${_pfx}hourly_wage');
+        await _prefs!.remove('${_pfx}currency');
+        await _prefs!.remove('${_pfx}available_resources');
+        await _prefs!.setBool('${_pfx}onboarding_complete', false);
+        
+        // IAP & Premium keys
+        await _prefs!.remove('is_pro');
+        await _prefs!.remove('ads_removed');
+        await _prefs!.remove('themes_unlocked');
+        await _prefs!.remove('security_unlocked_iap');
+        await _prefs!.remove('theme_expiry_timestamp');
+        
+        // Settings reset
+        await _prefs!.remove('sounds_enabled');
+        await _prefs!.remove('is_dark_mode');
+        await _prefs!.remove('theme_index');
+        await _prefs!.remove('performance_mode_enabled');
+        await _prefs!.remove('motion_blur_enabled');
+        await _prefs!.remove('biometric_enabled');
+        await _prefs!.remove('app_lock_enabled');
+        await _prefs!.remove('app_lock_type');
+        await _prefs!.remove('app_lock_code');
+      }
     
     // 3. Reset local state
     _settings = AppSettings(

@@ -229,8 +229,10 @@ class ShoppingListScreen extends StatelessWidget {
               TextButton(
                 onPressed: () async {
                   await prov.checkout(listId, selectedSource, sProv, eProv);
-                  Navigator.pop(ctx);
-                  Navigator.pop(context); // Go back to lists
+                  if (context.mounted) {
+                    Navigator.pop(ctx);
+                    Navigator.pop(context); // Go back to lists
+                  }
                   SoundService.success();
                 }, 
                 child: const Text("Log Expense", style: TextStyle(fontWeight: FontWeight.bold))

@@ -28,7 +28,9 @@ class _DebtsScreenState extends State<DebtsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<DebtProvider>().fetchDebts());
+    Future.microtask(() {
+      if (mounted) context.read<DebtProvider>().fetchDebts();
+    });
   }
 
   @override

@@ -47,6 +47,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
     await context.read<SavingsProvider>().addSaving(newGoal);
     SoundService.chaching();
 
+    if (!mounted) return;
+
     // Handle funding source debit
     if (amount > 0 && _fundingSource != 'none') {
       final sProv = context.read<SettingsProvider>();

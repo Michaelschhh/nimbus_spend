@@ -24,7 +24,9 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<SubscriptionProvider>().fetchSubscriptions());
+    Future.microtask(() {
+      if (mounted) context.read<SubscriptionProvider>().fetchSubscriptions();
+    });
   }
 
   @override

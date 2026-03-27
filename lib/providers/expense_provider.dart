@@ -79,10 +79,16 @@ class ExpenseProvider extends ChangeNotifier {
       notifyListeners();
 
       // Update Home Widget
+      final isDark = settings.settings.isDarkMode;
+      final theme = isDark ? ThemeData.dark() : ThemeData.light();
+      
       WidgetService.updateWidgetData(
-        balance: settings.settings.availableResources,
+        monthlyAllowance: settings.settings.monthlyBudget - totalSpentThisMonth,
         spentToday: totalSpentToday,
         currency: settings.settings.currency,
+        primaryColor: theme.primaryColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        textColor: isDark ? Colors.white : Colors.black,
       );
     } catch (e) {
       debugPrint("Error adding expense: $e");
@@ -106,10 +112,16 @@ class ExpenseProvider extends ChangeNotifier {
         notifyListeners();
 
         // Update Home Widget
+        final isDark = settings.settings.isDarkMode;
+        final theme = isDark ? ThemeData.dark() : ThemeData.light();
+        
         WidgetService.updateWidgetData(
-          balance: settings.settings.availableResources,
+          monthlyAllowance: settings.settings.monthlyBudget - totalSpentThisMonth,
           spentToday: totalSpentToday,
           currency: settings.settings.currency,
+          primaryColor: theme.primaryColor,
+          backgroundColor: theme.scaffoldBackgroundColor,
+          textColor: isDark ? Colors.white : Colors.black,
         );
       } catch (e) {
         debugPrint("Error deleting expense: $e");

@@ -113,10 +113,16 @@ class _LogicInitializerState extends State<LogicInitializer> with WidgetsBinding
     await RecurringService.checkAllCycles(sProv, eProv, bProv, dProv, subProv, prov);
 
     // Refresh home screen widget with real data
+    final isDark = sProv.settings.isDarkMode;
+    final theme = isDark ? ThemeData.dark() : ThemeData.light(); // Simplified, in reality would use app theme
+    
     WidgetService.updateWidgetData(
-      balance: sProv.settings.availableResources,
+      monthlyAllowance: sProv.settings.monthlyBudget - eProv.totalSpentThisMonth,
       spentToday: eProv.totalSpentToday,
       currency: sProv.settings.currency,
+      primaryColor: theme.primaryColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      textColor: isDark ? Colors.white : Colors.black,
     );
   }
 
@@ -148,6 +154,9 @@ class _LogicInitializerState extends State<LogicInitializer> with WidgetsBinding
       await bProv.fetchBills();
       await dProv.fetchDebts();
       await subProv.fetchSubscriptions();
+      
+      if (!mounted) return;
+      
       await Provider.of<AccountProvider>(context, listen: false).fetchAccounts();
       await Provider.of<IncomeProvider>(context, listen: false).fetchIncomes();
       await Provider.of<ShoppingProvider>(context, listen: false).fetchLists();
