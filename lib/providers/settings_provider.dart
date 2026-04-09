@@ -78,13 +78,16 @@ class SettingsProvider extends ChangeNotifier {
       tosAccepted: prefs.getBool('tos_accepted') ?? false,
       tutorialSeen: prefs.getBool('tutorial_seen') ?? false,
       isDarkMode: prefs.getBool('is_dark_mode') ?? true,
-      themeIndex: prefs.getInt('theme_index') ?? 0,
+      themeIndex: prefs.getInt('theme_index') == 10 ? 0 : (prefs.getInt('theme_index') ?? 0),
       themesUnlocked: prefs.getBool('themes_unlocked') ?? false,
       themeExpiryTimestamp: prefs.getInt('theme_expiry_timestamp'),
       adsRemoved: prefs.getBool('ads_removed') ?? false,
       performanceModeEnabled: prefs.getBool('performance_mode_enabled') ?? false,
       motionBlurEnabled: prefs.getBool('motion_blur_enabled') ?? true,
       biometricEnabled: prefs.getBool('biometric_enabled') ?? false,
+      liquidEffectEnabled: prefs.getInt('theme_index') == 10 ? true : (prefs.getBool('liquid_effect_enabled') ?? false),
+      blurIntensity: prefs.getDouble('blur_intensity') ?? 0.1,
+      refractionIntensity: prefs.getDouble('refraction_intensity') ?? 0.05,
 
 
       mascotEnabled: prefs.getBool('mascot_enabled') ?? true,
@@ -188,6 +191,19 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setMotionBlur(bool enabled) async {
     if (_prefs == null) return;
     await _prefs!.setBool('motion_blur_enabled', enabled);
+    await _loadSettings();
+  }
+
+  Future<void> setLiquidEffectEnabled(bool enabled) async {
+    if (_prefs == null) return;
+    await _prefs!.setBool('liquid_effect_enabled', enabled);
+    await _loadSettings();
+  }
+
+  Future<void> setLiquidIntensities(double blur, double refraction) async {
+    if (_prefs == null) return;
+    await _prefs!.setDouble('blur_intensity', blur);
+    await _prefs!.setDouble('refraction_intensity', refraction);
     await _loadSettings();
   }
 
@@ -305,6 +321,9 @@ class SettingsProvider extends ChangeNotifier {
         await _prefs!.remove('theme_index');
         await _prefs!.remove('performance_mode_enabled');
         await _prefs!.remove('motion_blur_enabled');
+        await _prefs!.remove('liquid_effect_enabled');
+        await _prefs!.remove('blur_intensity');
+        await _prefs!.remove('refraction_intensity');
         await _prefs!.remove('biometric_enabled');
         await _prefs!.remove('app_lock_enabled');
         await _prefs!.remove('app_lock_type');

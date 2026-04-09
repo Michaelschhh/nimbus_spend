@@ -22,13 +22,49 @@ import 'services/haptic_service.dart';
 import 'services/sound_service.dart';
 import 'services/recurring_service.dart';
 import 'services/widget_service.dart';
+import 'services/shader_service.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Background alarm callback — runs even when the app is dead or after reboot.
 @pragma('vm:entry-point')
 void backgroundAlarmCallback() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.init();
+
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final String todayString = DateTime.now().toIso8601String().substring(0, 10);
+    final String lastNotified = prefs.getString('last_savings_notif_date') ?? '';
+
+    if (lastNotified != todayString && DateTime.now().hour >= 9) { // At or after 9 AM
+      final savingsProv = SavingsProvider();
+      await savingsProv.fetchSavings();
+
+      double totalAddedToday = 0;
+      for (var s in savingsProv.savings) {
+        if (!s.isCompleted) {
+          totalAddedToday += s.amount * (s.annualInterestRate / 100) / 365;
+        }
+      }
+
+      if (totalAddedToday > 0) {
+        final settingsProv = SettingsProvider();
+        await settingsProv.init();
+        final currency = settingsProv.settings.currency;
+
+        await NotificationService.showNotification(
+          id: 9999, // Static ID to prevent spamming
+          title: 'Daily Savings Growth 📈',
+          body: 'Your money is working for you! You earned $currency${totalAddedToday.toStringAsFixed(2)} in interest today.',
+        );
+        await prefs.setString('last_savings_notif_date', todayString);
+      }
+    }
+  } catch (e) {
+    debugPrint('Background alarm error: $e');
+  }
 }
 
 void main() async {
@@ -46,6 +82,7 @@ void main() async {
 
   // Initialize Core Infrastructure
   await NotificationService.init(); 
+  await ShaderService.init();
   await AdService.init();
   await IAPService.init();
   await HapticService.init();

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:ui';
 import '../../theme/colors.dart';
+import '../../services/shader_service.dart';
 import '../../utils/formatters.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/savings_provider.dart';
@@ -62,7 +63,26 @@ class FinancialHubScreen extends StatelessWidget {
                       context,
                       icon: LucideIcons.calculator,
                       label: "Calculator",
-                      onTap: () => showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (ctx) => const CalculatorWidget()),
+                      onTap: () => showGeneralDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        barrierLabel: "Calculator",
+                        barrierColor: Colors.black.withOpacity(0.5),
+                        transitionDuration: const Duration(milliseconds: 600), // Half current speed (standard is 300ms)
+                        pageBuilder: (ctx, anim1, anim2) => const Align(
+                          alignment: Alignment.bottomCenter,
+                          child: CalculatorWidget(),
+                        ),
+                        transitionBuilder: (ctx, anim, anim2, child) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 1),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+                            child: child,
+                          );
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -207,6 +227,13 @@ class FinancialHubScreen extends StatelessWidget {
     required Color color,
     required Widget screen,
   }) {
+    final sProv = context.watch<SettingsProvider>();
+    final isWater = sProv.settings.themeIndex == 10;
+    
+    final filter = isWater 
+        ? (ShaderService.getLiquidGlassFilter(intensity: 0.05, blurAmt: sProv.settings.blurIntensity * 30.0) ?? ImageFilter.blur(sigmaX: 8, sigmaY: 8))
+        : ImageFilter.blur(sigmaX: 8, sigmaY: 8);
+
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
       child: Container(
@@ -214,7 +241,7 @@ class FinancialHubScreen extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            filter: filter,
             child: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -256,23 +283,36 @@ class FinancialHubScreen extends StatelessWidget {
   }
 
   Widget _quickAction(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap}) {
+    final sProv = context.watch<SettingsProvider>();
+    final isWater = sProv.settings.themeIndex == 10;
+
+    Widget card = Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        color: isWater ? (Theme.of(context).brightness == Brightness.dark ? Colors.black.withOpacity(0.2) : Colors.white.withOpacity(0.2)) : Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: isWater ? Colors.white.withOpacity(0.1) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.05)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: Theme.of(context).primaryColor, size: 24),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        ],
+      ),
+    );
+
+    if (isWater) {
+      final filter = ShaderService.getLiquidGlassFilter(intensity: 0.05, blurAmt: sProv.settings.blurIntensity * 30.0);
+      card = ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: filter != null ? BackdropFilter(filter: filter, child: card) : card,
+      );
+    }
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.05)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: Theme.of(context).primaryColor, size: 24),
-            const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          ],
-        ),
-      ),
+      child: card,
     );
   }
 }

@@ -29,9 +29,50 @@ class GlassCard extends StatelessWidget {
                 ? baseColor.withOpacity(opacity)
                 : Colors.white.withOpacity(0.75),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: isDark ? baseColor.withOpacity(0.2) : Colors.black.withOpacity(0.08)),
+            border: Border.all(
+              color: isDark ? baseColor.withOpacity(0.4) : Colors.black.withOpacity(0.15),
+              width: 1.5, // Crisp thin glass inset style
+            ),
+            gradient: RadialGradient(
+              center: Alignment.topLeft,
+              radius: 1.5,
+              colors: [
+                Colors.white.withOpacity(isDark ? 0.1 : 0.3),
+                Colors.transparent,
+              ],
+            ),
           ),
-          child: child,
+          child: Stack(
+            children: [
+               Positioned.fill(
+                 child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(23),
+                      gradient: const RadialGradient(
+                         center: Alignment(-0.6, -0.4),
+                         radius: 1.5,
+                         colors: [Colors.white12, Colors.transparent],
+                      ),
+                      backgroundBlendMode: BlendMode.overlay,
+                    ),
+                 ),
+               ),
+               Positioned.fill(
+                 child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(23),
+                      gradient: const RadialGradient(
+                         center: Alignment(0.6, 0.4),
+                         radius: 1.5,
+                         colors: [Colors.white12, Colors.transparent],
+                      ),
+                      backgroundBlendMode: BlendMode.overlay,
+                    ),
+                 ),
+               ),
+               child,
+            ],
+          ),
         ),
       ),
     );

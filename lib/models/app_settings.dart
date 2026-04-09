@@ -31,6 +31,9 @@ class AppSettings {
   final bool biometricEnabled;       // Fingerprint / Face unlock
   final List<String> customCategories;
   final bool hasMonthlyAllowance;
+  final bool liquidEffectEnabled;
+  final double blurIntensity;
+  final double refractionIntensity;
 
   AppSettings({
     required this.name,
@@ -65,6 +68,9 @@ class AppSettings {
     this.biometricEnabled = false,
     this.customCategories = const [],
     this.hasMonthlyAllowance = true,
+    this.liquidEffectEnabled = false,
+    this.blurIntensity = 0.1,
+    this.refractionIntensity = 0.05,
   });
 
   AppSettings copyWith({
@@ -100,6 +106,9 @@ class AppSettings {
     bool? biometricEnabled,
     List<String>? customCategories,
     bool? hasMonthlyAllowance,
+    bool? liquidEffectEnabled,
+    double? blurIntensity,
+    double? refractionIntensity,
   }) {
 
 
@@ -136,6 +145,9 @@ class AppSettings {
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
       customCategories: customCategories ?? this.customCategories,
       hasMonthlyAllowance: hasMonthlyAllowance ?? this.hasMonthlyAllowance,
+      liquidEffectEnabled: liquidEffectEnabled ?? this.liquidEffectEnabled,
+      blurIntensity: blurIntensity ?? this.blurIntensity,
+      refractionIntensity: refractionIntensity ?? this.refractionIntensity,
     );
 
 

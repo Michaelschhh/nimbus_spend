@@ -2,40 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import 'dart:async';
-import '../../theme/colors.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/shader_service.dart';
-import '../../services/haptic_service.dart';
-import '../../services/sound_service.dart';
 import 'liquid_physics_button.dart';
 
-class CustomSwitch extends StatefulWidget {
+class LiquidSwitch extends StatefulWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
-  final Color? activeColor;
 
-  const CustomSwitch({
-    super.key,
-    required this.value,
-    required this.onChanged,
-    this.activeColor,
-  });
+  const LiquidSwitch({super.key, required this.value, required this.onChanged});
 
   @override
-  State<CustomSwitch> createState() => _CustomSwitchState();
+  State<LiquidSwitch> createState() => _LiquidSwitchState();
 }
 
-class _CustomSwitchState extends State<CustomSwitch> {
+class _LiquidSwitchState extends State<LiquidSwitch> {
   bool _isAnimating = false;
   Timer? _animTimer;
 
   @override
-  void didUpdateWidget(covariant CustomSwitch oldWidget) {
+  void didUpdateWidget(covariant LiquidSwitch oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
       setState(() => _isAnimating = true);
       _animTimer?.cancel();
-      _animTimer = Timer(const Duration(milliseconds: 250), () {
+      _animTimer = Timer(const Duration(milliseconds: 300), () {
         if (mounted) setState(() => _isAnimating = false);
       });
     }
@@ -51,51 +42,58 @@ class _CustomSwitchState extends State<CustomSwitch> {
   Widget build(BuildContext context) {
     final s = context.watch<SettingsProvider>().settings;
     final isWater = s.liquidEffectEnabled;
-    final resolvedColor = widget.activeColor ?? Theme.of(context).primaryColor;
+    final resolvedColor = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final trackColor = widget.value 
         ? resolvedColor 
-        : (isDark ? Colors.white24 : Colors.black12);
+        : (isDark ? Colors.white24 : Colors.grey.withOpacity(0.3));
 
     final trackBorder = widget.value 
-        ? Border.all(color: resolvedColor, width: 2.0)
-        : Border.all(color: (isDark ? Colors.white10 : Colors.black12), width: 2.0);
+        ? Border.all(color: resolvedColor, width: 1.5)
+        : Border.all(color: (isDark ? Colors.white10 : Colors.black12), width: 1.5);
 
     Widget track;
     if (isWater && _isAnimating) {
-      // Lit track without background glass filtering to match precise thin iOS knob mechanics
-      track = AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        width: 50,
-        height: 28,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          color: Colors.white.withOpacity(isDark ? 0.15 : 0.3),
-          border: Border.all(color: Colors.white.withOpacity(isDark ? 0.35 : 0.5), width: 3.0),
-          boxShadow: [
-            BoxShadow(color: resolvedColor.withOpacity(0.2), blurRadius: 10, spreadRadius: 1),
-          ],
+      // Full glass track during active movement
+      final filter = ShaderService.getLiquidGlassFilter(intensity: s.refractionIntensity);
+      track = ClipRRect(
+        borderRadius: BorderRadius.circular(17),
+        child: BackdropFilter(
+          filter: filter ?? ImageFilter.blur(sigmaX: s.blurIntensity * 100, sigmaY: s.blurIntensity * 100),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutBack,
+            width: 60,
+            height: 34,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(17),
+              color: Colors.white.withOpacity(isDark ? 0.15 : 0.3),
+              border: Border.all(color: Colors.white.withOpacity(isDark ? 0.35 : 0.5), width: 1.5),
+              boxShadow: [
+                BoxShadow(color: resolvedColor.withOpacity(0.2), blurRadius: 10, spreadRadius: 1),
+              ],
+            ),
+          ),
         ),
       );
     } else {
       track = AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        width: 50,
-        height: 28,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutBack,
+        width: 60,
+        height: 34,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(17),
           color: isWater ? (isDark ? Colors.white10 : Colors.black.withOpacity(0.05)) : trackColor,
-          border: isWater ? Border.all(color: Colors.white.withOpacity(0.1), width: 3.0) : trackBorder,
+          border: isWater ? Border.all(color: Colors.white.withOpacity(0.1), width: 1.5) : trackBorder,
         ),
       );
     }
 
     Widget thumbWidget = Container(
-      width: 22,
-      height: 22,
+      width: 27,
+      height: 27,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
@@ -109,22 +107,17 @@ class _CustomSwitchState extends State<CustomSwitch> {
       final filter = ShaderService.getLiquidGlassFilter(intensity: s.refractionIntensity);
       thumbWidget = LiquidPhysicsButton(
         isWaterTheme: true,
-        onTap: () {
-          HapticService.light();
-          SoundService.play('pop.mp3');
-          widget.onChanged(!widget.value);
-        },
+        onTap: () => widget.onChanged(!widget.value),
         child: ClipOval(
           child: BackdropFilter(
             filter: filter ?? ImageFilter.blur(sigmaX: s.blurIntensity * 100, sigmaY: s.blurIntensity * 100),
             child: Container(
-              width: 22, height: 22,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: widget.value ? resolvedColor.withOpacity(0.8) : Colors.white.withOpacity(0.4),
-                  border: isWater ? Border.all(color: Colors.white.withOpacity(0.5), width: 2.0) : null,
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))],
-                ),
+              width: 27, height: 27,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.value ? resolvedColor.withOpacity(0.8) : Colors.white.withOpacity(0.4),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))],
+              ),
             ),
           ),
         ),
@@ -132,18 +125,12 @@ class _CustomSwitchState extends State<CustomSwitch> {
     }
 
     return GestureDetector(
-      onTap: () {
-        HapticService.light();
-        SoundService.play('pop.mp3');
-        widget.onChanged(!widget.value);
-      },
+      onTap: () => widget.onChanged(!widget.value),
       onHorizontalDragUpdate: (details) {
         if (details.delta.dx > 0 && !widget.value) {
           widget.onChanged(true);
-          HapticService.light();
         } else if (details.delta.dx < 0 && widget.value) {
           widget.onChanged(false);
-          HapticService.light();
         }
         if (!_isAnimating) {
           setState(() => _isAnimating = true);
@@ -154,16 +141,16 @@ class _CustomSwitchState extends State<CustomSwitch> {
         }
       },
       child: SizedBox(
-        width: 50,
-        height: 28,
+        width: 60,
+        height: 34,
         child: Stack(
           alignment: Alignment.centerLeft,
           children: [
             track,
             AnimatedPositioned(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              left: widget.value ? 24 : 4,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              left: widget.value ? 29 : 4,
               child: thumbWidget,
             ),
           ],

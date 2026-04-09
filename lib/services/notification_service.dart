@@ -1,55 +1,24 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import '../theme/colors.dart';
 
 class NotificationService {
-  static Future<void> init() async {
-    await AwesomeNotifications().initialize(
-      null,
-      [
-        NotificationChannel(
-          channelKey: 'nimbus_alerts',
-          channelName: 'Nimbus Spend Alerts',
-          channelDescription: 'Institutional financial notifications',
-          defaultColor: const Color(0xFF0A84FF),
-          ledColor: Colors.white,
-          importance: NotificationImportance.Max,
-          channelShowBadge: true,
-          criticalAlerts: true,
-          onlyAlertOnce: true,
-          playSound: true,
-        )
-      ],
-      debug: false,
-    );
+  static final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
-    // Set listeners so AwesomeNotifications can handle actions
-    // even when the app was killed and relaunched by notification tap.
-    await AwesomeNotifications().setListeners(
-      onActionReceivedMethod: _onActionReceived,
-      onNotificationCreatedMethod: _onNotificationCreated,
-      onNotificationDisplayedMethod: _onNotificationDisplayed,
-      onDismissActionReceivedMethod: _onDismissActionReceived,
-    );
+  static Future<void> init() async {
+    tz.initializeTimeZones();
+    const AndroidInitializationSettings initAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings = InitializationSettings(android: initAndroid);
+    await _plugin.initialize(initSettings);
   }
 
-  // These must be top-level or static to work in background isolates.
-  @pragma('vm:entry-point')
-  static Future<void> _onActionReceived(ReceivedAction receivedAction) async {}
-
-  @pragma('vm:entry-point')
-  static Future<void> _onNotificationCreated(ReceivedNotification receivedNotification) async {}
-
-  @pragma('vm:entry-point')
-  static Future<void> _onNotificationDisplayed(ReceivedNotification receivedNotification) async {}
-
-  @pragma('vm:entry-point')
-  static Future<void> _onDismissActionReceived(ReceivedAction receivedAction) async {}
-
   static Future<void> requestPermission() async {
-    final isAllowed = await AwesomeNotifications().isNotificationAllowed();
-    if (!isAllowed) {
-      await AwesomeNotifications().requestPermissionToSendNotifications();
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.requestNotificationsPermission();
+      await androidPlugin.requestExactAlarmsPermission();
     }
   }
 
@@ -59,30 +28,34 @@ class NotificationService {
     required String body,
     required DateTime date,
   }) async {
-    // Only schedule if date is in the future
     if (date.isBefore(DateTime.now())) return;
     
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-         id: id,
-         channelKey: 'nimbus_alerts',
-         title: title,
-         body: body,
-         notificationLayout: NotificationLayout.Default,
-         category: NotificationCategory.Reminder,
-         backgroundColor: Colors.black,
+    // Set for 9 AM of that date
+    final scheduleTime = DateTime(date.year, date.month, date.day, 9, 0);
+    if (scheduleTime.isBefore(DateTime.now())) return;
+
+    await _plugin.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduleTime, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'nimbus_alerts',
+          'Nimbus Spend Alerts',
+          channelDescription: 'Institutional financial notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          color: Color(0xFF0A84FF),
+        ),
       ),
-      schedule: NotificationCalendar(
-        year: date.year, month: date.month, day: date.day, hour: 9, minute: 0, 
-        allowWhileIdle: true,
-        preciseAlarm: false,
-        repeats: false,
-      )
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
   static Future<void> cancelScheduled(int id) async {
-    await AwesomeNotifications().cancel(id);
+    await _plugin.cancel(id);
   }
 
   static Future<void> showNotification({
@@ -90,15 +63,19 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: id,
-        channelKey: 'nimbus_alerts',
-        title: title,
-        body: body,
-        notificationLayout: NotificationLayout.Default,
-        category: NotificationCategory.Status, // Essential for visibility
-        backgroundColor: Colors.black,
+    await _plugin.show(
+      id,
+      title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'nimbus_alerts',
+          'Nimbus Spend Alerts',
+          channelDescription: 'Institutional financial notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          color: Color(0xFF0A84FF),
+        ),
       ),
     );
   }

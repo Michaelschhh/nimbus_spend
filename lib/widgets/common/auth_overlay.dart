@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'dart:ui';
 import '../../providers/settings_provider.dart';
 import '../../theme/colors.dart';
 import '../../widgets/common/apple_button.dart';
 import '../../services/biometric_service.dart';
+import '../../services/shader_service.dart';
 
 class AuthOverlay extends StatefulWidget {
   const AuthOverlay({super.key});
@@ -55,9 +57,11 @@ class _AuthOverlayState extends State<AuthOverlay> {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<SettingsProvider>().settings;
+    final isWater = s.themeIndex == 10;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
+    Widget content = Container(
+      color: isWater ? Colors.transparent : Theme.of(context).scaffoldBackgroundColor,
       width: double.infinity,
       height: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -67,10 +71,10 @@ class _AuthOverlayState extends State<AuthOverlay> {
           Icon(
             s.biometricEnabled ? LucideIcons.fingerprint : LucideIcons.lock, 
             size: 60, 
-            color: Theme.of(context).primaryColor,
+            color: isWater ? (isDark ? Colors.white : Colors.black) : Theme.of(context).primaryColor,
           ),
           const SizedBox(height: 24),
-          const Text("Nimbus Secure", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          Text("Nimbus Secure", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isWater ? (isDark ? Colors.white : Colors.black) : null)),
           const SizedBox(height: 8),
           Text(
             s.biometricEnabled
@@ -78,7 +82,7 @@ class _AuthOverlayState extends State<AuthOverlay> {
                 : s.appLockType == 'passcode' 
                     ? "Enter your passcode to unlock" 
                     : "Enter your password to unlock",
-            style: const TextStyle(color: AppColors.textDim),
+            style: TextStyle(color: isWater ? (isDark ? Colors.white70 : Colors.black87) : AppColors.textDim),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
@@ -89,12 +93,12 @@ class _AuthOverlayState extends State<AuthOverlay> {
             textAlign: TextAlign.center,
             autofocus: !s.biometricEnabled,
             keyboardType: s.appLockType == 'passcode' ? TextInputType.number : TextInputType.text,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8, color: isWater ? (isDark ? Colors.white : Colors.black) : null),
             decoration: InputDecoration(
               hintText: s.appLockType == 'passcode' ? "••••" : "Password",
-              hintStyle: const TextStyle(letterSpacing: 4),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.3))),
-              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2)),
+              hintStyle: TextStyle(letterSpacing: 4, color: isWater ? (isDark ? Colors.white54 : Colors.black54) : null),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isWater ? (isDark ? Colors.white30 : Colors.black26) : Theme.of(context).primaryColor.withOpacity(0.3))),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: isWater ? (isDark ? Colors.white : Colors.black) : Theme.of(context).primaryColor, width: 2)),
             ),
             onSubmitted: (_) => _verify(),
           ),
@@ -107,6 +111,8 @@ class _AuthOverlayState extends State<AuthOverlay> {
           const SizedBox(height: 40),
           AppleButton(
             label: "Unlock",
+            bgColor: isWater ? (isDark ? Colors.white : Colors.black) : null,
+            textColor: isWater ? (isDark ? Colors.black : Colors.white) : null,
             onTap: _verify,
           ),
           
@@ -114,8 +120,8 @@ class _AuthOverlayState extends State<AuthOverlay> {
             const SizedBox(height: 16),
             AppleButton(
               label: "Use Biometrics",
-              bgColor: Theme.of(context).primaryColor.withOpacity(0.15),
-              textColor: Theme.of(context).primaryColor,
+              bgColor: isWater ? (isDark ? Colors.white12 : Colors.black12) : Theme.of(context).primaryColor.withOpacity(0.15),
+              textColor: isWater ? (isDark ? Colors.white : Colors.black) : Theme.of(context).primaryColor,
               onTap: () {
                 _biometricAttempted = false;
                 _tryBiometric();
@@ -127,5 +133,18 @@ class _AuthOverlayState extends State<AuthOverlay> {
         ],
       ),
     );
+
+    if (isWater) {
+      final filter = ShaderService.getLiquidGlassFilter(intensity: 0.1, blurAmt: 60.0);
+      content = BackdropFilter(
+        filter: filter ?? ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+        child: Container(
+          color: (isDark ? Colors.black : Colors.white).withOpacity(0.2),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
   }
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
+import 'dart:async';
 
 import 'utils/responsive.dart'; // Added by user instruction
 
@@ -20,7 +21,9 @@ import 'providers/settings_provider.dart';
 import 'theme/colors.dart';
 import 'services/sound_service.dart';
 import 'services/haptic_service.dart';
+import 'services/shader_service.dart';
 import 'widgets/common/auth_overlay.dart';
+import 'widgets/common/liquid_physics_button.dart';
 import 'widgets/common/nimbus_mascot.dart';
 import 'widgets/common/tutorial_overlay.dart';
 import 'package:home_widget/home_widget.dart';
@@ -166,6 +169,11 @@ class NimbusSpendApp extends StatelessWidget {
           primary: const Color(0xFFBE185D),
           secondary: const Color(0xFFF472B6),
         );
+      case 10: // Water (Liquid Glass)
+        return _ThemeColors(
+          primary: const Color(0xFF0A84FF), // Apple Glass Blue
+          secondary: const Color(0xFFFFFFFF), // Glass Brightness
+        );
       default:
         return _ThemeColors(
           primary: const Color(0xFF0A84FF),
@@ -186,6 +194,7 @@ class NimbusSpendApp extends StatelessWidget {
       case 7: return const Color(0xFF021E14); // Deep Forest
       case 8: return const Color(0xFF14021E); // Deep Lavender
       case 9: return const Color(0xFF1E020D); // Deep Rose
+      case 10: return Colors.black; // Water (Liquid Glass)
       default: return Colors.black;
     }
   }
@@ -202,6 +211,7 @@ class NimbusSpendApp extends StatelessWidget {
       case 7: return const Color(0xFFECFDF5); // Emerald white
       case 8: return const Color(0xFFF5F3FF); // Violet white
       case 9: return const Color(0xFFFDF2F8); // Pink white
+      case 10: return Colors.white; // Water (Liquid Glass)
       default: return Colors.white;
     }
   }
@@ -222,6 +232,9 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _index = 0;
+  bool _isNavAnimating = false;
+  Timer? _navAnimTimer;
+  double _pullOffset = 0;
 
   @override
   void initState() {
@@ -317,7 +330,20 @@ class _MainNavigationState extends State<MainNavigation> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: _buildAppleNavBar(isDark),
+              child: GestureDetector(
+                onVerticalDragUpdate: (details) {
+                  if (s.liquidEffectEnabled) {
+                    setState(() {
+                      _pullOffset += details.delta.dy * 0.2;
+                      _pullOffset = _pullOffset.clamp(-15.0, 15.0);
+                    });
+                  }
+                },
+                onVerticalDragEnd: (_) {
+                  setState(() => _pullOffset = 0);
+                },
+                child: _buildAppleNavBar(isDark),
+              ),
             ),
           ],
         ),
@@ -330,7 +356,6 @@ class _MainNavigationState extends State<MainNavigation> {
     final primaryColor = Theme.of(context).primaryColor;
     final s = context.watch<SettingsProvider>().settings;
 
-    
     return LayoutBuilder(builder: (context, constraints) {
       double maxWidth = constraints.maxWidth * 0.9;
       double itemWidth = maxWidth / 5;
@@ -342,32 +367,48 @@ class _MainNavigationState extends State<MainNavigation> {
         child: Container(
           width: maxWidth,
           margin: EdgeInsets.only(
-            bottom: (Responsive.isTablet(context) ? 24.0 : 16.0) + bottomPadding,
+            bottom: ((Responsive.isTablet(context) ? 24.0 : 16.0) + bottomPadding) - _pullOffset,
           ),
-        height: navHeight,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(navHeight / 2),
-          border: Border.all(
-            color: isDark 
-                ? Colors.white.withOpacity(0.08) 
-                : Colors.black.withOpacity(0.06),
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(navHeight / 2),
-          child: s.performanceModeEnabled 
-            ? Stack(
-                alignment: Alignment.center,
-                children: _buildNavStack(primaryColor, itemWidth, navHeight, isDark),
+          height: navHeight,
+          decoration: BoxDecoration(
+            color: s.liquidEffectEnabled
+                ? Colors.white.withOpacity(isDark ? 0.02 : 0.04)
+                : (isDark ? Colors.grey[900]!.withOpacity(0.95) : Colors.white.withOpacity(0.95)),
+            borderRadius: BorderRadius.circular(navHeight / 2),
+            border: Border.all(
+              color: s.liquidEffectEnabled
+                  ? (isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.07))
+                  : (isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.1)),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.12),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               )
-            : BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                child: Stack(
+            ]
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(navHeight / 2),
+            child: s.performanceModeEnabled 
+              ? Stack(
                   alignment: Alignment.center,
                   children: _buildNavStack(primaryColor, itemWidth, navHeight, isDark),
+                )
+              : BackdropFilter(
+                  filter: s.liquidEffectEnabled 
+                      ? (ShaderService.getLiquidGlassFilter(
+                          intensity: s.refractionIntensity,
+                          size: Size(maxWidth, navHeight), // Injects explicit structural limits for UV distortion mapping
+                        ) ?? ImageFilter.blur(sigmaX: 15, sigmaY: 15))
+                      : ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: _buildNavStack(primaryColor, itemWidth, navHeight, isDark),
+                  ),
                 ),
-              ),
-        ),
+           ),
         ),
       );
     });
@@ -375,38 +416,89 @@ class _MainNavigationState extends State<MainNavigation> {
 
 
   List<Widget> _buildNavStack(Color primaryColor, double itemWidth, double navHeight, bool isDark) {
+    final s = context.watch<SettingsProvider>().settings;
+    final isWater = s.liquidEffectEnabled;
+
     return [
-      // THE SLIDING PILL
+      // THE SLIDING PILL (Glass)
       AnimatedPositioned(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic, // No recoil
         left: _index * itemWidth,
         top: 0,
         bottom: 0,
-        child: SizedBox(
-          width: itemWidth,
-          child: Center(
-            child: Container(
-              width: Responsive.isTablet(context) ? 64 : Responsive.sp(56, context),
-              height: Responsive.isTablet(context) ? 42 : 36, // Guarantees a horizontal pill shape
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    primaryColor.withOpacity(0.2),
-                    primaryColor.withOpacity(0.05),
-                  ],
+        child: GestureDetector(
+          onHorizontalDragUpdate: (details) {
+            final newIndex = ((_index * itemWidth + details.delta.dx) / itemWidth).round().clamp(0, 4);
+            if (newIndex != _index) {
+              setState(() {
+                _index = newIndex;
+                _isNavAnimating = true;
+              });
+              _navAnimTimer?.cancel();
+              _navAnimTimer = Timer(const Duration(milliseconds: 800), () {
+                if (mounted) setState(() => _isNavAnimating = false);
+              });
+            }
+          },
+          child: SizedBox(
+            width: itemWidth,
+            child: Center(
+              child: LiquidPhysicsButton(
+                isWaterTheme: isWater,
+                onTap: () {},
+                child: TweenAnimationBuilder<double>(
+                   // Short duration prevents the slow fade-in->fade-out on stop
+                  duration: const Duration(milliseconds: 175),
+                  tween: Tween<double>(begin: 0.0, end: _isNavAnimating ? 1.0 : 0.0),
+                  builder: (context, animValue, child) {
+                    final distortionIntensity = animValue * 3.0; // Tripled
+                    final blurIntensity = 10.0 + (animValue * 5.0);
+                    
+                    final pW = Responsive.isTablet(context) ? 64.0 : Responsive.sp(56, context);
+                    final pH = Responsive.isTablet(context) ? 42.0 : 36.0;
+
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: BackdropFilter(
+                        filter: isWater 
+                            ? (ShaderService.getLiquidGlassFilter(
+                                intensity: s.refractionIntensity * 5.0 + distortionIntensity * 2.0, // Strong base + animated boost
+                                tilt: Offset(_isNavAnimating ? 0.3 * animValue : 0.0, _isNavAnimating ? -0.2 * animValue : 0.0),
+                                size: Size(pW, pH),
+                                shape: 1,
+                              ) ?? ImageFilter.blur(sigmaX: blurIntensity, sigmaY: blurIntensity))
+                            : ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(
+                          width: pW,
+                          height: pH,
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(100),
+                            border: isWater ? Border.all(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.4 + (animValue * 0.2))
+                                  : Colors.black.withOpacity(0.15 + (animValue * 0.1)),
+                              width: 1.5
+                            ) : null,
+                            boxShadow: [
+                              if (isWater && _isNavAnimating)
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(0.4 * animValue),
+                                  blurRadius: 20,
+                                  spreadRadius: 4,
+                                )
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                borderRadius: BorderRadius.circular(100),
-                boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withOpacity(0.1),
-                  blurRadius: 10,
-                )
-              ],
+              ),
             ),
           ),
         ),
-      ),
       ),
       
       // THE INTERACTIVE ICONS
@@ -416,13 +508,27 @@ class _MainNavigationState extends State<MainNavigation> {
             onTap: () {
               SoundService.tap();
               HapticService.light();
-              setState(() => _index = i);
+              setState(() {
+                _isNavAnimating = true;
+                _index = i;
+              });
+              _navAnimTimer?.cancel();
+              _navAnimTimer = Timer(const Duration(milliseconds: 800), () {
+                if (mounted) setState(() => _isNavAnimating = false);
+              });
             },
             behavior: HitTestBehavior.opaque,
-            child: Icon(
-              _getIcon(i),
-              color: _index == i ? primaryColor : AppColors.textDim,
-              size: Responsive.sp(23, context),
+            child: Transform(
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateX(_isNavAnimating && _index == i ? 0.2 : 0)
+                ..rotateY(_isNavAnimating && _index == i ? 0.2 : 0),
+              alignment: Alignment.center,
+              child: Icon(
+                _getIcon(i),
+                color: _index == i ? primaryColor : AppColors.textDim,
+                size: Responsive.sp(23, context),
+              ),
             ),
           ),
         )),

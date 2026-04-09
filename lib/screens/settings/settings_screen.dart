@@ -23,6 +23,7 @@ import '../../utils/responsive.dart';
 import 'security_settings_screen.dart';
 import 'salary_settings_screen.dart';
 import 'paywall_screen.dart';
+import '../../widgets/common/liquid_slider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -85,6 +86,7 @@ class SettingsScreen extends StatelessWidget {
             _darkModeCard(context, prov),
             _performanceModeCard(context, prov),
             _motionBlurCard(context, prov),
+            _environmentalEffectsCard(context, prov),
 
 
             // Nimbus Mascot toggle (Pro/adsRemoved only)
@@ -497,6 +499,84 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
       ]),
+    );
+  }
+
+  Widget _environmentalEffectsCard(BuildContext context, SettingsProvider prov) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
+      child: Column(
+        children: [
+          Row(children: [
+            Icon(LucideIcons.droplets, color: Theme.of(context).primaryColor, size: 18),
+            const SizedBox(width: 14),
+            const Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Liquid Glass Overlay", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                Text("System-wide fluid physics and rendering", style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+              ],
+            )),
+            CustomSwitch(
+              value: prov.settings.liquidEffectEnabled,
+              onChanged: (val) {
+                if (!prov.settings.isPro) {
+                  Navigator.push(context, MaterialPageRoute(builder: (c) => const PaywallScreen()));
+                  return;
+                }
+                prov.setLiquidEffectEnabled(val);
+              },
+            ),
+          ]),
+          if (prov.settings.liquidEffectEnabled && prov.settings.isPro) ...[
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const SizedBox(width: 8),
+                const Text("Blur Intensity", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                Expanded(
+                  child: LiquidSlider(
+                    value: prov.settings.blurIntensity,
+                    min: 0.0,
+                    max: 0.5,
+                    onChanged: (v) => prov.setLiquidIntensities(v, prov.settings.refractionIntensity),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const SizedBox(width: 8),
+                const Text("Dispersion", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                Expanded(
+                  child: LiquidSlider(
+                    value: prov.settings.refractionIntensity,
+                    min: 0.0,
+                    max: 0.15,
+                    onChanged: (v) => prov.setLiquidIntensities(prov.settings.blurIntensity, v),
+                  ),
+                ),
+              ],
+            ),
+          ]
+          else if (!prov.settings.isPro) ...[
+             const SizedBox(height: 10),
+             Container(
+               padding: const EdgeInsets.all(8),
+               decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+               child: const Row(
+                 children: [
+                   Icon(LucideIcons.lock, size: 14, color: Colors.amber),
+                   SizedBox(width: 8),
+                   Text("Pro feature", style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
+                 ],
+               ),
+             )
+          ]
+        ],
+      ),
     );
   }
 }

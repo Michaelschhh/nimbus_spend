@@ -104,7 +104,7 @@ class PaywallScreen extends StatelessWidget {
             
             _themesGrid(context, s.themeIndex, sProv.isThemeUnlocked(), sProv),
             
-            if (s.themeExpiryTimestamp != null && !s.themesUnlocked && !s.isPro) ...[
+            if (s.themeExpiryTimestamp != null && !s.themesUnlocked && !s.isPro && DateTime.now().millisecondsSinceEpoch < s.themeExpiryTimestamp!) ...[
               const SizedBox(height: 12),
               Text("Temporary Access Active: Ends in ${((s.themeExpiryTimestamp! - DateTime.now().millisecondsSinceEpoch) / 3600000).ceil()}h", style: const TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.bold)),
             ],

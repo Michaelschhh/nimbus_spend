@@ -14,6 +14,7 @@ import '../../widgets/common/apple_button.dart';
 import '../../widgets/common/ad_placements.dart';
 import '../../services/sound_service.dart';
 import '../../services/local_ai_service.dart';
+import '../../services/shader_service.dart';
 import '../../models/expense.dart';
 import '../../widgets/common/account_management_sheet.dart';
 import '../../widgets/common/transaction_details_sheet.dart';
@@ -54,8 +55,8 @@ class DashboardScreen extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: Responsive.sp(24, context)),
                 child: s.hasMonthlyAllowance
-                   ? _mainCard(context, left, s.currency, isOver, "MONTHLY ALLOWANCE")
-                   : _mainCard(context, exp.totalSpentThisMonth, s.currency, false, "MONTHLY SPEND (LEDGER)"),
+                   ? _mainCard(context, left, s.currency, isOver, "MONTHLY ALLOWANCE", s.themeIndex == 10)
+                   : _mainCard(context, exp.totalSpentThisMonth, s.currency, false, "MONTHLY SPEND (LEDGER)", s.themeIndex == 10),
               ),
               SizedBox(height: Responsive.sp(30, context)),
 
@@ -149,12 +150,13 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _mainCard(BuildContext context, double amount, String cur, bool isOver, String title) {
-    return Container(
+  Widget _mainCard(BuildContext context, double amount, String cur, bool isOver, String title, bool isWater) {
+    Widget card = Container(
       width: double.infinity, padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: isOver ? AppColors.danger.withOpacity(0.5) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.05)),
+        color: isWater ? (Theme.of(context).brightness == Brightness.dark ? Colors.black.withOpacity(0.3) : Colors.white.withOpacity(0.3)) : Theme.of(context).cardColor, 
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: isWater ? Colors.white.withOpacity(0.2) : (isOver ? AppColors.danger.withOpacity(0.5) : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black).withOpacity(0.05))),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -172,6 +174,15 @@ class DashboardScreen extends StatelessWidget {
           style: TextStyle(color: isOver ? AppColors.danger : AppColors.success, fontWeight: FontWeight.bold, fontSize: Responsive.fs(11, context))),
       ]),
     );
+
+    if (isWater) {
+      final filter = ShaderService.getLiquidGlassFilter(intensity: 0.08, blurAmt: context.read<SettingsProvider>().settings.blurIntensity * 40.0);
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: filter != null ? BackdropFilter(filter: filter, child: card) : card,
+      );
+    }
+    return card;
   }
 
   Widget _item(BuildContext context, dynamic e, ExpenseProvider prov, SettingsProvider sProv, String cur, {bool isHidden = false}) {
@@ -189,7 +200,7 @@ class DashboardScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: sProv.settings.themeIndex == 10 ? Colors.transparent : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(children: [
@@ -235,31 +246,41 @@ class DashboardScreen extends StatelessWidget {
       final items = entry.value;
       final total = items.fold<double>(0, (sum, e) => sum + e.amount);
 
+      Widget groupContainer = Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: sProv.settings.themeIndex == 10 ? (Theme.of(context).brightness == Brightness.dark ? Colors.black.withOpacity(0.2) : Colors.white.withOpacity(0.3)) : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(22),
+          border: sProv.settings.themeIndex == 10 ? Border.all(color: Colors.white.withOpacity(0.1)) : null,
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            leading: Icon(_getCategoryIcon(category), color: Theme.of(context).primaryColor, size: 20),
+            title: Text(category, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600, fontSize: 15)),
+            subtitle: Text("${items.length} transaction${items.length > 1 ? 's' : ''} · ${Formatters.currency(total, cur)}",
+              style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
+            iconColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54),
+            collapsedIconColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54),
+            children: items.map<Widget>((e) => _item(context, e, exp, sProv, cur)).toList(),
+          ),
+        ),
+      );
+
+      if (sProv.settings.themeIndex == 10) {
+        final filter = ShaderService.getLiquidGlassFilter(intensity: 0.05, blurAmt: sProv.settings.blurIntensity * 30.0);
+        groupContainer = ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: filter != null ? BackdropFilter(filter: filter, child: groupContainer) : groupContainer,
+        );
+      }
+
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: Theme(
-
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                leading: Icon(_getCategoryIcon(category), color: Theme.of(context).primaryColor, size: 20),
-                title: Text(category, style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black), fontWeight: FontWeight.w600, fontSize: 15)),
-                subtitle: Text("${items.length} transaction${items.length > 1 ? 's' : ''} · ${Formatters.currency(total, cur)}",
-                  style: const TextStyle(color: AppColors.textDim, fontSize: 11)),
-                iconColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54),
-                collapsedIconColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54),
-                children: items.map<Widget>((e) => _item(context, e, exp, sProv, cur)).toList(),
-              ),
-            ),
-          ),
-        );
+        child: groupContainer,
+      );
     }).toList();
 
 
@@ -429,14 +450,15 @@ class DashboardScreen extends StatelessWidget {
             final insight = insights[index];
             final isWarning = insight.title.contains('Warning') || insight.title.contains('Exhausted') || insight.title.contains('Velocity') || insight.title.contains('Creep');
             
-            return Container(
+            final isWater = context.read<SettingsProvider>().settings.themeIndex == 10;
+            Widget card = Container(
               width: 280,
               margin: const EdgeInsets.only(right: 16),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
+                color: isWater ? (Theme.of(context).brightness == Brightness.dark ? Colors.black.withOpacity(0.2) : Colors.white.withOpacity(0.2)) : Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: isWarning ? AppColors.warning.withOpacity(0.3) : Theme.of(context).primaryColor.withOpacity(0.1)),
+                border: Border.all(color: isWarning ? AppColors.warning.withOpacity(0.3) : (isWater ? Colors.white.withOpacity(0.2) : Theme.of(context).primaryColor.withOpacity(0.1))),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,6 +491,15 @@ class DashboardScreen extends StatelessWidget {
                 ],
               ),
             );
+
+            if (isWater) {
+              final filter = ShaderService.getLiquidGlassFilter(intensity: 0.05, blurAmt: context.read<SettingsProvider>().settings.blurIntensity * 25.0);
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: filter != null ? BackdropFilter(filter: filter, child: card) : card,
+              );
+            }
+            return card;
           },
         ),
       ),
